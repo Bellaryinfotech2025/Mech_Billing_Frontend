@@ -1,14 +1,13 @@
-import { useState } from "react";
+"use client"
+
+import { useState } from "react"
 import {
   LayoutDashboard,
   BarChart,
-  Truck,
   CreditCard,
   TrendingUp,
   Sliders,
-  Users,
   FileText,
-  Download,
   FileQuestion,
   History,
   Bell,
@@ -18,19 +17,21 @@ import {
   User,
   Menu,
   X,
-} from "lucide-react";
-import "../Design Component/Dashboard.css";
-import SettingsPopup from "../Main Mech Component/Settings";
-import logo from "../assets/blogo.jpg";
+} from "lucide-react"
+import "../Design Component/Dashboard.css"
+import SettingsPopup from "../Main Mech Component/Settings"
+import OrderDetails from "../Main Mech Component/OrderDetails"
+import logo from "../assets/blogo.jpg"
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [activeMenu, setActiveMenu] = useState("home")
 
   // Prevent default on link clicks to avoid page refresh
-  const handleLinkClick = (e) => {
+  const handleLinkClick = (e, menu) => {
     e.preventDefault()
-    // You would normally handle navigation here
+    setActiveMenu(menu)
   }
 
   const toggleSidebar = () => {
@@ -48,7 +49,7 @@ const MainDashboard = () => {
         <div className="logo-container">
           {/* Company Logo */}
           <div className="company-logo">
-            <img src={logo} alt="source logo" style={{ width: "30px", height: "30px" }} />
+            <img src={logo || "/placeholder.svg"} alt="source logo" style={{ width: "30px", height: "30px" }} />
           </div>
 
           <button className="close-sidebar" onClick={toggleSidebar}>
@@ -59,82 +60,117 @@ const MainDashboard = () => {
         <nav className="nav-menu">
           <ul>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "home" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "home")}
+              >
                 <LayoutDashboard size={20} />
                 <span>Home</span>
               </a>
             </li>
 
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "orders" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "orders")}
+              >
                 <BarChart size={20} />
                 <span>Orders</span>
               </a>
             </li>
 
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
-              <History size={20} />
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "lines" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "lines")}
+              >
+                <History size={20} />
                 <span>Lines</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "fabrication" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "fabrication")}
+              >
                 <CreditCard size={20} />
                 <span>Fabrication</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
-              <TrendingUp size={20} />
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "erection" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "erection")}
+              >
+                <TrendingUp size={20} />
                 <span>Erection</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "alignment" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "alignment")}
+              >
                 <Sliders size={20} />
-                <span>Alingnment</span>
+                <span>Alignment</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
-              <CreditCard size={20} />
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "billing" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "billing")}
+              >
+                <CreditCard size={20} />
                 <span>Billing</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "reports" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "reports")}
+              >
                 <FileText size={20} />
                 <span>Reports</span>
               </a>
             </li>
-            
+
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "requests" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "requests")}
+              >
                 <FileQuestion size={20} />
                 <span>Requests</span>
               </a>
             </li>
-             
           </ul>
         </nav>
 
         <div className="bottom-menu">
           <ul>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a href="#" className="nav-link" onClick={(e) => handleLinkClick(e, "notifications")}>
                 <Bell size={20} />
                 <span>Notifications</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a href="#" className="nav-link" onClick={(e) => handleLinkClick(e, "settings")}>
                 <Settings size={20} />
                 <span>Settings</span>
               </a>
             </li>
             <li>
-              <a href="#" className="nav-link" onClick={handleLinkClick}>
+              <a href="#" className="nav-link" onClick={(e) => handleLinkClick(e, "logout")}>
                 <LogOut size={20} />
                 <span>Logout</span>
               </a>
@@ -151,8 +187,17 @@ const MainDashboard = () => {
             <button className="hamburger-menu" onClick={toggleSidebar}>
               <Menu size={24} />
             </button>
-            <h1 style={{fontSize:'1rem'}}>Dashboard</h1>
-
+            <h1 style={{ fontSize: "1rem" }}>
+              {activeMenu === "home" && "Dashboard"}
+              {activeMenu === "orders" && "Orders"}
+              {activeMenu === "lines" && "Lines"}
+              {activeMenu === "fabrication" && "Fabrication"}
+              {activeMenu === "erection" && "Erection"}
+              {activeMenu === "alignment" && "Alignment"}
+              {activeMenu === "billing" && "Billing"}
+              {activeMenu === "reports" && "Reports"}
+              {activeMenu === "requests" && "Requests"}
+            </h1>
           </div>
           <div className="header-right">
             <button className="header-btn" onClick={toggleSettings}>
@@ -166,13 +211,19 @@ const MainDashboard = () => {
 
         {/* Main Content */}
         <main className="main-content">
-          <div className="empty-state">
-            <p>You have no orders.</p>
-            <button className="add-order-btn">
-              <Plus size={20} />
-              <span>Add Order</span>
-            </button>
-          </div>
+          {activeMenu === "home" && (
+            <div className="empty-state">
+              <p>You have no orders.</p>
+              <button className="add-order-btn">
+                <Plus size={20} />
+                <span>Add Order</span>
+              </button>
+            </div>
+          )}
+
+          {activeMenu === "orders" && <OrderDetails />}
+
+          {/* Other menu content would go here */}
         </main>
       </div>
 
