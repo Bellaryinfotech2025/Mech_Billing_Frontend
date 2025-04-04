@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "../IndexComponent/indexxx.css";
 import land from '../assets/landingimage.png';
+import { Link } from "react-router-dom";
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -47,8 +48,14 @@ const LandingPage = () => {
             </li>
           </ul>
           <div className="auth-buttons">
-            <button className="login-btn">Login</button>
-            <button className="register-btn">Register</button>
+            <button className="login-btn">
+<Link to="/loginbilling">Login</Link>
+             
+
+            </button>
+             
+            <button className="register-btn"> <Link to="/registerpage">Register</Link></button>
+            
           </div>
         </div>
 

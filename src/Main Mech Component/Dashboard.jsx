@@ -1,6 +1,4 @@
-"use client"
-
-import { useState } from "react"
+import { useState } from "react";
 import {
   LayoutDashboard,
   BarChart,
@@ -17,11 +15,13 @@ import {
   User,
   Menu,
   X,
-} from "lucide-react"
-import "../Design Component/Dashboard.css"
-import SettingsPopup from "../Main Mech Component/Settings"
-import OrderDetails from "../Main Mech Component/OrderDetails"
-import logo from "../assets/blogo.jpg"
+} from "lucide-react";
+import "../Design Component/Dashboard.css";
+import SettingsPopup from "../Main Mech Component/Settings";
+import OrderDetails from "../Main Mech Component/OrderDetails";
+import Alignment from "../Main Mech Component/Alingment";
+import Erection from "../Main Mech Component/Erection";
+import logo from "../assets/blogo.jpg";
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -118,7 +118,7 @@ const MainDashboard = () => {
                 onClick={(e) => handleLinkClick(e, "alignment")}
               >
                 <Sliders size={20} />
-                <span>Alignment</span>
+                <span>Alingnment</span>
               </a>
             </li>
             <li>
@@ -222,6 +222,10 @@ const MainDashboard = () => {
           )}
 
           {activeMenu === "orders" && <OrderDetails />}
+
+          {activeMenu === "alignment" && <Alignment />}
+
+          {activeMenu === "erection" && <Erection />}
 
           {/* Other menu content would go here */}
         </main>
