@@ -5,6 +5,7 @@ import RegisterPage from './UserCredentials/Register_page';
 import LoginPage from './UserCredentials/Login_page';
 import MainDashboard from './Main Mech Component/Dashboard';
 
+
 function App() {
   return (
     <>
@@ -14,6 +15,9 @@ function App() {
             <Route path="/registerpage" element={<RegisterPage/>}/>
             <Route path="/loginbilling" element={<LoginPage/>}/>
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
+             
+
+
           </Routes>
         </Router>
       

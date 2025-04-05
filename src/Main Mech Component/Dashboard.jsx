@@ -15,23 +15,31 @@ import {
   User,
   Menu,
   X,
+  AlertTriangle,
 } from "lucide-react";
-import "../Design Component/Dashboard.css";
-import SettingsPopup from "../Main Mech Component/Settings";
-import OrderDetails from "../Main Mech Component/OrderDetails";
-import Alignment from "../Main Mech Component/Alingment";
-import Erection from "../Main Mech Component/Erection";
+import "../Design Component/Dashboard.css"
+import SettingsPopup from "../Main Mech Component/Settings"
+import OrderDetails from "../Main Mech Component/OrderDetails"
+import Alignment from "../Main Mech Component/Alingment"
+import Erection from "../Main Mech Component/Erection"
 import logo from "../assets/blogo.jpg";
+import "../Design Component/logout-popup.css";
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [activeMenu, setActiveMenu] = useState("home")
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false)
 
   // Prevent default on link clicks to avoid page refresh
   const handleLinkClick = (e, menu) => {
     e.preventDefault()
-    setActiveMenu(menu)
+
+    if (menu === "logout") {
+      setShowLogoutPopup(true)
+    } else {
+      setActiveMenu(menu)
+    }
   }
 
   const toggleSidebar = () => {
@@ -40,6 +48,15 @@ const MainDashboard = () => {
 
   const toggleSettings = () => {
     setSettingsOpen(!settingsOpen)
+  }
+
+  const handleStay = () => {
+    setShowLogoutPopup(false)
+  }
+
+  const handleLogout = () => {
+    // Redirect to landing page
+    window.location.href = "/" // Change this to your landing page URL
   }
 
   return (
@@ -233,6 +250,29 @@ const MainDashboard = () => {
 
       {/* Settings Popup */}
       <SettingsPopup isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* Logout Confirmation Popup */}
+      {showLogoutPopup && (
+        <div className="logout-popup-overlay">
+          <div className="logout-popup">
+            <div className="logout-popup-header">
+              <AlertTriangle size={28} className="logout-icon" />
+              <h3>Sign Out</h3>
+            </div>
+            <div className="logout-popup-content">
+              <p>Are you sure you want to sign out of Mech Billing App?</p>
+            </div>
+            <div className="logout-popup-actions">
+              <button className="stay-btn" onClick={handleStay}>
+                No, Stay
+              </button>
+              <button className="logout-btn" onClick={handleLogout}>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
