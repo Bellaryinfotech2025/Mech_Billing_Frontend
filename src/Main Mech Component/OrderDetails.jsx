@@ -1,6 +1,9 @@
+"use client"
+
 import { useState, useRef, useEffect } from "react"
-import { Calendar, Save, X, ChevronDown } from "lucide-react"
-import "../Design Component/OrderDetails.css";
+import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import "../Design Component/OrderDetails.css"
+import axios from "axios"
 
 const OrderDetails = () => {
   const [activeTab, setActiveTab] = useState("order-details")
@@ -15,6 +18,64 @@ const OrderDetails = () => {
   const datePickerRef = useRef(null)
   const categoryDropdownRef = useRef(null)
 
+  // Calendar state
+  const [calendarDate, setCalendarDate] = useState(new Date())
+  const [calendarView, setCalendarView] = useState("date") // "date", "month", "year"
+
+  // Add order state for backend submission
+  const [order, setOrder] = useState({
+    orderId: "",
+    orderNumber: "",
+    orderType: "",
+    orderCategory: "",
+    effectiveStartDate: null,
+    effectiveEndDate: null,
+    ldApplicabel: "N",
+    billToCustomerId: "",
+    billToSiteId: "",
+    billToContactId: "",
+    salesrep: "",
+    billingFrequency: "",
+    billingCycle: "",
+    attribute1D: null,
+    attribute2D: null,
+    attribute3D: null,
+    attribute4D: null,
+    attribute5D: null,
+    attribute1V: "",
+    attribute2V: "",
+    attribute3V: "",
+    attribute4V: "",
+    attribute5V: "",
+    attribute1N: "",
+    attribute2N: "",
+    attribute3N: "",
+    attribute4N: "",
+    attribute5N: "",
+    // Required fields for the backend
+    orderVersion: 1,
+    status: "Draft",
+    version: 1,
+    source: 1,
+  })
+
+  // Order ID and Order Number options
+  const orderIdOptions = [
+    { value: "1001", label: "1001" },
+    { value: "1002", label: "1002" },
+    { value: "1003", label: "1003" },
+    { value: "1004", label: "1004" },
+    { value: "1005", label: "1005" },
+  ]
+
+  const orderNumberOptions = [
+    { value: "ORD-2023-001", label: "ORD-2023-001" },
+    { value: "ORD-2023-002", label: "ORD-2023-002" },
+    { value: "ORD-2023-003", label: "ORD-2023-003" },
+    { value: "ORD-2023-004", label: "ORD-2023-004" },
+    { value: "ORD-2023-005", label: "ORD-2023-005" },
+  ]
+
   const categoryOptions = [
     {
       value: "",
@@ -23,34 +84,55 @@ const OrderDetails = () => {
     },
     {
       value: "a",
-      label:
-        "Category A - This is an extremely long option text that will definitely exceed the width of the dropdown and require horizontal scrolling to view completely. It contains detailed information about this specific category that users might need to reference.",
+      label: "Category A",
     },
     {
       value: "b",
-      label:
-        "Category B - Another very long description that extends beyond the visible area and requires horizontal scrolling. This text includes specifications, requirements, and other important details about Category B that are necessary for proper selection.",
+      label: "Category B",
     },
     {
       value: "c",
-      label:
-        "Category C - This option contains extensive information about Category C including its applications, limitations, and compatibility with other systems. The text is intentionally long to demonstrate horizontal scrolling functionality.",
+      label: "Category C",
     },
     {
       value: "d",
-      label:
-        "Category D - Extended information about this category with multiple sections including usage guidelines, pricing tiers, and implementation notes. This text is designed to test the horizontal scrolling capabilities of the dropdown.",
+      label: "Category D",
     },
     {
       value: "e",
-      label:
-        "Category E - This option includes a comprehensive description of Category E with technical specifications, compatibility information, and usage scenarios. The text extends well beyond the visible area to demonstrate scrolling.",
+      label: "Category E",
     },
     {
       value: "f",
-      label:
-        "Category F - Detailed information about Category F including historical context, development timeline, and future roadmap. This extensive text requires horizontal scrolling to view in its entirety.",
+      label: "Category F",
     },
+  ]
+
+  // Options for attribute dropdowns
+  const stringAttributeOptions = [
+    "Customer Reference",
+    "Project Code",
+    "Department",
+    "Cost Center",
+    "Region",
+    "Product Line",
+    "Contract Type",
+    "Promotion Code",
+    "Vendor ID",
+    "Account Manager",
+  ]
+
+  const numericAttributeOptions = [
+    "Discount Percentage",
+    "Tax Rate",
+    "Quantity",
+    "Unit Price",
+    "Total Amount",
+    "Service Level",
+    "Priority",
+    "Duration (Months)",
+    "Renewal Count",
+    "Version Number",
   ]
 
   const handleTabClick = (tab) => {
@@ -60,6 +142,15 @@ const OrderDetails = () => {
   const handleDateSelect = (field, date) => {
     const formattedDate = formatDate(date)
     setDates({ ...dates, [field]: formattedDate })
+
+    // Update the order state with ISO date format for backend
+    const isoDate = date.toISOString().split("T")[0]
+    if (field === "startDate") {
+      setOrder({ ...order, effectiveStartDate: isoDate })
+    } else if (field === "endDate") {
+      setOrder({ ...order, effectiveEndDate: isoDate })
+    }
+
     setShowDatePicker(null)
   }
 
@@ -67,14 +158,60 @@ const OrderDetails = () => {
     const day = date.getDate()
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const month = monthNames[date.getMonth()]
-    const year = date.getFullYear().toString().substr(-2)
+    const year = date.getFullYear().toString()
     return `${day < 10 ? "0" + day : day}-${month}-${year}`
   }
 
+  // Enhanced calendar functions
+  const handlePrevMonth = () => {
+    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))
+  }
+
+  const handleNextMonth = () => {
+    setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))
+  }
+
+  const handlePrevYear = () => {
+    setCalendarDate(new Date(calendarDate.getFullYear() - 1, calendarDate.getMonth(), 1))
+  }
+
+  const handleNextYear = () => {
+    setCalendarDate(new Date(calendarDate.getFullYear() + 1, calendarDate.getMonth(), 1))
+  }
+
+  const handleMonthClick = () => {
+    setCalendarView("month")
+  }
+
+  const handleYearClick = () => {
+    setCalendarView("year")
+  }
+
+  const handleMonthSelect = (month) => {
+    setCalendarDate(new Date(calendarDate.getFullYear(), month, 1))
+    setCalendarView("date")
+  }
+
+  const handleYearSelect = (year) => {
+    setCalendarDate(new Date(year, calendarDate.getMonth(), 1))
+    setCalendarView("month")
+  }
+
   const generateCalendar = (field) => {
-    const today = new Date()
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay()
+    if (calendarView === "date") {
+      return generateDateView(field)
+    } else if (calendarView === "month") {
+      return generateMonthView()
+    } else if (calendarView === "year") {
+      return generateYearView()
+    }
+  }
+
+  const generateDateView = (field) => {
+    const year = calendarDate.getFullYear()
+    const month = calendarDate.getMonth()
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const firstDay = new Date(year, month, 1).getDay()
 
     const days = []
     for (let i = 0; i < firstDay; i++) {
@@ -82,8 +219,9 @@ const OrderDetails = () => {
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(today.getFullYear(), today.getMonth(), i)
-      const isToday = i === today.getDate()
+      const date = new Date(year, month, i)
+      const isToday = new Date().getDate() === i && new Date().getMonth() === month && new Date().getFullYear() === year
+
       days.push(
         <div
           key={`day-${i}`}
@@ -98,10 +236,127 @@ const OrderDetails = () => {
     return days
   }
 
+  const generateMonthView = () => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return (
+      <div className="calendar-months">
+        {months.map((month, index) => (
+          <div key={month} className="calendar-month" onClick={() => handleMonthSelect(index)}>
+            {month}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  const generateYearView = () => {
+    const currentYear = calendarDate.getFullYear()
+    const startYear = currentYear - 6
+    const years = []
+
+    for (let i = 0; i < 12; i++) {
+      const year = startYear + i
+      years.push(
+        <div key={year} className="calendar-year" onClick={() => handleYearSelect(year)}>
+          {year}
+        </div>,
+      )
+    }
+
+    return <div className="calendar-years">{years}</div>
+  }
+
   const handleCategorySelect = (option) => {
     if (!option.disabled) {
       setSelectedCategory(option.label)
+      setOrder({ ...order, orderCategory: option.value })
       setShowCategoryDropdown(false)
+    }
+  }
+
+  // Handle input changes for order state
+  const handleChange = (field, value) => {
+    setOrder({ ...order, [field]: value })
+  }
+
+  // Handle checkbox change for LD Applicable
+  const handleLdApplicableChange = (checked) => {
+    setLdApplicable(checked)
+    setOrder({ ...order, ldApplicabel: checked ? "Y" : "N" })
+  }
+
+  // Handle dropdown selection for Order ID and Order Number
+  const [showOrderIdDropdown, setShowOrderIdDropdown] = useState(false)
+  const [showOrderNumberDropdown, setShowOrderNumberDropdown] = useState(false)
+  const orderIdDropdownRef = useRef(null)
+  const orderNumberDropdownRef = useRef(null)
+
+  const handleOrderIdSelect = (option) => {
+    setOrder({ ...order, orderId: option.value })
+    setShowOrderIdDropdown(false)
+  }
+
+  const handleOrderNumberSelect = (option) => {
+    setOrder({ ...order, orderNumber: option.value })
+    setShowOrderNumberDropdown(false)
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      // Create a copy of the order data for submission
+      const orderData = { ...order }
+
+      // Convert empty strings to null for numeric fields
+      Object.keys(orderData).forEach((key) => {
+        // If it's a numeric field and empty string, set to null
+        if (
+          (key.endsWith("Id") || key.includes("Amount") || key.includes("Price") || key.endsWith("N")) &&
+          orderData[key] === ""
+        ) {
+          orderData[key] = null
+        }
+      })
+
+      // Ensure orderId is provided and is a number
+      if (!orderData.orderId) {
+        alert("Order ID is required")
+        return
+      }
+
+      // Convert orderId to number
+      orderData.orderId = Number(orderData.orderId)
+
+      console.log("Submitting order data:", orderData)
+
+      const response = await axios.post("http://localhost:5577/api/orders", orderData)
+      console.log("Server response:", response.data)
+      alert("Order saved successfully")
+    } catch (error) {
+      console.error("Error saving order:", error)
+
+      // Show more detailed error information
+      let errorMessage = "Failed to save order"
+
+      if (error.response) {
+        // The server responded with an error status
+        console.error("Server error data:", error.response.data)
+        errorMessage += `: ${error.response.status} ${error.response.statusText}`
+
+        if (error.response.data && error.response.data.message) {
+          errorMessage += ` - ${error.response.data.message}`
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage += ": No response from server"
+      } else {
+        // Something else caused the error
+        errorMessage += `: ${error.message}`
+      }
+
+      alert(errorMessage)
     }
   }
 
@@ -114,20 +369,26 @@ const OrderDetails = () => {
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
         setShowCategoryDropdown(false)
       }
+      if (orderIdDropdownRef.current && !orderIdDropdownRef.current.contains(event.target)) {
+        setShowOrderIdDropdown(false)
+      }
+      if (orderNumberDropdownRef.current && !orderNumberDropdownRef.current.contains(event.target)) {
+        setShowOrderNumberDropdown(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [datePickerRef, categoryDropdownRef])
+  }, [datePickerRef, categoryDropdownRef, orderIdDropdownRef, orderNumberDropdownRef])
 
   return (
     <div className="order-details-container">
       <div className="order-header">
         <h1>Add Order</h1>
         <div className="order-actions">
-          <button className="save-btn">
+          <button className="save-btn" onClick={handleSubmit}>
             <Save size={16} style={{ color: "black" }} />
             <span style={{ color: "black" }}>Save</span>
           </button>
@@ -170,18 +431,64 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>PO Number</label>
-                <div className="input-wrapper">
-                  <input type="text" placeholder="Enter PO number" />
+                <label>Order ID</label>
+                <div className="custom-dropdown-wrapper" ref={orderIdDropdownRef}>
+                  <div className="custom-dropdown-trigger" onClick={() => setShowOrderIdDropdown(!showOrderIdDropdown)}>
+                    <span>{order.orderId || "Select Order ID"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showOrderIdDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {orderIdOptions.map((option, index) => (
+                          <div key={index} className="custom-dropdown-item" onClick={() => handleOrderIdSelect(option)}>
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>PO Type</label>
+                <label>Order Number</label>
+                <div className="custom-dropdown-wrapper" ref={orderNumberDropdownRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowOrderNumberDropdown(!showOrderNumberDropdown)}
+                  >
+                    <span>{order.orderNumber || "Select Order Number"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showOrderNumberDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {orderNumberOptions.map((option, index) => (
+                          <div
+                            key={index}
+                            className="custom-dropdown-item"
+                            onClick={() => handleOrderNumberSelect(option)}
+                          >
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field-container">
+                <label>Order Type</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select value={order.orderType} onChange={(e) => handleChange("orderType", e.target.value)}>
                     <option value="" disabled>
-                      Select PO Type
+                      Select Order Type
                     </option>
                     <option value="standard">Standard</option>
                     <option value="blanket">Blanket</option>
@@ -224,7 +531,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Start Date</label>
+                <label> Effective Start Date</label>
                 <div className="input-wrapper date-input-wrapper">
                   <input
                     type="text"
@@ -246,7 +553,7 @@ const OrderDetails = () => {
               </div>
 
               <div className="form-field-container">
-                <label>End Date</label>
+                <label>Effective End Date</label>
                 <div className="input-wrapper date-input-wrapper">
                   <input
                     type="text"
@@ -276,7 +583,7 @@ const OrderDetails = () => {
                     type="checkbox"
                     id="ld-applicable"
                     checked={ldApplicable}
-                    onChange={() => setLdApplicable(!ldApplicable)}
+                    onChange={(e) => handleLdApplicableChange(e.target.checked)}
                   />
                   <label htmlFor="ld-applicable"></label>
                 </div>
@@ -294,23 +601,26 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Bill To</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Customer
-                    </option>
-                    <option value="customer1">Wayne Enterprises</option>
-                    <option value="customer2">Stark Industries</option>
-                    <option value="customer3">Umbrella Corporation</option>
-                  </select>
+                <label>Bill To Customer</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter customer ID"
+                    value={order.billToCustomerId}
+                    onChange={(e) => handleChange("billToCustomerId", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Location</label>
+                <label>Bill to Site</label>
                 <div className="input-wrapper">
-                  <input type="text" placeholder="Enter customer ID" />
+                  <input
+                    type="text"
+                    placeholder="Enter site ID"
+                    value={order.billToSiteId}
+                    onChange={(e) => handleChange("billToSiteId", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -318,24 +628,27 @@ const OrderDetails = () => {
             <div className="form-row">
               <div className="form-field-container">
                 <label>Bill to Contact</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    <option value="corporate">Corporate</option>
-                    <option value="individual">Individual</option>
-                    <option value="government">Government</option>
-                  </select>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter contact ID"
+                    value={order.billToContactId}
+                    onChange={(e) => handleChange("billToContactId", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Sales Representrative</label>
+                <label>Sales Representative</label>
                 <div className="input-wrapper">
-                  <input type="text" placeholder="Enter billing address" />
+                  <input
+                    type="text"
+                    placeholder="Enter sales rep name"
+                    value={order.salesrep}
+                    onChange={(e) => handleChange("salesrep", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -353,14 +666,17 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Billing Frequency</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select
+                    value={order.billingFrequency}
+                    onChange={(e) => handleChange("billingFrequency", e.target.value)}
+                  >
                     <option value="" disabled>
                       Select Frequency
                     </option>
-                    <option value="monthly">Monthly</option>
-                    <option value="quarterly">Quarterly</option>
-                    <option value="semiannual">Semi-Annual</option>
-                    <option value="annual">Annual</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Semi-Annual">Semi-Annual</option>
+                    <option value="Annual">Annual</option>
                   </select>
                 </div>
               </div>
@@ -368,62 +684,14 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Billing Cycle</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select value={order.billingCycle} onChange={(e) => handleChange("billingCycle", e.target.value)}>
                     <option value="" disabled>
                       Select Cycle
                     </option>
-                    <option value="start">Start of Month</option>
-                    <option value="mid">Mid-Month</option>
-                    <option value="end">End of Month</option>
-                    <option value="anniversary">Anniversary</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-field-container">
-                <label>Payment Terms</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Terms
-                    </option>
-                    <option value="net15">Net 15</option>
-                    <option value="net30">Net 30</option>
-                    <option value="net45">Net 45</option>
-                    <option value="net60">Net 60</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-field-container">
-                <label>Payment Method</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Method
-                    </option>
-                    <option value="creditcard">Credit Card</option>
-                    <option value="ach">ACH</option>
-                    <option value="wire">Wire Transfer</option>
-                    <option value="check">Check</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-field-container">
-                <label>Invoice Template</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Template
-                    </option>
-                    <option value="standard">Standard</option>
-                    <option value="detailed">Detailed</option>
-                    <option value="custom">Custom</option>
+                    <option value="Start of Month">Start of Month</option>
+                    <option value="Mid-Month">Mid-Month</option>
+                    <option value="End of Month">End of Month</option>
+                    <option value="Anniversary">Anniversary</option>
                   </select>
                 </div>
               </div>
@@ -436,33 +704,36 @@ const OrderDetails = () => {
       {activeTab === "additional-attributes" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">Additional Attributes</h2>
-
+            <h2 className="section-title">String Attributes</h2>
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 1</label>
+                <label>Attribute 1 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute1VName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {stringAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 2</label>
+                <label>Attribute 2 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute2VName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {stringAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -470,59 +741,33 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 3</label>
+                <label>Attribute 3 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute3VName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {stringAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 4</label>
+                <label>Attribute 4 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute4VName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-field-container">
-                <label>Attribute 5</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Value
-                    </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-field-container">
-                <label>Attribute 6</label>
-                <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
-                    <option value="" disabled>
-                      Select Value
-                    </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {stringAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -530,29 +775,52 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 7</label>
+                <label>Attribute 5 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute5VName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {stringAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="section-title">Numeric Attributes</h2>
+            <div className="form-row">
+              <div className="form-field-container">
+                <label>Attribute 1 (Numeric)</label>
+                <div className="input-wrapper select-wrapper">
+                  <select onChange={(e) => handleChange("attribute1NName", e.target.value)}>
+                    <option value="" disabled>
+                      Select Type
+                    </option>
+                    {numericAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 8</label>
+                <label>Attribute 2 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute2NName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {numericAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -560,29 +828,51 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 9</label>
+                <label>Attribute 3 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute3NName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {numericAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 10</label>
+                <label>Attribute 4 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select defaultValue="">
+                  <select onChange={(e) => handleChange("attribute4NName", e.target.value)}>
                     <option value="" disabled>
-                      Select Value
+                      Select Type
                     </option>
-                    <option value="value1">Value 1</option>
-                    <option value="value2">Value 2</option>
-                    <option value="value3">Value 3</option>
+                    {numericAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-field-container">
+                <label>Attribute 5 (Numeric)</label>
+                <div className="input-wrapper select-wrapper">
+                  <select onChange={(e) => handleChange("attribute5NName", e.target.value)}>
+                    <option value="" disabled>
+                      Select Type
+                    </option>
+                    {numericAttributeOptions.map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -591,23 +881,77 @@ const OrderDetails = () => {
         </div>
       )}
 
-      {/* Centered Date Picker Popup */}
+      {/* Enhanced Date Picker Popup */}
       {showDatePicker && (
         <div className="date-picker-overlay">
           <div className="date-picker-modal" ref={datePickerRef}>
             <div className="calendar-header">
-              <span>{new Date().toLocaleString("default", { month: "long", year: "numeric" })}</span>
+              {calendarView === "date" && (
+                <>
+                  <button className="calendar-nav-btn" onClick={handlePrevMonth}>
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span onClick={handleMonthClick}>{calendarDate.toLocaleString("default", { month: "long" })}</span>
+                  <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
+                  <button className="calendar-nav-btn" onClick={handleNextMonth}>
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
+
+              {calendarView === "month" && (
+                <>
+                  <button className="calendar-nav-btn" onClick={handlePrevYear}>
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
+                  <button className="calendar-nav-btn" onClick={handleNextYear}>
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
+
+              {calendarView === "year" && (
+                <>
+                  <button
+                    className="calendar-nav-btn"
+                    onClick={() => {
+                      setCalendarDate(new Date(calendarDate.getFullYear() - 12, calendarDate.getMonth(), 1))
+                    }}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span>
+                    {calendarDate.getFullYear() - 6} - {calendarDate.getFullYear() + 5}
+                  </span>
+                  <button
+                    className="calendar-nav-btn"
+                    onClick={() => {
+                      setCalendarDate(new Date(calendarDate.getFullYear() + 12, calendarDate.getMonth(), 1))
+                    }}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
             </div>
-            <div className="calendar-days">
-              <div className="weekday">Su</div>
-              <div className="weekday">Mo</div>
-              <div className="weekday">Tu</div>
-              <div className="weekday">We</div>
-              <div className="weekday">Th</div>
-              <div className="weekday">Fr</div>
-              <div className="weekday">Sa</div>
-              {generateCalendar(showDatePicker)}
-            </div>
+
+            {calendarView === "date" && (
+              <div className="calendar-days">
+                <div className="weekday">Su</div>
+                <div className="weekday">Mo</div>
+                <div className="weekday">Tu</div>
+                <div className="weekday">We</div>
+                <div className="weekday">Th</div>
+                <div className="weekday">Fr</div>
+                <div className="weekday">Sa</div>
+                {generateCalendar(showDatePicker)}
+              </div>
+            )}
+
+            {(calendarView === "month" || calendarView === "year") && (
+              <div className="calendar-grid">{generateCalendar(showDatePicker)}</div>
+            )}
           </div>
         </div>
       )}

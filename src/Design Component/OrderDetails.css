@@ -615,3 +615,113 @@
     font-size: 0.8rem;
   }
 }
+
+
+
+/*calender*/
+/* Add these styles to your existing CSS file */
+
+/* Calendar enhancements */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.calendar-header span {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 5px;
+}
+
+.calendar-header span:hover {
+  background-color: #e2e8f0;
+  border-radius: 4px;
+}
+
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.calendar-nav-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.calendar-months,
+.calendar-years {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+}
+
+.calendar-month,
+.calendar-year {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.calendar-month:hover,
+.calendar-year:hover {
+  background-color: #e2e8f0;
+}
+
+/* Custom dropdown styles for Order ID and Order Number */
+.custom-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  margin-top: 4px;
+}
+
+.custom-dropdown-content {
+  padding: 4px 0;
+}
+
+.custom-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f3f4f6;
+}
+
+.custom-dropdown-item.disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+}
