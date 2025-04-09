@@ -113,14 +113,14 @@ const LookupTable = () => {
             <RefreshCw size={16} />
             <span>Refresh Cache</span>
           </button>
-          <button className="action-btn excel-btn" onClick={handleExcelExport}>
+          {/* <button className="action-btn excel-btn" onClick={handleExcelExport}>
             <FileSpreadsheet size={16} />
             <span>Excel</span>
           </button>
           <button className="action-btn csv-btn" onClick={handleCSVExport}>
             <FileText size={16} />
             <span>CSV</span>
-          </button>
+          </button> */}
         </div>
       </div>
 

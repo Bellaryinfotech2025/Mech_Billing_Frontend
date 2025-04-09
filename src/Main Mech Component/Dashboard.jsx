@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+"use client"
+
+import { useState, useRef, useEffect } from "react"
 import {
   LayoutDashboard,
   BarChart,
@@ -17,16 +19,18 @@ import {
   AlertTriangle,
   UserCircle,
   Edit,
-} from "lucide-react";
-import "../Design Component/Dashboard.css";
+} from "lucide-react"
+import "../Design Component/Dashboard.css"
+ 
 import SettingsPopup from "../Main Mech Component/Settings";
-import OrderDetails from "../Main Mech Component/OrderDetails";
-import Alignment from "../Main Mech Component/Alingment";
-import Erection from "../Main Mech Component/Erection";
-import LookupTable from "../Main Mech Component/LookUpTable";
-import logo from "../assets/blogo.jpg";
-import "../Design Component/logout-popup.css";
-import "../Design Component/user-dropdown.css";
+import OrderDetails from "../Main Mech Component/OrderDetails"
+import Alignment from "../Main Mech Component/Alingment"
+import Erection from "../Main Mech Component/Erection"
+import LookupTable from "../Main Mech Component/LookUpTable"
+ 
+import logo from "../assets/blogo.jpg"
+import "../Design Component/logout-popup.css"
+import "../Design Component/user-dropdown.css"
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -35,6 +39,8 @@ const MainDashboard = () => {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
   const [logoImage, setLogoImage] = useState(logo)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const [showCoreLookup, setShowCoreLookup] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const fileInputRef = useRef(null)
   const userDropdownRef = useRef(null)
 
@@ -60,6 +66,7 @@ const MainDashboard = () => {
       setShowLogoutPopup(true)
     } else {
       setActiveMenu(menu)
+      setShowCoreLookup(false) // Hide lookup table when navigating
     }
   }
 
@@ -84,11 +91,6 @@ const MainDashboard = () => {
     window.location.href = "/" // Change this to your landing page URL
   }
 
-  const handleLogoClick = () => {
-    // Trigger the hidden file input when logo is clicked
-    fileInputRef.current.click()
-  }
-
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -111,13 +113,24 @@ const MainDashboard = () => {
     setShowUserDropdown(false)
   }
 
+  const handleCoreLookupClick = () => {
+    setShowCoreLookup(true)
+    setSettingsOpen(false) // Close settings popup
+  }
+
+  const handleSearch = (query) => {
+    setSearchQuery(query)
+    console.log("Searching for:", query)
+    // You can implement search functionality here
+  }
+
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="logo-container">
           {/* Company Logo - Clickable and Editable */}
-          <div className="company-logo" onClick={handleLogoClick}>
+          <div className="company-logo">
             <div className="logo-image-container">
               <img src={logoImage || "/placeholder.svg"} alt="company logo" className="logo-image" />
               <input
@@ -274,6 +287,7 @@ const MainDashboard = () => {
               {activeMenu === "billing" && "Billing"}
               {activeMenu === "reports" && "Reports"}
               {activeMenu === "requests" && "Requests"}
+              {showCoreLookup && "Core Lookup Values"}
             </h1>
           </div>
           <div className="header-right">
@@ -307,20 +321,28 @@ const MainDashboard = () => {
 
         {/* Main Content */}
         <main className="main-content">
-          {activeMenu === "home" && <LookupTable />}
+          {/* Stylish Search Box */}
+         
 
-          {activeMenu === "orders" && <OrderDetails />}
+          {/* Conditional rendering based on active menu */}
+          {showCoreLookup && <LookupTable />}
 
-          {activeMenu === "alignment" && <Alignment />}
+          {activeMenu === "orders" && !showCoreLookup && <OrderDetails />}
 
-          {activeMenu === "erection" && <Erection />}
+          {activeMenu === "alignment" && !showCoreLookup && <Alignment />}
+
+          {activeMenu === "erection" && !showCoreLookup && <Erection />}
 
           {/* Other menu content would go here */}
         </main>
       </div>
 
       {/* Settings Popup */}
-      <SettingsPopup isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsPopup
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onCoreLookupClick={handleCoreLookupClick}
+      />
 
       {/* Logout Confirmation Popup */}
       {showLogoutPopup && (
@@ -349,4 +371,6 @@ const MainDashboard = () => {
 }
 
 export default MainDashboard;
+
+
 

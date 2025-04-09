@@ -1,6 +1,7 @@
-import "../Design Component/Settings.css";
+"use client"
+import "../Design Component/Settings.css"
 
-const SettingsPopup = ({ isOpen, onClose }) => {
+const SettingsPopup = ({ isOpen, onClose, onCoreLookupClick }) => {
   if (!isOpen) return null
 
   return (
@@ -39,7 +40,15 @@ const SettingsPopup = ({ isOpen, onClose }) => {
                   <a href="#">Customers</a>
                 </li>
                 <li className="highlight">
-                  <a href="#">Core Lookup Values</a>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onCoreLookupClick()
+                    }}
+                  >
+                    Core Lookup Values
+                  </a>
                 </li>
                 <li className="highlight">
                   <a href="#">Product Catalogs</a>
@@ -57,4 +66,3 @@ const SettingsPopup = ({ isOpen, onClose }) => {
 }
 
 export default SettingsPopup;
-
