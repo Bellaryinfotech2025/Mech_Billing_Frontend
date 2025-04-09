@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap");
 
 :root {
   --primary-gradient: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
@@ -6,7 +7,7 @@
   --accent-gradient: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
   --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   --danger-gradient: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-  --maroon-color: #8B0000;
+  --maroon-color: #8b0000;
   --text-primary: #333;
   --text-secondary: #666;
   --text-muted: #888;
@@ -20,15 +21,22 @@
   --border-radius-sm: 4px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
+  --scrollbar-track-color: #f1f1f1;
+  --scrollbar-thumb-color: #c1c1c1;
+  --scrollbar-thumb-hover-color: #a1a1a1;
+  --scrollbar-width: 16px;
+  --scrollbar-height: 16px;
 }
 
 .order-details-container {
   width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-    "Helvetica Neue", sans-serif;
+  font-family: "Merriweather", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
   font-size: 14px;
   color: var(--text-primary);
   background-color: #f5f7fa;
@@ -73,7 +81,7 @@
 }
 
 .save-btn {
-  background-image: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background-image: linear-gradient(135deg, white 0%, white 100%);
   color: #006400;
 }
 
@@ -84,7 +92,7 @@
 }
 
 .cancel-btn {
-  background-image: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  background-image: linear-gradient(135deg, white 0%, white 100%);
   color: white;
 }
 
@@ -119,14 +127,19 @@
 }
 
 .tab:hover {
-  color: #8B0000;
+  color: #8b0000;
   background-color: rgba(139, 0, 0, 0.05);
 }
 
 .tab.active {
-  color: #8B0000;
-  border-bottom: 3px solid #8B0000;
+  color: #8b0000;
+  border-bottom: 3px solid #8b0000;
   font-weight: 600;
+}
+
+/* Adjust tab name */
+.tab:nth-child(4) {
+  white-space: nowrap;
 }
 
 .order-form {
@@ -151,7 +164,7 @@
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: #8B0000;
+  color: #8b0000;
   margin: 0 0 20px 0;
   padding-bottom: 10px;
   border-bottom: 1px solid #f0f0f0;
@@ -192,7 +205,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background-color: #8B0000; /* Maroon color */
+  background-color: #8b0000; /* Maroon color */
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
 }
@@ -223,7 +236,7 @@
 .input-wrapper select:focus,
 .input-wrapper textarea:focus {
   outline: none;
-  border-color: #8B0000;
+  border-color: #8b0000;
   box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
 }
 
@@ -253,31 +266,166 @@
   cursor: pointer;
 }
 
+/* Custom dropdown styling */
+.custom-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-wrapper::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #8b0000;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  z-index: 1;
+}
+
+.custom-dropdown-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.custom-dropdown-trigger:hover {
+  border-color: #8b0000;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 250px;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.custom-dropdown-content {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+/* Traditional scrollbar styling */
+.custom-dropdown-content::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-height);
+}
+
+.custom-dropdown-content::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-color);
+  border: 1px solid #d1d1d1;
+}
+
+.custom-dropdown-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb-color);
+  border: 1px solid #999;
+  border-radius: 2px;
+}
+
+.custom-dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover-color);
+}
+
+.custom-dropdown-content::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track-color);
+}
+
+/* Firefox scrollbar styling */
+.custom-dropdown-content {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+}
+
+.custom-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.custom-dropdown-item.disabled {
+  color: #999;
+  cursor: default;
+}
+
+.custom-dropdown-item.disabled:hover {
+  background-color: transparent;
+}
+
+/* Make the Order Categories field wider */
+.wide-field {
+  flex: 2;
+}
+
 .checkbox-container {
   flex-direction: row;
   align-items: center;
   gap: 10px;
 }
 
-.checkbox-wrapper {
+/* Simple checkbox that works properly */
+.simple-checkbox {
   position: relative;
-  width: 20px;
-  height: 20px;
+  display: inline-block;
+  margin-top: 8px;
 }
 
- 
+.simple-checkbox input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  z-index: 1;
+}
 
- 
+.simple-checkbox label {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background-color: white;
+  border: 2px solid #8b0000;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-.checkbox-wrapper input[type="checkbox"]:checked + .checkbox-label::after {
+.simple-checkbox input[type="checkbox"]:checked + label:after {
   content: "✓";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
+  color: #8b0000;
+  font-size: 14px;
   font-weight: bold;
+}
+
+.simple-checkbox input[type="checkbox"]:focus + label {
+  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
 }
 
 .checkbox-group {
@@ -323,38 +471,58 @@
 }
 
 .calendar-btn:hover {
-  color: #8B0000;
+  color: #8b0000;
   background-color: rgba(139, 0, 0, 0.05);
 }
 
-/* Date Picker Styles */
-.date-picker {
-  position: absolute;
-  top: 100%;
+/* Date Picker Overlay Styles */
+.date-picker-overlay {
+  position: fixed;
+  top: 0;
   left: 0;
-  width: 280px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.date-picker-modal {
+  width: 320px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  margin-top: 8px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .calendar-header {
-  background: linear-gradient(135deg, #8B0000 0%, #C70039 100%);
+  background: linear-gradient(135deg, #8b0000 0%, #c70039 100%);
   color: white;
-  padding: 12px;
+  padding: 16px;
   text-align: center;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  padding: 12px;
-  gap: 4px;
+  padding: 16px;
+  gap: 8px;
 }
 
 .weekday {
@@ -366,7 +534,7 @@
 }
 
 .calendar-day {
-  height: 32px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,49 +553,13 @@
 }
 
 .calendar-day.today {
-  border: 1px solid #8B0000;
+  border: 1px solid #8b0000;
   font-weight: 600;
 }
 
-.service-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.service-header h3 {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.add-service-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-image: linear-gradient(135deg, #8B0000 0%, #C70039 100%);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-speed) ease;
-}
-
-.add-service-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.service-item {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 20px;
-  border: 1px solid #e0e0e0;
+.calendar-day:hover:not(.empty) {
+  background-color: rgba(139, 0, 0, 0.1);
+  color: #8b0000;
 }
 
 /* Responsive styles for form */
@@ -440,7 +572,7 @@
   .checkbox-container {
     flex-direction: row;
   }
-  
+
   .order-header {
     flex-direction: column;
     align-items: flex-start;
@@ -452,6 +584,11 @@
     width: 100%;
     justify-content: space-between;
   }
+
+  .date-picker-modal {
+    width: 90%;
+    max-width: 320px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -459,12 +596,22 @@
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .order-form {
     padding: 10px;
   }
-  
+
   .form-section {
     padding: 15px;
+  }
+
+  .calendar-days {
+    gap: 4px;
+    padding: 12px;
+  }
+
+  .calendar-day {
+    height: 32px;
+    font-size: 0.8rem;
   }
 }
