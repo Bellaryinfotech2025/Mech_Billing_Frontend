@@ -32,7 +32,7 @@ const LookupTable = () => {
 
   const fetchData = () => {
     axios
-      .get("http://localhost:5533/api/lookup-values", {
+      .get("http://localhost:5555/api/lookup-values", {
         params: {
           search: search,
           page: page,

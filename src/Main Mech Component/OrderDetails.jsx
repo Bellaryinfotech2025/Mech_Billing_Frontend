@@ -1,8 +1,6 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import { Calendar, Save, X, ChevronDown } from "lucide-react"
-import "../Design Component/OrderDetails.css"
+import "../Design Component/OrderDetails.css";
 
 const OrderDetails = () => {
   const [activeTab, setActiveTab] = useState("order-details")

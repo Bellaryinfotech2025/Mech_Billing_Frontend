@@ -9,6 +9,8 @@ import MainDashboard from './Main Mech Component/Dashboard';
 
 import CoreLookupTable from './serverpractice/CoreLookUp';
 
+import OrderForm from './orderpractice/orderpracticedetails';
+
 
 
 function App() {
@@ -22,6 +24,10 @@ function App() {
             {/* <Route path="/register" element={<Register/>}/>
             <Route path="/login" element={<Login/>}/> */}
             <Route path="/corelookup" element={<CoreLookupTable/>}/>
+
+            <Route path="/orderdetails" element={<OrderForm/>}/>
+
+
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
           </Routes>
         </Router>
