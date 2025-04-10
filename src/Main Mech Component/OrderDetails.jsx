@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
-import "../Design Component/OrderDetails.css"
+import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import "../Design Component/OrderDetails.css";
 import axios from "axios"
 
 const OrderDetails = () => {
@@ -21,6 +21,24 @@ const OrderDetails = () => {
   // Calendar state
   const [calendarDate, setCalendarDate] = useState(new Date())
   const [calendarView, setCalendarView] = useState("date") // "date", "month", "year"
+
+  // Billing Frequency state
+  const [billingFrequencies, setBillingFrequencies] = useState([])
+  const [selectedFrequency, setSelectedFrequency] = useState("")
+  const [loadingFrequencies, setLoadingFrequencies] = useState(true)
+  const [savingFrequency, setSavingFrequency] = useState(false)
+  const [frequencyMessage, setFrequencyMessage] = useState({ text: "", type: "" })
+
+  // Customer details dropdown states
+  const [showBillToCustomerDropdown, setShowBillToCustomerDropdown] = useState(false)
+  const [showBillToSiteDropdown, setShowBillToSiteDropdown] = useState(false)
+  const [showBillToContactDropdown, setShowBillToContactDropdown] = useState(false)
+  const billToCustomerRef = useRef(null)
+  const billToSiteRef = useRef(null)
+  const billToContactRef = useRef(null)
+
+  // API base URL for billing frequency
+  const BILLING_API_URL = "http://localhost:9922/api"
 
   // Add order state for backend submission
   const [order, setOrder] = useState({
@@ -59,7 +77,7 @@ const OrderDetails = () => {
     source: 1,
   })
 
-  // Order ID and Order Number options
+  // Order ID options
   const orderIdOptions = [
     { value: "1001", label: "1001" },
     { value: "1002", label: "1002" },
@@ -68,12 +86,29 @@ const OrderDetails = () => {
     { value: "1005", label: "1005" },
   ]
 
-  const orderNumberOptions = [
-    { value: "ORD-2023-001", label: "ORD-2023-001" },
-    { value: "ORD-2023-002", label: "ORD-2023-002" },
-    { value: "ORD-2023-003", label: "ORD-2023-003" },
-    { value: "ORD-2023-004", label: "ORD-2023-004" },
-    { value: "ORD-2023-005", label: "ORD-2023-005" },
+  // Customer details options
+  const billToCustomerOptions = [
+    { value: "CUST001", label: "Customer 001" },
+    { value: "CUST002", label: "Customer 002" },
+    { value: "CUST003", label: "Customer 003" },
+    { value: "CUST004", label: "Customer 004" },
+    { value: "CUST005", label: "Customer 005" },
+  ]
+
+  const billToSiteOptions = [
+    { value: "SITE001", label: "Site 001" },
+    { value: "SITE002", label: "Site 002" },
+    { value: "SITE003", label: "Site 003" },
+    { value: "SITE004", label: "Site 004" },
+    { value: "SITE005", label: "Site 005" },
+  ]
+
+  const billToContactOptions = [
+    { value: "CONT001", label: "Contact 001" },
+    { value: "CONT002", label: "Contact 002" },
+    { value: "CONT003", label: "Contact 003" },
+    { value: "CONT004", label: "Contact 004" },
+    { value: "CONT005", label: "Contact 005" },
   ]
 
   const categoryOptions = [
@@ -134,6 +169,45 @@ const OrderDetails = () => {
     "Renewal Count",
     "Version Number",
   ]
+
+  // Fetch billing frequencies from the backend
+  useEffect(() => {
+    const fetchBillingFrequencies = async () => {
+      if (activeTab === "billing") {
+        try {
+          setLoadingFrequencies(true)
+          const response = await axios.get(`${BILLING_API_URL}/billing-frequencies`)
+
+          if (response.data && Array.isArray(response.data)) {
+            setBillingFrequencies(response.data)
+            if (response.data.length === 0) {
+              setFrequencyMessage({
+                text: "No billing frequencies found in the database.",
+                type: "warning",
+              })
+            } else {
+              setFrequencyMessage({ text: "", type: "" })
+            }
+          } else {
+            setFrequencyMessage({
+              text: "Invalid response format from server.",
+              type: "error",
+            })
+          }
+        } catch (error) {
+          console.error("Error fetching billing frequencies:", error)
+          setFrequencyMessage({
+            text: `Failed to load billing frequencies: ${error.message}`,
+            type: "error",
+          })
+        } finally {
+          setLoadingFrequencies(false)
+        }
+      }
+    }
+
+    fetchBillingFrequencies()
+  }, [activeTab])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -279,26 +353,81 @@ const OrderDetails = () => {
     setOrder({ ...order, [field]: value })
   }
 
+  // Handle billing frequency dropdown change
+  const handleFrequencyChange = (e) => {
+    setSelectedFrequency(e.target.value)
+    setOrder({ ...order, billingFrequency: e.target.value })
+  }
+
+  // Handle save billing frequency button click
+  const handleSaveFrequency = async () => {
+    if (!selectedFrequency) {
+      setFrequencyMessage({
+        text: "Please select a billing frequency",
+        type: "error",
+      })
+      return
+    }
+
+    try {
+      setSavingFrequency(true)
+      setFrequencyMessage({ text: "", type: "" })
+
+      // Send the lookup code to the backend
+      const response = await axios.post(`${BILLING_API_URL}/billing-frequency`, selectedFrequency, {
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      })
+
+      if (response.data.status === "error") {
+        throw new Error(response.data.message || "Failed to save billing frequency")
+      }
+
+      setFrequencyMessage({
+        text: "Billing frequency saved successfully!",
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error saving billing frequency:", error)
+      setFrequencyMessage({
+        text: `Failed to save: ${error.message}`,
+        type: "error",
+      })
+    } finally {
+      setSavingFrequency(false)
+    }
+  }
+
   // Handle checkbox change for LD Applicable
   const handleLdApplicableChange = (checked) => {
     setLdApplicable(checked)
     setOrder({ ...order, ldApplicabel: checked ? "Y" : "N" })
   }
 
-  // Handle dropdown selection for Order ID and Order Number
+  // Handle dropdown selection for Order ID
   const [showOrderIdDropdown, setShowOrderIdDropdown] = useState(false)
-  const [showOrderNumberDropdown, setShowOrderNumberDropdown] = useState(false)
   const orderIdDropdownRef = useRef(null)
-  const orderNumberDropdownRef = useRef(null)
 
   const handleOrderIdSelect = (option) => {
     setOrder({ ...order, orderId: option.value })
     setShowOrderIdDropdown(false)
   }
 
-  const handleOrderNumberSelect = (option) => {
-    setOrder({ ...order, orderNumber: option.value })
-    setShowOrderNumberDropdown(false)
+  // Handle customer details dropdown selections
+  const handleBillToCustomerSelect = (option) => {
+    setOrder({ ...order, billToCustomerId: option.value })
+    setShowBillToCustomerDropdown(false)
+  }
+
+  const handleBillToSiteSelect = (option) => {
+    setOrder({ ...order, billToSiteId: option.value })
+    setShowBillToSiteDropdown(false)
+  }
+
+  const handleBillToContactSelect = (option) => {
+    setOrder({ ...order, billToContactId: option.value })
+    setShowBillToContactDropdown(false)
   }
 
   // Handle form submission
@@ -331,7 +460,7 @@ const OrderDetails = () => {
 
       console.log("Submitting order data:", orderData)
 
-      const response = await axios.post("http://localhost:5577/api/orders", orderData)
+      const response = await axios.post("http://localhost:8877/api/orders", orderData)
       console.log("Server response:", response.data)
       alert("Order saved successfully")
     } catch (error) {
@@ -372,8 +501,14 @@ const OrderDetails = () => {
       if (orderIdDropdownRef.current && !orderIdDropdownRef.current.contains(event.target)) {
         setShowOrderIdDropdown(false)
       }
-      if (orderNumberDropdownRef.current && !orderNumberDropdownRef.current.contains(event.target)) {
-        setShowOrderNumberDropdown(false)
+      if (billToCustomerRef.current && !billToCustomerRef.current.contains(event.target)) {
+        setShowBillToCustomerDropdown(false)
+      }
+      if (billToSiteRef.current && !billToSiteRef.current.contains(event.target)) {
+        setShowBillToSiteDropdown(false)
+      }
+      if (billToContactRef.current && !billToContactRef.current.contains(event.target)) {
+        setShowBillToContactDropdown(false)
       }
     }
 
@@ -381,7 +516,7 @@ const OrderDetails = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [datePickerRef, categoryDropdownRef, orderIdDropdownRef, orderNumberDropdownRef])
+  }, [datePickerRef, categoryDropdownRef, orderIdDropdownRef, billToCustomerRef, billToSiteRef, billToContactRef])
 
   return (
     <div className="order-details-container">
@@ -454,30 +589,13 @@ const OrderDetails = () => {
 
               <div className="form-field-container">
                 <label>Order Number</label>
-                <div className="custom-dropdown-wrapper" ref={orderNumberDropdownRef}>
-                  <div
-                    className="custom-dropdown-trigger"
-                    onClick={() => setShowOrderNumberDropdown(!showOrderNumberDropdown)}
-                  >
-                    <span>{order.orderNumber || "Select Order Number"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showOrderNumberDropdown && (
-                    <div className="custom-dropdown-menu">
-                      <div className="custom-dropdown-content">
-                        {orderNumberOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item"
-                            onClick={() => handleOrderNumberSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter order number"
+                    value={order.orderNumber}
+                    onChange={(e) => handleChange("orderNumber", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -576,18 +694,19 @@ const OrderDetails = () => {
             </div>
 
             <div className="form-row">
-              <div className="form-field-container checkbox-container">
+              <div>
                 <label>LD Applicable</label>
-                <div className="simple-checkbox">
+                <div>
                   <input
                     type="checkbox"
-                    id="ld-applicable"
-                    checked={ldApplicable}
+                     
+                    
                     onChange={(e) => handleLdApplicableChange(e.target.checked)}
                   />
-                  <label htmlFor="ld-applicable"></label>
+                  <label></label>
                 </div>
               </div>
+              
             </div>
           </div>
         </div>
@@ -602,25 +721,59 @@ const OrderDetails = () => {
             <div className="form-row">
               <div className="form-field-container">
                 <label>Bill To Customer</label>
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Enter customer ID"
-                    value={order.billToCustomerId}
-                    onChange={(e) => handleChange("billToCustomerId", e.target.value)}
-                  />
+                <div className="custom-dropdown-wrapper" ref={billToCustomerRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
+                  >
+                    <span>{order.billToCustomerId || "Select Customer"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showBillToCustomerDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {billToCustomerOptions.map((option, index) => (
+                          <div
+                            key={index}
+                            className="custom-dropdown-item"
+                            onClick={() => handleBillToCustomerSelect(option)}
+                          >
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="form-field-container">
                 <label>Bill to Site</label>
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Enter site ID"
-                    value={order.billToSiteId}
-                    onChange={(e) => handleChange("billToSiteId", e.target.value)}
-                  />
+                <div className="custom-dropdown-wrapper" ref={billToSiteRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
+                  >
+                    <span>{order.billToSiteId || "Select Site"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showBillToSiteDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {billToSiteOptions.map((option, index) => (
+                          <div
+                            key={index}
+                            className="custom-dropdown-item"
+                            onClick={() => handleBillToSiteSelect(option)}
+                          >
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -628,13 +781,30 @@ const OrderDetails = () => {
             <div className="form-row">
               <div className="form-field-container">
                 <label>Bill to Contact</label>
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Enter contact ID"
-                    value={order.billToContactId}
-                    onChange={(e) => handleChange("billToContactId", e.target.value)}
-                  />
+                <div className="custom-dropdown-wrapper" ref={billToContactRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
+                  >
+                    <span>{order.billToContactId || "Select Contact"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showBillToContactDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {billToContactOptions.map((option, index) => (
+                          <div
+                            key={index}
+                            className="custom-dropdown-item"
+                            onClick={() => handleBillToContactSelect(option)}
+                          >
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -665,19 +835,37 @@ const OrderDetails = () => {
             <div className="form-row">
               <div className="form-field-container">
                 <label>Billing Frequency</label>
-                <div className="input-wrapper select-wrapper">
-                  <select
-                    value={order.billingFrequency}
-                    onChange={(e) => handleChange("billingFrequency", e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Select Frequency
-                    </option>
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Semi-Annual">Semi-Annual</option>
-                    <option value="Annual">Annual</option>
-                  </select>
+                <div className="billing-frequency-container">
+                  <div className="form-group">
+                    <select
+                      id="billingFrequency"
+                      value={selectedFrequency}
+                      onChange={handleFrequencyChange}
+                      disabled={loadingFrequencies || savingFrequency}
+                      className="form-control"
+                    >
+                      <option value="">-- Select Frequency --</option>
+                      {billingFrequencies.map((frequency) => (
+                        <option key={frequency.lookupCode} value={frequency.lookupCode}>
+                          {frequency.meaning}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {frequencyMessage.text && (
+                    <div className={`message ${frequencyMessage.type}`}>{frequencyMessage.text}</div>
+                  )}
+
+                  <div className="form-actions">
+                    <button
+                      onClick={handleSaveFrequency}
+                      disabled={loadingFrequencies || savingFrequency || !selectedFrequency}
+                      className="save-button"
+                    >
+                      {savingFrequency ? "Saving..." : "Save Frequency"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -709,7 +897,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 1 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute1VName", e.target.value)}>
+                  <select value={order.attribute1V} onChange={(e) => handleChange("attribute1V", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -725,7 +913,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 2 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute2VName", e.target.value)}>
+                  <select value={order.attribute2V} onChange={(e) => handleChange("attribute2V", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -743,7 +931,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 3 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute3VName", e.target.value)}>
+                  <select value={order.attribute3V} onChange={(e) => handleChange("attribute3V", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -759,7 +947,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 4 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute4VName", e.target.value)}>
+                  <select value={order.attribute4V} onChange={(e) => handleChange("attribute4V", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -777,7 +965,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 5 (String)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute5VName", e.target.value)}>
+                  <select value={order.attribute5V} onChange={(e) => handleChange("attribute5V", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -796,7 +984,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 1 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute1NName", e.target.value)}>
+                  <select value={order.attribute1N} onChange={(e) => handleChange("attribute1N", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -812,7 +1000,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 2 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute2NName", e.target.value)}>
+                  <select value={order.attribute2N} onChange={(e) => handleChange("attribute2N", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -830,7 +1018,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 3 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute3NName", e.target.value)}>
+                  <select value={order.attribute3N} onChange={(e) => handleChange("attribute3N", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -846,7 +1034,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 4 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute4NName", e.target.value)}>
+                  <select value={order.attribute4N} onChange={(e) => handleChange("attribute4N", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>
@@ -864,7 +1052,7 @@ const OrderDetails = () => {
               <div className="form-field-container">
                 <label>Attribute 5 (Numeric)</label>
                 <div className="input-wrapper select-wrapper">
-                  <select onChange={(e) => handleChange("attribute5NName", e.target.value)}>
+                  <select value={order.attribute5N} onChange={(e) => handleChange("attribute5N", e.target.value)}>
                     <option value="" disabled>
                       Select Type
                     </option>

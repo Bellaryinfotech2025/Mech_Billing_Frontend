@@ -11,6 +11,8 @@ import CoreLookupTable from './serverpractice/CoreLookUp';
 
 import OrderForm from './orderpractice/orderpracticedetails';
 
+import BillingFrequencyForm from './orderpractice/billing_frequency';
+
 
 
 function App() {
@@ -27,6 +29,7 @@ function App() {
 
             <Route path="/orderdetails" element={<OrderForm/>}/>
 
+            <Route path="/billingfrequency" element={<BillingFrequencyForm/>}/>
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
           </Routes>
