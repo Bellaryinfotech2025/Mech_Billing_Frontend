@@ -1,9 +1,7 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import "../Design Component/OrderDetails.css";
-import axios from "axios"
+import axios from "axios";
 
 const OrderDetails = () => {
   const [activeTab, setActiveTab] = useState("order-details")
@@ -38,7 +36,7 @@ const OrderDetails = () => {
   const billToContactRef = useRef(null)
 
   // API base URL for billing frequency
-  const BILLING_API_URL = "http://localhost:9922/api"
+  const BILLING_API_URL = "http://localhost:9944/api"
 
   // Add order state for backend submission
   const [order, setOrder] = useState({
@@ -720,7 +718,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Bill To Customer</label>
+                <label>Customer details</label>
                 <div className="custom-dropdown-wrapper" ref={billToCustomerRef}>
                   <div
                     className="custom-dropdown-trigger"
@@ -892,10 +890,10 @@ const OrderDetails = () => {
       {activeTab === "additional-attributes" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">String Attributes</h2>
+            <h2 className="section-title">Additional Information</h2>
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 1 (String)</label>
+                <label>Attribute 1</label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute1V} onChange={(e) => handleChange("attribute1V", e.target.value)}>
                     <option value="" disabled>
@@ -911,7 +909,7 @@ const OrderDetails = () => {
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 2 (String)</label>
+                <label>Attribute 2 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute2V} onChange={(e) => handleChange("attribute2V", e.target.value)}>
                     <option value="" disabled>
@@ -929,7 +927,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 3 (String)</label>
+                <label>Attribute 3 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute3V} onChange={(e) => handleChange("attribute3V", e.target.value)}>
                     <option value="" disabled>
@@ -945,7 +943,7 @@ const OrderDetails = () => {
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 4 (String)</label>
+                <label>Attribute 4 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute4V} onChange={(e) => handleChange("attribute4V", e.target.value)}>
                     <option value="" disabled>
@@ -963,7 +961,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 5 (String)</label>
+                <label>Attribute 5 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute5V} onChange={(e) => handleChange("attribute5V", e.target.value)}>
                     <option value="" disabled>
@@ -982,7 +980,7 @@ const OrderDetails = () => {
             <h2 className="section-title">Numeric Attributes</h2>
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 1 (Numeric)</label>
+                <label>Attribute 1</label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute1N} onChange={(e) => handleChange("attribute1N", e.target.value)}>
                     <option value="" disabled>
@@ -998,7 +996,7 @@ const OrderDetails = () => {
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 2 (Numeric)</label>
+                <label>Attribute 2</label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute2N} onChange={(e) => handleChange("attribute2N", e.target.value)}>
                     <option value="" disabled>
@@ -1016,7 +1014,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 3 (Numeric)</label>
+                <label>Attribute 3 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute3N} onChange={(e) => handleChange("attribute3N", e.target.value)}>
                     <option value="" disabled>
@@ -1032,7 +1030,7 @@ const OrderDetails = () => {
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 4 (Numeric)</label>
+                <label>Attribute 4 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute4N} onChange={(e) => handleChange("attribute4N", e.target.value)}>
                     <option value="" disabled>
@@ -1050,7 +1048,7 @@ const OrderDetails = () => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 5 (Numeric)</label>
+                <label>Attribute 5 </label>
                 <div className="input-wrapper select-wrapper">
                   <select value={order.attribute5N} onChange={(e) => handleChange("attribute5N", e.target.value)}>
                     <option value="" disabled>

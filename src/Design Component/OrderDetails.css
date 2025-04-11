@@ -1,64 +1,55 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap");
 
 :root {
-  --primary-gradient: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+  --primary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
   --secondary-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  --accent-gradient: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
-  --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-  --danger-gradient: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-  --maroon-color: #8b0000;
+  --success-gradient: linear-gradient(135deg, #43c6ac 0%, #00c853 100%);
+  --info-gradient: linear-gradient(135deg, #00c6fb 0%, #005bea 100%);
   --text-primary: #333;
   --text-secondary: #666;
-  --text-muted: #888;
-  --border-color: #e0e0e0;
-  --background-light: #f8f9fa;
-  --background-dark: #e9ecef;
+  --border-color: #ddd;
+  --background-light: #f5f7fa;
+  --background-form: #ffffff;
+  --background-section: #f5f7fa;
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --transition-speed: 0.3s;
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
   --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --scrollbar-track-color: #f1f1f1;
-  --scrollbar-thumb-color: #c1c1c1;
-  --scrollbar-thumb-hover-color: #a1a1a1;
-  --scrollbar-width: 16px;
-  --scrollbar-height: 16px;
+  --border-radius-md: 6px;
+  --transition-speed: 0.2s;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: white;
 }
 
 .order-details-container {
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
   height: 100%;
   display: flex;
   flex-direction: column;
-  font-family: "Merriweather", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    "Open Sans", "Helvetica Neue", sans-serif;
-  font-size: 14px;
-  color: var(--text-primary);
-  background-color: #f5f7fa;
-  border-radius: var(--border-radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
 }
 
+/* Header styling with gradient */
 .order-header {
-  background-image: linear-gradient(135deg, #666 0%, #666 100%);
-  color: white;
-  padding: 16px 24px;
+  background-image: var(--primary-gradient);
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: white;
   box-shadow: var(--shadow-md);
 }
 
 .order-header h1 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .order-actions {
@@ -70,129 +61,112 @@
 .cancel-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border: none;
-  border-radius: var(--border-radius-md);
-  font-size: 0.875rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-speed) ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .save-btn {
-  background-image: linear-gradient(135deg, white 0%, white 100%);
-  color: #006400;
-}
-
-.save-btn:hover {
-  background-image: linear-gradient(135deg, #B2beb5 0%, #B2beb5 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.cancel-btn {
-  background-image: linear-gradient(135deg, white 0%, white 100%);
+  background-image: var(--success-gradient);
   color: white;
 }
 
-.cancel-btn:hover {
-  background-image: linear-gradient(135deg, #B2beb5 0%, #B2beb5 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.cancel-btn {
+  background-image: var(--success-gradient);
+  color: white;
 }
 
+.save-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabs styling */
 .order-tabs {
   display: flex;
   background-color: white;
   border-bottom: 1px solid var(--border-color);
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.order-tabs::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
 .tab {
-  padding: 12px 20px;
-  font-size: 0.875rem;
+  padding: 14px 20px;
+  font-size: 14px;
   color: var(--text-secondary);
   cursor: pointer;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
   white-space: nowrap;
   transition: all var(--transition-speed) ease;
-  font-weight: 500;
 }
 
 .tab:hover {
-  color: #8b0000;
-  background-color: rgba(139, 0, 0, 0.05);
+  color: #2193b0;
+  background-color: rgba(33, 147, 176, 0.05);
 }
 
 .tab.active {
-  color: #8b0000;
-  border-bottom: 3px solid #8b0000;
-  font-weight: 600;
+  color: #2193b0;
+  border-bottom: 2px solid #2193b0;
+  font-weight: 500;
 }
 
-/* Adjust tab name */
-.tab:nth-child(4) {
-  white-space: nowrap;
-}
-
+/* Form styling - changed to white background */
 .order-form {
-  background-color: #f5f7fa;
-  padding: 20px;
+  background-color: var(--background-form);
   flex: 1;
   overflow-y: auto;
+  padding: 0;
 }
 
+/* Section styling - kept ash color background */
 .form-section {
-  background-color: white;
-  border-radius: var(--border-radius-md);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
-}
-
-.form-section:last-child {
+  background-color: var(--background-section);
+  padding: 20px 24px;
   margin-bottom: 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .section-title {
-  font-size: 1.125rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #8b0000;
-  margin: 0 0 20px 0;
+  color: #2193b0;
+  margin: 0 0 18px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #d1e0e0;
 }
 
+/* Form grid layout with consistent field widths */
 .form-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-row:last-child {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .form-field-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 12px;
 }
 
 .form-field-container label {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: 14px;
+  color: var(--text-primary);
   font-weight: 500;
-  margin-bottom: 8px;
+  text-align: right;
 }
 
+/* Input styling with consistent width */
 .input-wrapper {
   position: relative;
   width: 100%;
@@ -204,47 +178,54 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
-  background-color: #8b0000; /* Maroon color */
+  width: 3px;
+  background-image: linear-gradient(to bottom, #2193b0, #6dd5ed);
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
 }
 
+/* Common styles for all input types to ensure consistency */
 .input-wrapper input[type="text"],
 .input-wrapper input[type="email"],
 .input-wrapper input[type="number"],
 .input-wrapper select,
-.input-wrapper textarea {
+.input-wrapper textarea,
+.custom-dropdown-trigger,
+.form-control,
+#billingFrequency {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d1e0e0;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 14px;
   background-color: white;
-  transition: all var(--transition-speed) ease;
-}
-
-.input-wrapper textarea {
-  height: auto;
-  min-height: 80px;
-  resize: vertical;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .input-wrapper input[type="text"]:focus,
 .input-wrapper input[type="email"]:focus,
 .input-wrapper input[type="number"]:focus,
 .input-wrapper select:focus,
-.input-wrapper textarea:focus {
+.input-wrapper textarea:focus,
+.custom-dropdown-trigger:focus,
+.form-control:focus,
+#billingFrequency:focus {
   outline: none;
-  border-color: #8b0000;
-  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.1);
+  border-color: #2193b0;
+  box-shadow: 0 0 0 3px rgba(33, 147, 176, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+/* Select styling */
 .select-wrapper {
   position: relative;
+  width: 100%;
 }
 
-.select-wrapper::after {
+.select-wrapper::after,
+.form-group::after {
   content: "";
   position: absolute;
   right: 12px;
@@ -258,7 +239,8 @@
   pointer-events: none;
 }
 
-.select-wrapper select {
+.select-wrapper select,
+.form-group select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -278,8 +260,8 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
-  background-color: #8b0000;
+  width: 3px;
+  background-image: linear-gradient(to bottom, #2193b0, #6dd5ed);
   border-top-left-radius: 4px;
   border-bottom-left-radius: 4px;
   z-index: 1;
@@ -289,18 +271,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 10px 12px;
+  height: 36px;
+  padding: 0 12px;
   background-color: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #d1e0e0;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .custom-dropdown-trigger:hover {
-  border-color: #8b0000;
+  border-color: #2193b0;
 }
 
 .custom-dropdown-menu {
@@ -308,148 +290,38 @@
   top: 100%;
   left: 0;
   width: 100%;
-  max-height: 250px;
+  max-height: 220px;
   background-color: white;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #d1e0e0;
   border-radius: 4px;
   margin-top: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   z-index: 100;
-  overflow: hidden;
 }
 
 .custom-dropdown-content {
-  max-height: 200px;
+  max-height: 220px;
   overflow-y: auto;
-  overflow-x: auto;
-}
-
-/* Traditional scrollbar styling */
-.custom-dropdown-content::-webkit-scrollbar {
-  width: var(--scrollbar-width);
-  height: var(--scrollbar-height);
-}
-
-.custom-dropdown-content::-webkit-scrollbar-track {
-  background: var(--scrollbar-track-color);
-  border: 1px solid #d1d1d1;
-}
-
-.custom-dropdown-content::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb-color);
-  border: 1px solid #999;
-  border-radius: 2px;
-}
-
-.custom-dropdown-content::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover-color);
-}
-
-.custom-dropdown-content::-webkit-scrollbar-corner {
-  background: var(--scrollbar-track-color);
-}
-
-/* Firefox scrollbar styling */
-.custom-dropdown-content {
-  scrollbar-width: auto;
-  scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
 }
 
 .custom-dropdown-item {
-  padding: 10px 12px;
+  padding: 8px 12px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background-color 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .custom-dropdown-item:hover {
-  background-color: #f5f5f5;
+  background-color: #f0f7fa;
 }
 
-.custom-dropdown-item.disabled {
-  color: #999;
-  cursor: default;
-}
-
-.custom-dropdown-item.disabled:hover {
-  background-color: transparent;
-}
-
-/* Make the Order Categories field wider */
-.wide-field {
-  flex: 2;
-}
-
-.checkbox-container {
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Simple checkbox that works properly */
-.simple-checkbox {
-  position: relative;
-  display: inline-block;
-  margin-top: 8px;
-}
-
-.simple-checkbox input[type="checkbox"] {
-  opacity: 0;
-  position: absolute;
-  cursor: pointer;
-  width: 22px;
-  height: 22px;
-  z-index: 1;
-}
-
-.simple-checkbox label {
-  position: relative;
-  display: inline-block;
-  width: 22px;
-  height: 22px;
-  background-color: white;
-  border: 2px solid #8b0000;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.simple-checkbox input[type="checkbox"]:checked + label:after {
-  content: "✓";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #8b0000;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.simple-checkbox input[type="checkbox"]:focus + label {
-  box-shadow: 0 0 0 3px rgba(139, 0, 0, 0.2);
-}
-
-.checkbox-group {
-  display: flex;
-  gap: 20px;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox-item span {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
+/* Date input styling */
 .date-input-wrapper {
   display: flex;
+  position: relative;
 }
 
 .date-input-wrapper input {
-  padding-right: 40px;
+  padding-right: 36px;
   cursor: pointer;
 }
 
@@ -458,31 +330,40 @@
   right: 0;
   top: 0;
   height: 100%;
-  width: 40px;
+  width: 36px;
   background: none;
   border: none;
-  border-left: 1px solid #e0e0e0;
+  border-left: 1px solid #d1e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #2193b0;
   cursor: pointer;
-  transition: all var(--transition-speed) ease;
+  transition: all 0.2s ease;
 }
 
 .calendar-btn:hover {
-  color: #8b0000;
-  background-color: rgba(139, 0, 0, 0.05);
+  background-color: rgba(33, 147, 176, 0.05);
 }
 
-/* Date Picker Overlay Styles */
+/* Checkbox styling */
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  border: 1px solid #d1e0e0;
+  border-radius: 3px;
+}
+
+/* Calendar styling */
 .date-picker-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -490,10 +371,10 @@
 }
 
 .date-picker-modal {
-  width: 320px;
+  width: 300px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   animation: fadeIn 0.2s ease;
 }
@@ -501,7 +382,7 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -510,218 +391,168 @@
 }
 
 .calendar-header {
-  background: linear-gradient(135deg, #8b0000 0%, #c70039 100%);
+  background-image: var(--primary-gradient);
   color: white;
-  padding: 16px;
+  padding: 12px;
   text-align: center;
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  padding: 16px;
-  gap: 8px;
+  padding: 12px;
+  gap: 6px;
 }
 
 .weekday {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 12px;
   color: #666;
   font-weight: 500;
   padding: 6px 0;
 }
 
 .calendar-day {
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 13px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .calendar-day:hover {
-  background-color: #f3f4f6;
-}
-
-.calendar-day.empty {
-  cursor: default;
+  background-color: #e6f3f7;
+  color: #2193b0;
 }
 
 .calendar-day.today {
-  border: 1px solid #8b0000;
+  border: 1px solid #2193b0;
   font-weight: 600;
+  color: #2193b0;
 }
 
-.calendar-day:hover:not(.empty) {
-  background-color: rgba(139, 0, 0, 0.1);
-  color: #8b0000;
-}
-
-/* Responsive styles for form */
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .checkbox-container {
-    flex-direction: row;
-  }
-
-  .order-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .order-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .date-picker-modal {
-    width: 90%;
-    max-width: 320px;
-  }
-}
-
-@media (max-width: 480px) {
-  .checkbox-group {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .order-form {
-    padding: 10px;
-  }
-
-  .form-section {
-    padding: 15px;
-  }
-
-  .calendar-days {
-    gap: 4px;
-    padding: 12px;
-  }
-
-  .calendar-day {
-    height: 32px;
-    font-size: 0.8rem;
-  }
-}
-
-
-
-/*calender*/
-/* Add these styles to your existing CSS file */
-
-/* Calendar enhancements */
-.calendar-header {
+/* Billing frequency styles - made consistent with other fields */
+.billing-frequency-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e2e8f0;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
-.calendar-header span {
-  cursor: pointer;
-  font-weight: 500;
-  padding: 5px;
-}
-
-.calendar-header span:hover {
-  background-color: #e2e8f0;
-  border-radius: 4px;
-}
-
-.calendar-nav-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
-}
-
-.calendar-nav-btn:hover {
-  background-color: #e2e8f0;
-}
-
-.calendar-months,
-.calendar-years {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 16px;
-}
-
-.calendar-month,
-.calendar-year {
-  text-align: center;
-  padding: 12px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.calendar-month:hover,
-.calendar-year:hover {
-  background-color: #e2e8f0;
-}
-
-/* Custom dropdown styles for Order ID and Order Number */
-.custom-dropdown-wrapper {
+/* Make the form-group match other input wrappers */
+.form-group {
   position: relative;
   width: 100%;
 }
 
-.custom-dropdown-trigger {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  font-size: 0.875rem;
-}
-
-.custom-dropdown-menu {
+.form-group::before {
+  content: "";
   position: absolute;
-  top: 100%;
   left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-image: linear-gradient(to bottom, #2193b0, #6dd5ed);
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  z-index: 1;
+}
+
+/* Style the billing frequency select to match other inputs */
+#billingFrequency {
   width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  background-color: white;
-  border: 1px solid #d1d5db;
+  height: 36px;
+  padding: 0 12px;
+  padding-right: 30px;
+  border: 1px solid #d1e0e0;
   border-radius: 4px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  margin-top: 4px;
-}
-
-.custom-dropdown-content {
-  padding: 4px 0;
-}
-
-.custom-dropdown-item {
-  padding: 8px 12px;
+  font-size: 14px;
+  background-color: white;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.custom-dropdown-item:hover {
-  background-color: #f3f4f6;
+.message {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 4px;
 }
 
-.custom-dropdown-item.disabled {
-  color: #9ca3af;
+.message.success {
+  background-color: #e6f7ef;
+  color: #2e7d32;
+  border-left: 3px solid #2e7d32;
+}
+
+.message.error {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border-left: 3px solid #b91c1c;
+}
+
+.message.warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  border-left: 3px solid #92400e;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+.save-button {
+  padding: 8px 16px;
+  background-image: var(--success-gradient);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.save-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.save-button:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field-container {
+    grid-template-columns: 110px 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-field-container {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field-container label {
+    text-align: left;
+  }
 }
