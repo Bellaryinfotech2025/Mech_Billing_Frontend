@@ -1,7 +1,9 @@
+"use client"
+
 import { useState, useRef, useEffect } from "react"
-import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import "../Design Component/OrderDetails.css";
-import axios from "axios";
+import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
+import "../Design Component/OrderDetails.css"
+import axios from "axios"
 
 const OrderDetails = () => {
   const [activeTab, setActiveTab] = useState("order-details")
@@ -16,16 +18,21 @@ const OrderDetails = () => {
   const datePickerRef = useRef(null)
   const categoryDropdownRef = useRef(null)
 
+  // Toast notification state
+  const [showToast, setShowToast] = useState(false)
+
   // Calendar state
   const [calendarDate, setCalendarDate] = useState(new Date())
   const [calendarView, setCalendarView] = useState("date") // "date", "month", "year"
 
-  // Billing Frequency state
-  const [billingFrequencies, setBillingFrequencies] = useState([])
-  const [selectedFrequency, setSelectedFrequency] = useState("")
-  const [loadingFrequencies, setLoadingFrequencies] = useState(true)
-  const [savingFrequency, setSavingFrequency] = useState(false)
-  const [frequencyMessage, setFrequencyMessage] = useState({ text: "", type: "" })
+  // Lookup values state
+  const [lookupValues, setLookupValues] = useState({
+    orderTypes: [],
+    orderCategories: [],
+    billingFrequencies: [],
+    billingCycles: [],
+  })
+  const [loadingLookupValues, setLoadingLookupValues] = useState(true)
 
   // Customer details dropdown states
   const [showBillToCustomerDropdown, setShowBillToCustomerDropdown] = useState(false)
@@ -35,29 +42,24 @@ const OrderDetails = () => {
   const billToSiteRef = useRef(null)
   const billToContactRef = useRef(null)
 
-  // API base URL for billing frequency
-  const BILLING_API_URL = "http://localhost:9944/api"
+  // API base URL
+  const API_URL = "http://localhost:1999/api"
 
-  // Add order state for backend submission
-  const [order, setOrder] = useState({
+  // Initial order state for form reset
+  const initialOrderState = {
     orderId: "",
     orderNumber: "",
     orderType: "",
     orderCategory: "",
     effectiveStartDate: null,
     effectiveEndDate: null,
-    ldApplicabel: "N",
+    ldApplicable: "N", // Default to "N"
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
     salesrep: "",
     billingFrequency: "",
     billingCycle: "",
-    attribute1D: null,
-    attribute2D: null,
-    attribute3D: null,
-    attribute4D: null,
-    attribute5D: null,
     attribute1V: "",
     attribute2V: "",
     attribute3V: "",
@@ -73,139 +75,68 @@ const OrderDetails = () => {
     status: "Draft",
     version: 1,
     source: 1,
-  })
+  }
 
-  // Order ID options
-  const orderIdOptions = [
-    { value: "1001", label: "1001" },
-    { value: "1002", label: "1002" },
-    { value: "1003", label: "1003" },
-    { value: "1004", label: "1004" },
-    { value: "1005", label: "1005" },
-  ]
+  // Add order state for backend submission
+  const [order, setOrder] = useState({ ...initialOrderState })
 
   // Customer details options
   const billToCustomerOptions = [
-    { value: "CUST001", label: "Customer 001" },
-    { value: "CUST002", label: "Customer 002" },
-    { value: "CUST003", label: "Customer 003" },
-    { value: "CUST004", label: "Customer 004" },
-    { value: "CUST005", label: "Customer 005" },
+    { value: "001", label: "001" },
+    { value: "002", label: "002" },
+    { value: "003", label: "003" },
+    { value: "004", label: "004" },
+    { value: "CUST005", label: "005" },
   ]
 
   const billToSiteOptions = [
-    { value: "SITE001", label: "Site 001" },
-    { value: "SITE002", label: "Site 002" },
-    { value: "SITE003", label: "Site 003" },
-    { value: "SITE004", label: "Site 004" },
-    { value: "SITE005", label: "Site 005" },
+    { value: "001", label: "001" },
+    { value: "002", label: "002" },
+    { value: "003", label: "003" },
+    { value: "004", label: "004" },
+    { value: "005", label: "005" },
   ]
 
   const billToContactOptions = [
-    { value: "CONT001", label: "Contact 001" },
-    { value: "CONT002", label: "Contact 002" },
-    { value: "CONT003", label: "Contact 003" },
-    { value: "CONT004", label: "Contact 004" },
-    { value: "CONT005", label: "Contact 005" },
+    { value: "001", label: " 001" },
+    { value: "002", label: " 002" },
+    { value: "003", label: " 003" },
+    { value: "004", label: " 004" },
+    { value: "005", label: "005" },
   ]
 
-  const categoryOptions = [
-    {
-      value: "",
-      label: "Select Category",
-      disabled: true,
-    },
-    {
-      value: "a",
-      label: "Category A",
-    },
-    {
-      value: "b",
-      label: "Category B",
-    },
-    {
-      value: "c",
-      label: "Category C",
-    },
-    {
-      value: "d",
-      label: "Category D",
-    },
-    {
-      value: "e",
-      label: "Category E",
-    },
-    {
-      value: "f",
-      label: "Category F",
-    },
-  ]
-
-  // Options for attribute dropdowns
-  const stringAttributeOptions = [
-    "Customer Reference",
-    "Project Code",
-    "Department",
-    "Cost Center",
-    "Region",
-    "Product Line",
-    "Contract Type",
-    "Promotion Code",
-    "Vendor ID",
-    "Account Manager",
-  ]
-
-  const numericAttributeOptions = [
-    "Discount Percentage",
-    "Tax Rate",
-    "Quantity",
-    "Unit Price",
-    "Total Amount",
-    "Service Level",
-    "Priority",
-    "Duration (Months)",
-    "Renewal Count",
-    "Version Number",
-  ]
-
-  // Fetch billing frequencies from the backend
+  // Auto-hide toast after 2 seconds
   useEffect(() => {
-    const fetchBillingFrequencies = async () => {
-      if (activeTab === "billing") {
-        try {
-          setLoadingFrequencies(true)
-          const response = await axios.get(`${BILLING_API_URL}/billing-frequencies`)
+    let toastTimer
+    if (showToast) {
+      toastTimer = setTimeout(() => {
+        setShowToast(false)
+      }, 2000)
+    }
+    return () => {
+      clearTimeout(toastTimer)
+    }
+  }, [showToast])
 
-          if (response.data && Array.isArray(response.data)) {
-            setBillingFrequencies(response.data)
-            if (response.data.length === 0) {
-              setFrequencyMessage({
-                text: "No billing frequencies found in the database.",
-                type: "warning",
-              })
-            } else {
-              setFrequencyMessage({ text: "", type: "" })
-            }
-          } else {
-            setFrequencyMessage({
-              text: "Invalid response format from server.",
-              type: "error",
-            })
-          }
-        } catch (error) {
-          console.error("Error fetching billing frequencies:", error)
-          setFrequencyMessage({
-            text: `Failed to load billing frequencies: ${error.message}`,
-            type: "error",
-          })
-        } finally {
-          setLoadingFrequencies(false)
+  // Fetch lookup values from the backend
+  useEffect(() => {
+    const fetchLookupValues = async () => {
+      try {
+        setLoadingLookupValues(true)
+        const response = await axios.get(`${API_URL}/order-lookup-values`)
+
+        if (response.data) {
+          setLookupValues(response.data)
         }
+      } catch (error) {
+        console.error("Error fetching lookup values:", error)
+      } finally {
+        setLoadingLookupValues(false)
       }
     }
 
-    fetchBillingFrequencies()
-  }, [activeTab])
+    fetchLookupValues()
+  }, [])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -232,6 +163,17 @@ const OrderDetails = () => {
     const month = monthNames[date.getMonth()]
     const year = date.getFullYear().toString()
     return `${day < 10 ? "0" + day : day}-${month}-${year}`
+  }
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setOrder({ ...initialOrderState })
+    setDates({ startDate: "", endDate: "" })
+    setLdApplicable(false)
+    setSelectedCategory("")
+    setSelectedOrderType("")
+    setSelectedBillingFrequency("")
+    setSelectedBillingCycle("")
   }
 
   // Enhanced calendar functions
@@ -338,12 +280,44 @@ const OrderDetails = () => {
     return <div className="calendar-years">{years}</div>
   }
 
+  // Handle dropdown selection for Order Type
+  const [showOrderTypeDropdown, setShowOrderTypeDropdown] = useState(false)
+  const orderTypeDropdownRef = useRef(null)
+  const [selectedOrderType, setSelectedOrderType] = useState("")
+
+  const handleOrderTypeSelect = (option) => {
+    setSelectedOrderType(option.meaning)
+    setOrder({ ...order, orderType: option.lookupCode })
+    setShowOrderTypeDropdown(false)
+  }
+
+  // Handle dropdown selection for Order Category
   const handleCategorySelect = (option) => {
-    if (!option.disabled) {
-      setSelectedCategory(option.label)
-      setOrder({ ...order, orderCategory: option.value })
-      setShowCategoryDropdown(false)
-    }
+    setSelectedCategory(option.meaning)
+    setOrder({ ...order, orderCategory: option.lookupCode })
+    setShowCategoryDropdown(false)
+  }
+
+  // Handle dropdown selection for Billing Frequency
+  const [showBillingFrequencyDropdown, setShowBillingFrequencyDropdown] = useState(false)
+  const billingFrequencyDropdownRef = useRef(null)
+  const [selectedBillingFrequency, setSelectedBillingFrequency] = useState("")
+
+  const handleBillingFrequencySelect = (option) => {
+    setSelectedBillingFrequency(option.meaning)
+    setOrder({ ...order, billingFrequency: option.lookupCode })
+    setShowBillingFrequencyDropdown(false)
+  }
+
+  // Handle dropdown selection for Billing Cycle
+  const [showBillingCycleDropdown, setShowBillingCycleDropdown] = useState(false)
+  const billingCycleDropdownRef = useRef(null)
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState("")
+
+  const handleBillingCycleSelect = (option) => {
+    setSelectedBillingCycle(option.meaning)
+    setOrder({ ...order, billingCycle: option.lookupCode })
+    setShowBillingCycleDropdown(false)
   }
 
   // Handle input changes for order state
@@ -351,65 +325,12 @@ const OrderDetails = () => {
     setOrder({ ...order, [field]: value })
   }
 
-  // Handle billing frequency dropdown change
-  const handleFrequencyChange = (e) => {
-    setSelectedFrequency(e.target.value)
-    setOrder({ ...order, billingFrequency: e.target.value })
-  }
-
-  // Handle save billing frequency button click
-  const handleSaveFrequency = async () => {
-    if (!selectedFrequency) {
-      setFrequencyMessage({
-        text: "Please select a billing frequency",
-        type: "error",
-      })
-      return
-    }
-
-    try {
-      setSavingFrequency(true)
-      setFrequencyMessage({ text: "", type: "" })
-
-      // Send the lookup code to the backend
-      const response = await axios.post(`${BILLING_API_URL}/billing-frequency`, selectedFrequency, {
-        headers: {
-          "Content-Type": "text/plain",
-        },
-      })
-
-      if (response.data.status === "error") {
-        throw new Error(response.data.message || "Failed to save billing frequency")
-      }
-
-      setFrequencyMessage({
-        text: "Billing frequency saved successfully!",
-        type: "success",
-      })
-    } catch (error) {
-      console.error("Error saving billing frequency:", error)
-      setFrequencyMessage({
-        text: `Failed to save: ${error.message}`,
-        type: "error",
-      })
-    } finally {
-      setSavingFrequency(false)
-    }
-  }
-
   // Handle checkbox change for LD Applicable
   const handleLdApplicableChange = (checked) => {
     setLdApplicable(checked)
-    setOrder({ ...order, ldApplicabel: checked ? "Y" : "N" })
-  }
-
-  // Handle dropdown selection for Order ID
-  const [showOrderIdDropdown, setShowOrderIdDropdown] = useState(false)
-  const orderIdDropdownRef = useRef(null)
-
-  const handleOrderIdSelect = (option) => {
-    setOrder({ ...order, orderId: option.value })
-    setShowOrderIdDropdown(false)
+    // Set "Y" if checked, "N" if unchecked
+    setOrder({ ...order, ldApplicable: checked ? "Y" : "N" })
+    console.log("LD Applicable changed to:", checked ? "Y" : "N")
   }
 
   // Handle customer details dropdown selections
@@ -445,22 +366,34 @@ const OrderDetails = () => {
         ) {
           orderData[key] = null
         }
+
+        // Convert string values to numbers for numeric attributes
+        if (key.endsWith("N") && orderData[key] !== null && orderData[key] !== "") {
+          // Try to convert to number
+          const numValue = Number.parseFloat(orderData[key])
+          if (!isNaN(numValue)) {
+            orderData[key] = numValue
+          } else {
+            // If conversion fails, set to null
+            orderData[key] = null
+          }
+        }
       })
-
-      // Ensure orderId is provided and is a number
-      if (!orderData.orderId) {
-        alert("Order ID is required")
-        return
-      }
-
-      // Convert orderId to number
-      orderData.orderId = Number(orderData.orderId)
 
       console.log("Submitting order data:", orderData)
 
-      const response = await axios.post("http://localhost:8877/api/orders", orderData)
+      const response = await axios.post(`${API_URL}/post-orders`, orderData)
       console.log("Server response:", response.data)
-      alert("Order saved successfully")
+
+      if (response.data.status === "success") {
+        // Show success toast
+        setShowToast(true)
+
+        // Reset form
+        resetForm()
+      } else {
+        alert(response.data.message || "Failed to save order")
+      }
     } catch (error) {
       console.error("Error saving order:", error)
 
@@ -496,8 +429,14 @@ const OrderDetails = () => {
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
         setShowCategoryDropdown(false)
       }
-      if (orderIdDropdownRef.current && !orderIdDropdownRef.current.contains(event.target)) {
-        setShowOrderIdDropdown(false)
+      if (orderTypeDropdownRef.current && !orderTypeDropdownRef.current.contains(event.target)) {
+        setShowOrderTypeDropdown(false)
+      }
+      if (billingFrequencyDropdownRef.current && !billingFrequencyDropdownRef.current.contains(event.target)) {
+        setShowBillingFrequencyDropdown(false)
+      }
+      if (billingCycleDropdownRef.current && !billingCycleDropdownRef.current.contains(event.target)) {
+        setShowBillingCycleDropdown(false)
       }
       if (billToCustomerRef.current && !billToCustomerRef.current.contains(event.target)) {
         setShowBillToCustomerDropdown(false)
@@ -514,10 +453,29 @@ const OrderDetails = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [datePickerRef, categoryDropdownRef, orderIdDropdownRef, billToCustomerRef, billToSiteRef, billToContactRef])
+  }, [
+    datePickerRef,
+    categoryDropdownRef,
+    orderTypeDropdownRef,
+    billingFrequencyDropdownRef,
+    billingCycleDropdownRef,
+    billToCustomerRef,
+    billToSiteRef,
+    billToContactRef,
+  ])
 
   return (
     <div className="order-details-container">
+      {/* Success Toast */}
+      {showToast && (
+        <div className="toast-container">
+          <div className="toast success-toast">
+            <CheckCircle size={20} />
+            <span>Order created successfully</span>
+          </div>
+        </div>
+      )}
+
       <div className="order-header">
         <h1>Add Order</h1>
         <div className="order-actions">
@@ -560,31 +518,9 @@ const OrderDetails = () => {
       {activeTab === "order-details" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">Order Information</h2>
+            <h2 className="section-title"></h2>
 
             <div className="form-row">
-              <div className="form-field-container">
-                <label>Order ID</label>
-                <div className="custom-dropdown-wrapper" ref={orderIdDropdownRef}>
-                  <div className="custom-dropdown-trigger" onClick={() => setShowOrderIdDropdown(!showOrderIdDropdown)}>
-                    <span>{order.orderId || "Select Order ID"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showOrderIdDropdown && (
-                    <div className="custom-dropdown-menu">
-                      <div className="custom-dropdown-content">
-                        {orderIdOptions.map((option, index) => (
-                          <div key={index} className="custom-dropdown-item" onClick={() => handleOrderIdSelect(option)}>
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               <div className="form-field-container">
                 <label>Order Number</label>
                 <div className="input-wrapper">
@@ -596,20 +532,34 @@ const OrderDetails = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="form-row">
               <div className="form-field-container">
                 <label>Order Type</label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.orderType} onChange={(e) => handleChange("orderType", e.target.value)}>
-                    <option value="" disabled>
-                      Select Order Type
-                    </option>
-                    <option value="standard">Standard</option>
-                    <option value="blanket">Blanket</option>
-                    <option value="contract">Contract</option>
-                  </select>
+                <div className="custom-dropdown-wrapper" ref={orderTypeDropdownRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowOrderTypeDropdown(!showOrderTypeDropdown)}
+                  >
+                    <span>{selectedOrderType || "Select Order Type"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showOrderTypeDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {lookupValues.orderTypes &&
+                          lookupValues.orderTypes.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleOrderTypeSelect(option)}
+                            >
+                              {option.meaning}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -629,15 +579,16 @@ const OrderDetails = () => {
                   {showCategoryDropdown && (
                     <div className="custom-dropdown-menu">
                       <div className="custom-dropdown-content">
-                        {categoryOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className={`custom-dropdown-item ${option.disabled ? "disabled" : ""}`}
-                            onClick={() => handleCategorySelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                        {lookupValues.orderCategories &&
+                          lookupValues.orderCategories.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleCategorySelect(option)}
+                            >
+                              {option.meaning}
+                            </div>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -692,19 +643,18 @@ const OrderDetails = () => {
             </div>
 
             <div className="form-row">
-              <div>
+              <div className="form-field-container">
                 <label>LD Applicable</label>
-                <div>
+                <div className="checkbox-wrapper">
                   <input
                     type="checkbox"
-                     
-                    
+                    id="ldApplicable"
+                    checked={ldApplicable}
                     onChange={(e) => handleLdApplicableChange(e.target.checked)}
                   />
-                  <label></label>
+                  <label htmlFor="ldApplicable" className="checkbox-label"></label>
                 </div>
               </div>
-              
             </div>
           </div>
         </div>
@@ -714,7 +664,7 @@ const OrderDetails = () => {
       {activeTab === "customer-details" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">Bill to Customer</h2>
+            <h2 className="section-title"></h2>
 
             <div className="form-row">
               <div className="form-field-container">
@@ -828,57 +778,66 @@ const OrderDetails = () => {
       {activeTab === "billing" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">Billing Information</h2>
+            <h2 className="section-title"></h2>
 
             <div className="form-row">
               <div className="form-field-container">
                 <label>Billing Frequency</label>
-                <div className="billing-frequency-container">
-                  <div className="form-group">
-                    <select
-                      id="billingFrequency"
-                      value={selectedFrequency}
-                      onChange={handleFrequencyChange}
-                      disabled={loadingFrequencies || savingFrequency}
-                      className="form-control"
-                    >
-                      <option value="">-- Select Frequency --</option>
-                      {billingFrequencies.map((frequency) => (
-                        <option key={frequency.lookupCode} value={frequency.lookupCode}>
-                          {frequency.meaning}
-                        </option>
-                      ))}
-                    </select>
+                <div className="custom-dropdown-wrapper" ref={billingFrequencyDropdownRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowBillingFrequencyDropdown(!showBillingFrequencyDropdown)}
+                  >
+                    <span>{selectedBillingFrequency || "Select Billing Frequency"}</span>
+                    <ChevronDown size={16} />
                   </div>
 
-                  {frequencyMessage.text && (
-                    <div className={`message ${frequencyMessage.type}`}>{frequencyMessage.text}</div>
+                  {showBillingFrequencyDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {lookupValues.billingFrequencies &&
+                          lookupValues.billingFrequencies.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleBillingFrequencySelect(option)}
+                            >
+                              {option.meaning}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
                   )}
-
-                  <div className="form-actions">
-                    <button
-                      onClick={handleSaveFrequency}
-                      disabled={loadingFrequencies || savingFrequency || !selectedFrequency}
-                      className="save-button"
-                    >
-                      {savingFrequency ? "Saving..." : "Save Frequency"}
-                    </button>
-                  </div>
                 </div>
               </div>
 
               <div className="form-field-container">
                 <label>Billing Cycle</label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.billingCycle} onChange={(e) => handleChange("billingCycle", e.target.value)}>
-                    <option value="" disabled>
-                      Select Cycle
-                    </option>
-                    <option value="Start of Month">Start of Month</option>
-                    <option value="Mid-Month">Mid-Month</option>
-                    <option value="End of Month">End of Month</option>
-                    <option value="Anniversary">Anniversary</option>
-                  </select>
+                <div className="custom-dropdown-wrapper" ref={billingCycleDropdownRef}>
+                  <div
+                    className="custom-dropdown-trigger"
+                    onClick={() => setShowBillingCycleDropdown(!showBillingCycleDropdown)}
+                  >
+                    <span>{selectedBillingCycle || "Select Billing Cycle"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+
+                  {showBillingCycleDropdown && (
+                    <div className="custom-dropdown-menu">
+                      <div className="custom-dropdown-content">
+                        {lookupValues.billingCycles &&
+                          lookupValues.billingCycles.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleBillingCycleSelect(option)}
+                            >
+                              {option.meaning}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -890,89 +849,69 @@ const OrderDetails = () => {
       {activeTab === "additional-attributes" && (
         <div className="order-form">
           <div className="form-section">
-            <h2 className="section-title">Additional Information</h2>
+            <h2 className="section-title"></h2>
             <div className="form-row">
               <div className="form-field-container">
                 <label>Attribute 1</label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute1V} onChange={(e) => handleChange("attribute1V", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {stringAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter attribute value"
+                    value={order.attribute1V}
+                    onChange={(e) => handleChange("attribute1V", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 2 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute2V} onChange={(e) => handleChange("attribute2V", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {stringAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 2</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter attribute value"
+                    value={order.attribute2V}
+                    onChange={(e) => handleChange("attribute2V", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 3 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute3V} onChange={(e) => handleChange("attribute3V", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {stringAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 3</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter attribute value"
+                    value={order.attribute3V}
+                    onChange={(e) => handleChange("attribute3V", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 4 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute4V} onChange={(e) => handleChange("attribute4V", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {stringAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 4</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter attribute value"
+                    value={order.attribute4V}
+                    onChange={(e) => handleChange("attribute4V", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 5 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute5V} onChange={(e) => handleChange("attribute5V", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {stringAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 5</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter attribute value"
+                    value={order.attribute5V}
+                    onChange={(e) => handleChange("attribute5V", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -981,85 +920,65 @@ const OrderDetails = () => {
             <div className="form-row">
               <div className="form-field-container">
                 <label>Attribute 1</label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute1N} onChange={(e) => handleChange("attribute1N", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {numericAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter numeric value"
+                    value={order.attribute1N}
+                    onChange={(e) => handleChange("attribute1N", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="form-field-container">
                 <label>Attribute 2</label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute2N} onChange={(e) => handleChange("attribute2N", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {numericAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter numeric value"
+                    value={order.attribute2N}
+                    onChange={(e) => handleChange("attribute2N", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 3 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute3N} onChange={(e) => handleChange("attribute3N", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {numericAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 3</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter numeric value"
+                    value={order.attribute3N}
+                    onChange={(e) => handleChange("attribute3N", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="form-field-container">
-                <label>Attribute 4 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute4N} onChange={(e) => handleChange("attribute4N", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {numericAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 4</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter numeric value"
+                    value={order.attribute4N}
+                    onChange={(e) => handleChange("attribute4N", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Attribute 5 </label>
-                <div className="input-wrapper select-wrapper">
-                  <select value={order.attribute5N} onChange={(e) => handleChange("attribute5N", e.target.value)}>
-                    <option value="" disabled>
-                      Select Type
-                    </option>
-                    {numericAttributeOptions.map((option, index) => (
-                      <option key={index} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                <label>Attribute 5</label>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    placeholder="Enter numeric value"
+                    value={order.attribute5N}
+                    onChange={(e) => handleChange("attribute5N", e.target.value)}
+                  />
                 </div>
               </div>
             </div>

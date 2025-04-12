@@ -7,29 +7,34 @@ import MainDashboard from './Main Mech Component/Dashboard';
 // import Register from './fakeregister/Regisrer';
 // import Login from './fakeregister/login';
 
-import CoreLookupTable from './serverpractice/CoreLookUp';
+ 
 
 import OrderForm from './orderpractice/orderpracticedetails';
 
 import BillingFrequencyForm from './orderpractice/billing_frequency';
 
 
+import LookupTablePractice from './lookuppractice/lookuptablepractice';
 
 function App() {
   return (
     <>
         <Router>
           <Routes>
+
             <Route path="/" element={<LandingPage/>}/>
             <Route path="/registerpage" element={<RegisterPage/>}/>
             <Route path="/loginbilling" element={<LoginPage/>}/>
             {/* <Route path="/register" element={<Register/>}/>
             <Route path="/login" element={<Login/>}/> */}
-            <Route path="/corelookup" element={<CoreLookupTable/>}/>
+            {/* <Route path="/corelookup" element={<CoreLookupTable/>}/> */}
 
             <Route path="/orderdetails" element={<OrderForm/>}/>
 
             <Route path="/billingfrequency" element={<BillingFrequencyForm/>}/>
+
+            <Route path="/lookuppractice" element={<LookupTablePractice/>}/>
+
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
           </Routes>
