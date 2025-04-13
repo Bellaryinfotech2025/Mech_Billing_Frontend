@@ -44,7 +44,7 @@ const OrderDetails = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:8585/api"
+  const API_URL = "http://localhost:1885/api"
 
   // Initial order state for form reset
   const initialOrderState = {
@@ -660,7 +660,7 @@ const OrderDetails = ({ onCancel }) => {
                     checked={ldApplicable}
                     onChange={(e) => handleLdApplicableChange(e.target.checked)}
                   />
-                  <label htmlFor="ldApplicable" className="checkbox-label"></label>
+                  
                 </div>
               </div>
             </div>

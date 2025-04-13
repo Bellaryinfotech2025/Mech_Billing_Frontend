@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import "../Design Component/order-database-search.css"
+import "../Design Component/ordernumberdetails.css"
 
 import axios from "axios"
 import {
@@ -19,6 +20,7 @@ import {
   Edit,
 } from "lucide-react"
 import OrderDetails from "../Main Mech Component/OrderDetails"
+import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails";
 
 const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   // State for orders and lookup values
@@ -34,9 +36,11 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   })
   const [dataFetched, setDataFetched] = useState(false)
   const [showOrderDetails, setShowOrderDetails] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // API base URL
-  const API_URL = "http://localhost:8585/api"
+  const API_URL = "http://localhost:1885/api"
 
   // Fetch lookup values on component mount
   useEffect(() => {
@@ -123,9 +127,33 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
     setShowOrderDetails(false)
   }
 
+  // Handle order number click
+  const handleOrderNumberClick = (order) => {
+    setSelectedOrder(order)
+    setShowOrderNumberDetails(true)
+  }
+
+  // Handle back to order search
+  const handleBackToOrderSearch = () => {
+    setShowOrderNumberDetails(false)
+    setSelectedOrder(null)
+  }
+
   // If showing OrderDetails, render it instead of the table
   if (showOrderDetails) {
     return <OrderDetails onCancel={handleCancelOrderDetails} />
+  }
+
+  // If showing OrderNumberDetails, render it instead of the table
+  if (showOrderNumberDetails && selectedOrder) {
+    return (
+      <OrderNumberDetails
+        order={selectedOrder}
+        onCancel={handleBackToOrderSearch}
+        getLookupMeaning={getLookupMeaning}
+        formatDate={formatDate}
+      />
+    )
   }
 
   return (
@@ -167,7 +195,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
           <button className="table-action-btn">
             <Download size={16} />
           </button>
-          <button className="table-action-btn">
+          {/* <button className="table-action-btn">
             <Table size={16} />
           </button>
           <button className="table-action-btn">
@@ -175,7 +203,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
           </button>
           <button className="table-action-btn">
             <Filter size={16} />
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -232,12 +260,18 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                       <div style={{ display: "flex", gap: "4px" }}>
                         <button className="action-btn">
                           <Edit size={14} style={{ marginRight: "4px", color: "#94a3b8" }} />
-                          
                         </button>
                       </div>
                     </td>
                     <td>
-                      <a href={`#/order/${order.orderNumber}`} className="order-number-link">
+                      <a
+                        href="#"
+                        className="order-number-link"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          handleOrderNumberClick(order)
+                        }}
+                      >
                         {order.orderNumber || "-"}
                       </a>
                     </td>
