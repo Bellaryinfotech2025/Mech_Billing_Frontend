@@ -1,12 +1,58 @@
-import { useState } from "react"
-import "../Design Component/order-database-search.css";
- 
-import { CheckCircle, ChevronLeft, ChevronRight, Download, Filter, Grid, Plus, Search, Table } from "lucide-react"
+"use client"
+
+import { useState, useEffect } from "react"
+import "../Design Component/order-database-search.css"
+
+import axios from "axios"
+import {
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Filter,
+  Grid,
+  Plus,
+  Search,
+  Table,
+  Database,
+  AlertCircle,
+  Edit,
+} from "lucide-react"
+import OrderDetails from "../Main Mech Component/OrderDetails"
 
 const OrderDatabaseSearch = ({ onAddOrderClick }) => {
-  // Sample data for the table (empty for now as shown in the screenshot)
+  // State for orders and lookup values
   const [orders, setOrders] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [lookupValues, setLookupValues] = useState({
+    orderTypes: [],
+    orderCategories: [],
+    billingFrequencies: [],
+    billingCycles: [],
+  })
+  const [dataFetched, setDataFetched] = useState(false)
+  const [showOrderDetails, setShowOrderDetails] = useState(false)
+
+  // API base URL
+  const API_URL = "http://localhost:8585/api"
+
+  // Fetch lookup values on component mount
+  useEffect(() => {
+    const fetchLookupValues = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/order-lookup-values`)
+        if (response.data) {
+          setLookupValues(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching lookup values:", error)
+      }
+    }
+
+    fetchLookupValues()
+  }, [])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -14,15 +60,91 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
     // Implement search functionality here
   }
 
+  // Function to get meaning from lookup code
+  const getLookupMeaning = (lookupType, lookupCode) => {
+    if (!lookupCode) return "-"
+
+    let lookupArray = []
+
+    switch (lookupType) {
+      case "ORDER_TYPE":
+        lookupArray = lookupValues.orderTypes
+        break
+      case "ORDER_CATEGORY":
+        lookupArray = lookupValues.orderCategories
+        break
+      case "BILLING_FREQUENCY":
+        lookupArray = lookupValues.billingFrequencies
+        break
+      case "BILLING_CYCLE":
+        lookupArray = lookupValues.billingCycles
+        break
+      default:
+        return lookupCode
+    }
+
+    const lookup = lookupArray.find((item) => item.lookupCode === lookupCode)
+    return lookup ? lookup.meaning : lookupCode
+  }
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "-"
+    const date = new Date(dateString)
+    return date.toLocaleDateString()
+  }
+
+  // Handle load orders button click
+  const handleLoadOrders = () => {
+    setLoading(true)
+    setError(null)
+
+    axios
+      .get(`${API_URL}/orderscontroller`)
+      .then((response) => {
+        setOrders(response.data)
+        setLoading(false)
+        setDataFetched(true)
+      })
+      .catch((err) => {
+        console.error("Error loading orders:", err)
+        setError("Failed to load orders. Please try again.")
+        setLoading(false)
+      })
+  }
+
+  // Handle Add New Order button click
+  const handleAddNewOrder = () => {
+    setShowOrderDetails(true)
+  }
+
+  // Handle cancel from OrderDetails
+  const handleCancelOrderDetails = () => {
+    setShowOrderDetails(false)
+  }
+
+  // If showing OrderDetails, render it instead of the table
+  if (showOrderDetails) {
+    return <OrderDetails onCancel={handleCancelOrderDetails} />
+  }
+
   return (
     <div className="order-search-container">
       <header className="order-search-header">
         <h1>Order Search</h1>
         <div className="header-actions">
+          <button className="load-orders-btn" onClick={handleLoadOrders}>
+            <Database size={16} />
+            Load Orders
+          </button>
           <button className="add-order-btn" onClick={onAddOrderClick}>
             <Plus size={16} />
             Add Order
           </button>
+          {/* <button className="add-new-order-btn" onClick={handleAddNewOrder}>
+            <FileText size={16} />
+            Add New Order
+          </button> */}
         </div>
       </header>
 
@@ -74,20 +196,67 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                 <th>Total Value</th>
                 {/* Additional 8 columns as requested - will be visible only when scrolling */}
                 <th>Status</th>
-                 
                 <th>Bill to Site</th>
                 <th>Bill to Contact</th>
-                 
                 <th>Billing Frequency</th>
                 <th>Billing Cycle</th>
                 <th>LD Applicable</th>
-                 
-
               </tr>
             </thead>
             <tbody>
-              {orders.length > 0 ? (
-                orders.map((order, index) => <tr key={index}>{/* Order data would go here */}</tr>)
+              {loading ? (
+                <tr>
+                  <td colSpan={18} style={{ textAlign: "center", padding: "20px" }}>
+                    Loading orders...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={18} style={{ textAlign: "center", padding: "20px", color: "#e53e3e" }}>
+                    {error}
+                  </td>
+                </tr>
+              ) : !dataFetched ? (
+                <tr className="no-records-row">
+                  <td colSpan={18}>
+                    <div className="load-orders-toast">
+                      <AlertCircle size={18} />
+                      <span>Click the "Load Orders" button to display orders</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : orders.length > 0 ? (
+                orders.map((order, index) => (
+                  <tr key={index}>
+                    <td>
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        <button className="action-btn">
+                          <Edit size={14} style={{ marginRight: "4px", color: "#94a3b8" }} />
+                          
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <a href={`#/order/${order.orderNumber}`} className="order-number-link">
+                        {order.orderNumber || "-"}
+                      </a>
+                    </td>
+                    <td>{getLookupMeaning("ORDER_TYPE", order.orderType)}</td>
+                    <td>{order.businessUnit || "-"}</td>
+                    <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
+                    <td>{order.billToCustomerId || "-"}</td>
+                    <td>{order.deliverToCustomerId || "-"}</td>
+                    <td>{formatDate(order.effectiveStartDate)}</td>
+                    <td>{formatDate(order.effectiveEndDate)}</td>
+                    <td>{order.totalValue || "-"}</td>
+                    <td>{order.status || "-"}</td>
+                    <td>{order.billToSiteId || "-"}</td>
+                    <td>{order.billToContactId || "-"}</td>
+                    <td>{getLookupMeaning("BILLING_FREQUENCY", order.billingFrequency)}</td>
+                    <td>{getLookupMeaning("BILLING_CYCLE", order.billingCycle)}</td>
+                    <td>{order.ldApplicable === "Y" ? "Yes" : "No"}</td>
+                  </tr>
+                ))
               ) : (
                 <tr className="no-records-row">
                   <td colSpan={18}>
