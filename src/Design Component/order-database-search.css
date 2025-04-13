@@ -1,0 +1,322 @@
+/* Import font */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Base container styles */
+.order-search-container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header styles */
+.order-search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+.order-search-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.add-order-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-order-btn:hover {
+  background-color: #5a6268;
+}
+
+/* Search section styles */
+.search-section {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e0e0e0;
+  position: relative;
+  justify-content: flex-end; /* Align table actions to the right */
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.table-action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.table-action-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Table wrapper with border-radius and box-shadow */
+.table-wrapper {
+  flex: 1;
+  margin: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Table container with scrollbar attached directly to the table */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+
+  /* Force scrollbar to be visible and attached to table */
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Make scrollbar always visible */
+.table-container::-webkit-scrollbar {
+  height: 10px;
+  display: block;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+  border: 2px solid #f1f1f1;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.orders-table {
+  width: 100%;
+  min-width: max-content; /* Allow table to expand beyond container */
+  border-collapse: separate; /* Changed to separate for border styling */
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.orders-table th {
+  background-color: #f5f7fa;
+  padding: 8px 16px; /* Reduced padding for smaller height */
+  text-align: left;
+  font-weight: 500; /* Slightly reduced font weight */
+  font-size: 13px; /* Slightly smaller font */
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0; /* Added vertical lines between columns */
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.orders-table th:last-child {
+  border-right: none; /* Remove border from last column */
+}
+
+.orders-table th.column-actions {
+  width: 80px;
+}
+
+/* Adjusted column widths to ensure all are visible */
+.orders-table th:nth-child(1) {
+  width: 80px;
+} /* Actions */
+.orders-table th:nth-child(2) {
+  width: 110px;
+} /* Order Number */
+.orders-table th:nth-child(3) {
+  width: 100px;
+} /* Order Type */
+.orders-table th:nth-child(4) {
+  width: 110px;
+} /* Business Unit */
+.orders-table th:nth-child(5) {
+  width: 100px;
+} /* Category */
+.orders-table th:nth-child(6) {
+  width: 130px;
+} /* Bill To Customer */
+.orders-table th:nth-child(7) {
+  width: 130px;
+} /* Deliver To Customer */
+.orders-table th:nth-child(8) {
+  width: 90px;
+} /* Start Date */
+.orders-table th:nth-child(9) {
+  width: 90px;
+} /* End Date */
+.orders-table th:nth-child(10) {
+  width: 100px;
+} /* Total Value */
+
+/* Additional columns (will require scrolling) */
+.orders-table th:nth-child(n + 11) {
+  width: 120px;
+}
+
+.orders-table td {
+  padding: 8px 16px; /* Reduced padding for smaller height */
+  border-bottom: 1px solid #e0e0e0;
+  border-right: 1px solid #e0e0e0; /* Added vertical lines between columns */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px; /* Consistent font size */
+}
+
+.orders-table td:last-child {
+  border-right: none; /* Remove border from last column */
+}
+
+.no-records-row {
+  height: 150px; /* Reduced height */
+}
+
+/* No records toast styling - updated to green with better design */
+.no-records-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #f0fff4;
+  color: #38a169;
+  border: 1px solid #38a169;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0 auto;
+  width: fit-content;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.2);
+}
+
+.no-records-toast svg {
+  color: #38a169;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 161, 105, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(56, 161, 105, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 161, 105, 0);
+  }
+}
+
+/* Pagination styles */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-top: 1px solid #e0e0e0;
+  background-color: #fff;
+}
+
+.pagination-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #666;
+}
+
+.pagination-btn:hover {
+  color: #333;
+}
+
+.pagination-slider {
+  flex: 1;
+  height: 6px;
+  margin: 0 12px;
+  position: relative;
+  background-color: #f1f1f1;
+  border-radius: 3px;
+}
+
+.slider-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  border-radius: 3px;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #888;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-thumb:hover {
+  background-color: #555;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-section {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+  }
+
+  .table-actions {
+    margin-left: 0;
+  }
+}
+
