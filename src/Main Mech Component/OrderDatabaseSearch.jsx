@@ -1,12 +1,18 @@
-"use client"
-
 import { useState } from "react"
-import "../Design Component/order-database-search.css"
-import { CheckCircle, ChevronLeft, ChevronRight, Download, Filter, Grid, Plus, Table } from "lucide-react"
+import "../Design Component/order-database-search.css";
+ 
+import { CheckCircle, ChevronLeft, ChevronRight, Download, Filter, Grid, Plus, Search, Table } from "lucide-react"
 
 const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   // Sample data for the table (empty for now as shown in the screenshot)
   const [orders, setOrders] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    console.log("Searching for:", searchQuery)
+    // Implement search functionality here
+  }
 
   return (
     <div className="order-search-container">
@@ -21,6 +27,20 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
       </header>
 
       <div className="search-section">
+        <div className="search-input-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Orders # Customer Number . Category . Type . Billing Details Search Here ..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
+          />
+          <button className="search-button" onClick={handleSearch}>
+            <Search size={16} />
+          </button>
+        </div>
+
         <div className="table-actions">
           <button className="table-action-btn">
             <Download size={16} />
@@ -54,13 +74,15 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                 <th>Total Value</th>
                 {/* Additional 8 columns as requested - will be visible only when scrolling */}
                 <th>Status</th>
-                <th>Created By</th>
-                <th>Created Date</th>
-                <th>Last Updated</th>
-                <th>Payment Terms</th>
-                <th>Currency</th>
-                <th>Shipping Method</th>
-                <th>Notes</th>
+                 
+                <th>Bill to Site</th>
+                <th>Bill to Contact</th>
+                 
+                <th>Billing Frequency</th>
+                <th>Billing Cycle</th>
+                <th>LD Applicable</th>
+                 
+
               </tr>
             </thead>
             <tbody>
