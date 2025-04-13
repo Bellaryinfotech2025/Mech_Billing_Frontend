@@ -16,6 +16,9 @@ import BillingFrequencyForm from './orderpractice/billing_frequency';
 
 import LookupTablePractice from './lookuppractice/lookuptablepractice';
 
+
+// import OrderDatabaseSearch from './Main Mech Component/OrderDatabaseSearch';
+
 function App() {
   return (
     <>
@@ -34,6 +37,9 @@ function App() {
             <Route path="/billingfrequency" element={<BillingFrequencyForm/>}/>
 
             <Route path="/lookuppractice" element={<LookupTablePractice/>}/>
+
+            {/* <Route path="/orderdatabasesearch" element={<OrderDatabaseSearch/>}/> */}
+            
 
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>

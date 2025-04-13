@@ -91,22 +91,21 @@ body {
   }
 }
 
-/* Header styling with gradient */
+/* Updated Header styling to match screenshot */
 .order-header {
-  background-image: var(--primary-gradient);
+  background-color: white;
   padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
-  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .order-header h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .order-actions {
@@ -120,38 +119,43 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border: none;
   border-radius: var(--border-radius-sm);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-speed) ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .save-btn {
-  background-image: var(--success-gradient);
-  color: white;
+  background-color: #00a3ff;
+  color: white !important;
+}
+
+.save-btn span, .save-btn svg {
+  color: white !important;
 }
 
 .cancel-btn {
-  background-image: var(--success-gradient);
-  color: white;
+  background-color: #f0f0f0;
+  color: var(--text-primary);
 }
 
-.save-btn:hover,
+.save-btn:hover {
+  background-color: #0090e0;
+}
+
 .cancel-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background-color: #e0e0e0;
 }
 
-/* Tabs styling */
+/* Tabs styling to match screenshot */
 .order-tabs {
   display: flex;
   background-color: white;
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  padding: 0 16px;
 }
 
 .tab {
@@ -166,7 +170,6 @@ body {
 
 .tab:hover {
   color: #2193b0;
-  background-color: rgba(33, 147, 176, 0.05);
 }
 
 .tab.active {

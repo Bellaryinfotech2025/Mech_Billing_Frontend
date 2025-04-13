@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect } from "react"
 import {
   LayoutDashboard,
@@ -19,16 +21,19 @@ import {
   Edit,
 } from "lucide-react"
 import "../Design Component/Dashboard.css"
- 
-import SettingsPopup from "../Main Mech Component/Settings";
+
+import SettingsPopup from "../Main Mech Component/Settings"
 import OrderDetails from "../Main Mech Component/OrderDetails"
+import OrderDatabaseSearch from "../Main Mech Component/OrderDatabaseSearch"
 import Alignment from "../Main Mech Component/Alingment"
 import Erection from "../Main Mech Component/Erection"
 import LookupTable from "../Main Mech Component/LookUpTable"
- 
+
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
 import "../Design Component/user-dropdown.css"
+import "../Design Component/order-database-search.css"
+import "../Design Component/dashboard-fix.css"
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -39,6 +44,7 @@ const MainDashboard = () => {
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const [showCoreLookup, setShowCoreLookup] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [showOrderDetails, setShowOrderDetails] = useState(false)
   const fileInputRef = useRef(null)
   const userDropdownRef = useRef(null)
 
@@ -65,6 +71,7 @@ const MainDashboard = () => {
     } else {
       setActiveMenu(menu)
       setShowCoreLookup(false) // Hide lookup table when navigating
+      setShowOrderDetails(false) // Hide order details when navigating
     }
   }
 
@@ -120,6 +127,17 @@ const MainDashboard = () => {
     setSearchQuery(query)
     console.log("Searching for:", query)
     // You can implement search functionality here
+  }
+
+  // Handler for Add Order button click
+  const handleAddOrderClick = () => {
+    console.log("Add Order clicked")
+    setShowOrderDetails(true)
+  }
+
+  // Handler to go back to order search
+  const handleBackToOrderSearch = () => {
+    setShowOrderDetails(false)
   }
 
   return (
@@ -277,7 +295,8 @@ const MainDashboard = () => {
             </button>
             <h1 style={{ fontSize: "1rem" }}>
               {activeMenu === "home" && "Dashboard"}
-              {activeMenu === "orders" && "Orders"}
+              {activeMenu === "orders" && !showOrderDetails && "Orders"}
+              {activeMenu === "orders" && showOrderDetails && "Add Order"}
               {activeMenu === "lines" && "Lines"}
               {activeMenu === "fabrication" && "Fabrication"}
               {activeMenu === "erection" && "Erection"}
@@ -319,13 +338,18 @@ const MainDashboard = () => {
 
         {/* Main Content */}
         <main className="main-content">
-          {/* Stylish Search Box */}
-         
-
           {/* Conditional rendering based on active menu */}
           {showCoreLookup && <LookupTable />}
 
-          {activeMenu === "orders" && !showCoreLookup && <OrderDetails />}
+          {/* Render OrderDatabaseSearch when orders menu is active */}
+          {activeMenu === "orders" && !showCoreLookup && !showOrderDetails && (
+            <OrderDatabaseSearch onAddOrderClick={handleAddOrderClick} />
+          )}
+
+          {/* Render OrderDetails when Add Order is clicked */}
+          {activeMenu === "orders" && !showCoreLookup && showOrderDetails && (
+            <OrderDetails onCancel={handleBackToOrderSearch} />
+          )}
 
           {activeMenu === "alignment" && !showCoreLookup && <Alignment />}
 
@@ -369,6 +393,3 @@ const MainDashboard = () => {
 }
 
 export default MainDashboard;
-
-
-

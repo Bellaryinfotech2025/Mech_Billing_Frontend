@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react"
 import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
 import "../Design Component/OrderDetails.css"
+ 
 import axios from "axios"
 
-const OrderDetails = () => {
+const OrderDetails = ({ onCancel }) => {
   const [activeTab, setActiveTab] = useState("order-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
   const [dates, setDates] = useState({
@@ -43,7 +44,7 @@ const OrderDetails = () => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:1999/api"
+  const API_URL = "http://localhost:1998/api"
 
   // Initial order state for form reset
   const initialOrderState = {
@@ -420,6 +421,13 @@ const OrderDetails = () => {
     }
   }
 
+  // Handle cancel button click
+  const handleCancelClick = () => {
+    if (onCancel) {
+      onCancel()
+    }
+  }
+
   // Close date picker and dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -480,12 +488,12 @@ const OrderDetails = () => {
         <h1>Add Order</h1>
         <div className="order-actions">
           <button className="save-btn" onClick={handleSubmit}>
-            <Save size={16} style={{ color: "black" }} />
-            <span style={{ color: "black" }}>Save</span>
+            <Save size={16} />
+            <span>Save</span>
           </button>
-          <button className="cancel-btn">
-            <X size={16} style={{ color: "black" }} />
-            <span style={{ color: "black" }}>Cancel</span>
+          <button className="cancel-btn" onClick={handleCancelClick}>
+            <X size={16} />
+            <span>Cancel</span>
           </button>
         </div>
       </div>
