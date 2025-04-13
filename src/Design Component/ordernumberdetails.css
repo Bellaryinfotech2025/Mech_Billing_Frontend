@@ -16,6 +16,7 @@
   --input-focus: #0ea5e9;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --success-color: #10b981;
 }
 
 .order-details-view-container {
@@ -26,6 +27,7 @@
   display: flex;
   flex-direction: column;
   color: var(--text-primary);
+  position: relative;
 }
 
 /* Header styling */
@@ -67,6 +69,49 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+}
+
+.edit-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent;
+  color: var(--primary-color);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0;
+  margin-left: 16px;
+}
+
+.edit-button:hover {
+  color: var(--primary-hover);
+}
+
+.header-right {
+  display: flex;
+  gap: 12px;
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover {
+  background-color: var(--primary-hover);
 }
 
 .cancel-button {
@@ -165,6 +210,12 @@
   flex: 1;
 }
 
+.form-field-checkbox {
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+
 .form-input {
   width: 100%;
   height: 40px;
@@ -222,16 +273,19 @@
 }
 
 .form-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   margin-top: 10px;
   border-radius: 4px;
   border: 1px solid var(--input-border);
   cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: auto;
 }
 
 .form-checkbox:disabled {
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .form-textarea {
@@ -322,6 +376,97 @@
   color: #16a34a;
 }
 
+/* Toast notification styling */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  animation: toastFadeIn 0.3s ease;
+  max-width: 400px;
+}
+
+.success-toast {
+  background-color: #ecfdf5;
+  border-left: 4px solid var(--success-color);
+  color: #065f46;
+}
+
+.success-toast svg {
+  color: var(--success-color);
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom dropdown styling */
+.custom-dropdown-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-top: 4px;
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+.custom-dropdown-content {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.custom-dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f0f7fa;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .order-details-form {
@@ -349,5 +494,13 @@
 
   .order-details-tab {
     padding: 12px 16px;
+  }
+
+  .header-left {
+    flex-wrap: wrap;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
   }
 }
