@@ -44,7 +44,7 @@ const OrderDetails = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:1445/api"
+  const API_URL = "http://localhost:5522/api"
 
   // Initial order state for form reset
   const initialOrderState = {
