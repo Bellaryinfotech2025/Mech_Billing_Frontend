@@ -19,6 +19,9 @@ import LookupTablePractice from './lookuppractice/lookuptablepractice';
 
 // import OrderDatabaseSearch from './Main Mech Component/OrderDatabaseSearch';
 
+
+
+
 function App() {
   return (
     <>
@@ -39,7 +42,7 @@ function App() {
             <Route path="/lookuppractice" element={<LookupTablePractice/>}/>
 
             {/* <Route path="/orderdatabasesearch" element={<OrderDatabaseSearch/>}/> */}
-            
+             
 
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
