@@ -1,0 +1,382 @@
+/* Import modern fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Base container styles */
+.order-search-containerlineskh {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100%;
+}
+
+/* Header styles */
+.order-search-headerlineskh {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #fff;
+}
+
+.header-titlelineskh {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.header-actionslineskh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-parent-btnlineskh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.add-parent-btnlineskh:hover {
+  background-color: #4338ca;
+}
+
+.add-child-btnlineskh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.add-child-btnlineskh:hover {
+  background-color: #059669;
+}
+
+/* Order Number Section */
+.order-number-sectionlineskh {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+  justify-content: space-between;
+  background-color: #f9fafb;
+}
+
+.order-number-displaylineskh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.active-statuslineskh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: #ecfdf5;
+  color: #059669;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  animation: greenPulselineskh 2s infinite;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+}
+
+.table-actionslineskh {
+  display: flex;
+  gap: 8px;
+}
+
+.table-action-btnlineskh {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.table-action-btnlineskh:hover {
+  background-color: #f9fafb;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+/* Table wrapper with border-radius and box-shadow */
+.table-wrapperlineskh {
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Table container with scrollbar attached directly to the table */
+.table-containerlineskh {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Make scrollbar always visible */
+.table-containerlineskh::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-containerlineskh::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.table-containerlineskh::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-containerlineskh::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Table styling for full width with proper spacing */
+.orders-tablelineskh {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.orders-tablelineskh th {
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  letter-spacing: 0.05em;
+}
+
+/* Column widths with proper spacing */
+.orders-tablelineskh th:nth-child(1) {
+  width: 100px;
+} /* ACTIONS */
+.orders-tablelineskh th:nth-child(2) {
+  width: 150px;
+} /* SERVICE NUMBER */
+.orders-tablelineskh th:nth-child(3) {
+  width: 300px;
+} /* SERVICE DESCRIPTION */
+.orders-tablelineskh th:nth-child(4) {
+  width: 80px;
+} /* UOM */
+.orders-tablelineskh th:nth-child(5) {
+  width: 80px;
+} /* QTY */
+.orders-tablelineskh th:nth-child(6) {
+  width: 100px;
+} /* TOTAL */
+.orders-tablelineskh th:nth-child(7) {
+  width: 150px;
+} /* COMPLETION DATE */
+
+.orders-tablelineskh tr {
+  transition: background-color 0.2s ease;
+}
+
+.table-row-evenlineskh {
+  background-color: #f8fafc;
+}
+
+.orders-tablelineskh tr:hover {
+  background-color: #f1f5f9;
+}
+
+.orders-tablelineskh td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #334155;
+}
+
+.service-description-celllineskh {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #334155;
+  width: 300px;
+  max-width: 300px;
+}
+
+.action-buttonslineskh {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btnlineskh {
+  padding: 4px 10px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btnlineskh:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+  border-color: #94a3b8;
+}
+
+.edit-iconlineskh {
+  margin-right: 4px;
+  color: #94a3b8;
+}
+
+.no-records-rowlineskh {
+  height: 120px;
+}
+
+.loading-celllineskh,
+.error-celllineskh {
+  text-align: center;
+  padding: 20px;
+}
+
+.error-celllineskh {
+  color: #e53e3e;
+}
+
+/* Active toast styling */
+.active-toastlineskh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #10b981;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin: 20px auto;
+  width: fit-content;
+  max-width: 90%;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  animation: greenPulselineskh 2s infinite;
+}
+
+/* No records toast styling */
+.no-records-toastlineskh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0 auto;
+  width: fit-content;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Pagination styles */
+.table-paginationlineskh {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
+
+.pagination-sliderlineskh {
+  flex: 1;
+  height: 4px;
+  margin: 0 16px;
+  position: relative;
+  background-color: #e2e8f0;
+  border-radius: 2px;
+}
+
+/* Animation for the green blinking effect */
+@keyframes greenPulselineskh {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    transform: scale(1);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-number-sectionlineskh {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .table-actionslineskh {
+    align-self: flex-end;
+  }
+}

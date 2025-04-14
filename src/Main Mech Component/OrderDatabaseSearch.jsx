@@ -40,7 +40,9 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // API base URL
-  const API_URL = "http://localhost:5522/api"
+ 
+  const API_URL = "http://localhost:4422/api"
+ 
 
   // Fetch lookup values on component mount
   useEffect(() => {
@@ -249,7 +251,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                   <td colSpan={18}>
                     <div className="load-orders-toast">
                       <AlertCircle size={18} />
-                      <span>Click the "Load Orders" button to display orders</span>
+                      <span>Click the Load Orders button to display your orders</span>
                     </div>
                   </td>
                 </tr>
@@ -307,16 +309,11 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
       </div>
 
       <div className="table-pagination">
-        <button className="pagination-btn">
-          <ChevronLeft size={16} />
-        </button>
+        
         <div className="pagination-slider">
-          <div className="slider-track"></div>
-          <div className="slider-thumb"></div>
+           
         </div>
-        <button className="pagination-btn">
-          <ChevronRight size={16} />
-        </button>
+         
       </div>
     </div>
   )

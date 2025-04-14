@@ -38,7 +38,9 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
   const billingCycleDropdownRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:5522/api"
+ 
+  const API_URL = "http://localhost:4422/api"
+ 
 
   useEffect(() => {
     setOrder(initialOrder || {})

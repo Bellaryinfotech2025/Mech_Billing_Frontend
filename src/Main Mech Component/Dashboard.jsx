@@ -25,15 +25,19 @@ import "../Design Component/Dashboard.css"
 import SettingsPopup from "../Main Mech Component/Settings"
 import OrderDetails from "../Main Mech Component/OrderDetails"
 import OrderDatabaseSearch from "../Main Mech Component/OrderDatabaseSearch"
+import LinesDatabaseSearch from "../Mech Lines Component/LinesDatabaseSearch"
 import Alignment from "../Main Mech Component/Alingment"
 import Erection from "../Main Mech Component/Erection"
 import LookupTable from "../Main Mech Component/LookUpTable"
+import LinesAddParent from "../Mech Lines Component/LinesAddParent"
+import LinesAddChild from "../Mech Lines Component/LinesAddChild"
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
 import "../Design Component/user-dropdown.css"
 import "../Design Component/order-database-search.css"
 import "../Design Component/dashboard-fix.css"
+ 
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -47,6 +51,9 @@ const MainDashboard = () => {
   const [showOrderDetails, setShowOrderDetails] = useState(false)
   const fileInputRef = useRef(null)
   const userDropdownRef = useRef(null)
+  const [showLinesAddParent, setShowLinesAddParent] = useState(false)
+  // Add a new state for tracking LinesAddChild visibility
+  const [showLinesAddChild, setShowLinesAddChild] = useState(false)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -72,6 +79,8 @@ const MainDashboard = () => {
       setActiveMenu(menu)
       setShowCoreLookup(false) // Hide lookup table when navigating
       setShowOrderDetails(false) // Hide order details when navigating
+      setShowLinesAddParent(false)
+      setShowLinesAddChild(false)
     }
   }
 
@@ -138,6 +147,24 @@ const MainDashboard = () => {
   // Handler to go back to order search
   const handleBackToOrderSearch = () => {
     setShowOrderDetails(false)
+  }
+
+  const handleAddParentClick = () => {
+    setShowLinesAddParent(true)
+  }
+
+  const handleLinesAddParentCancel = () => {
+    setShowLinesAddParent(false)
+  }
+
+  // Add a handler for showing LinesAddChild
+  const handleAddChildClick = () => {
+    setShowLinesAddChild(true)
+  }
+
+  // Add a handler for canceling from LinesAddChild
+  const handleLinesAddChildCancel = () => {
+    setShowLinesAddChild(false)
   }
 
   return (
@@ -293,8 +320,8 @@ const MainDashboard = () => {
             <button className="hamburger-menu" onClick={toggleSidebar}>
               <Menu size={24} />
             </button>
-            <h1 style={{ fontSize: "1rem" }}>
-              {activeMenu === "home" && "Dashboard"}
+            <h1 style={{ fontSize: "1rem", color: "white" }}>
+              {activeMenu === "home" && "Your Dashboard"}
               {activeMenu === "orders" && !showOrderDetails && "Orders"}
               {activeMenu === "orders" && showOrderDetails && "Add Order"}
               {activeMenu === "lines" && "Lines"}
@@ -349,6 +376,19 @@ const MainDashboard = () => {
           {/* Render OrderDetails when Add Order is clicked */}
           {activeMenu === "orders" && !showCoreLookup && showOrderDetails && (
             <OrderDetails onCancel={handleBackToOrderSearch} />
+          )}
+
+          {/* Render LinesDatabaseSearch when lines menu is active */}
+          {activeMenu === "lines" && !showCoreLookup && (
+            <div style={{ padding: "20px" }}>
+              {showLinesAddParent ? (
+                <LinesAddParent onCancel={handleLinesAddParentCancel} />
+              ) : showLinesAddChild ? (
+                <LinesAddChild onCancel={handleLinesAddChildCancel} />
+              ) : (
+                <LinesDatabaseSearch onAddParentClick={handleAddParentClick} onAddChildClick={handleAddChildClick} />
+              )}
+            </div>
           )}
 
           {activeMenu === "alignment" && !showCoreLookup && <Alignment />}
