@@ -7,6 +7,9 @@ export default defineConfig({
   server: {
     allowedHosts: ['mechbill.bellaryinfotech.com']
   }
+ 
 })
 
 
+ 
+ 
