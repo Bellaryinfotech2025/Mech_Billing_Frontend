@@ -39,7 +39,7 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
 
   // API base URL
  
-  const API_URL = "http://localhost:4422/api"
+  const API_URL = "http://localhost:5522/api"
  
 
   useEffect(() => {
