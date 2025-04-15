@@ -42,9 +42,9 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   // API base URL
  
 <<<<<<< HEAD
-  const API_URL = "http://localhost:5522/api"
+  const API_URL = "http://195.35.45.56:5522/api"
 =======
-  const API_URL = "http://localhost:4411/api"
+  const API_URL = "http://195.35.45.56:5522/api"
 >>>>>>> ab6fab8 (updated lines menu in server with new port please chanhe it before deployment)
  
 
