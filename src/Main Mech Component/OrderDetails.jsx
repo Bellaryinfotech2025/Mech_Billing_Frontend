@@ -46,7 +46,7 @@ const OrderDetails = ({ onCancel }) => {
   // API base URL
  
  
-  const API_URL = "http://localhost:5522/api"
+  const API_URL = "http://localhost:5525/api"
  
   // Initial order state for form reset
   const initialOrderState = {
@@ -89,7 +89,7 @@ const OrderDetails = ({ onCancel }) => {
     { value: "002", label: "002" },
     { value: "003", label: "003" },
     { value: "004", label: "004" },
-    { value: "CUST005", label: "005" },
+    { value: "005", label: "005" },
   ]
 
   const billToSiteOptions = [
@@ -1075,3 +1075,8 @@ const OrderDetails = ({ onCancel }) => {
 }
 
 export default OrderDetails;
+
+
+
+
+

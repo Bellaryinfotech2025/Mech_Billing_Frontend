@@ -31,6 +31,27 @@
   justify-content: center;
   gap: 5px;
   padding: 6px 12px;
+  
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  color: white;
+  font-weight: 500;
+  background: linear-gradient(to bottom, #9e9e9e, #757575); /* Ash color for all buttons */
+}
+
+.refresh-btn{
+ position: fixed;
+ bottom: 450px;
+ left: 815px;
+ display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  
   border-radius: 4px;
   font-size: 12px;
   cursor: pointer;

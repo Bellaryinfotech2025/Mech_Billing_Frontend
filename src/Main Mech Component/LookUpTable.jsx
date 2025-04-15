@@ -33,7 +33,7 @@ const LookupTable = () => {
   const fetchData = () => {
     axios
  
-      .get("http://localhost:5522/api/lookup-values", {
+      .get("http://localhost:5525/api/lookup-values", {
  
         params: {
           search: search,
@@ -111,7 +111,7 @@ const LookupTable = () => {
             <Plus size={16} />
             <span>Add</span>
           </button>
-          <button className="action-btn refresh-btn" onClick={handleRefreshCache}>
+          <button className=" refresh-btn" onClick={handleRefreshCache}>
             <RefreshCw size={16} />
             <span>Refresh Cache</span>
           </button>

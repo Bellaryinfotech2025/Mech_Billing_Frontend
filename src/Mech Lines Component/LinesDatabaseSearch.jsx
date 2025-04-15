@@ -16,7 +16,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
   const orderId = 1
 
   // API base URL
-  const API_URL = "http://localhost:1111/api"
+  const API_URL = "http://localhost:5525/api"
 
   // Fetch order lines from the backend
   useEffect(() => {
@@ -142,7 +142,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
                     </td>
                     <td>{line.uom || "-"}</td>
                     <td>{line.orderedQuantity || "-"}</td>
-                    <td>${line.totalPrice ? Number.parseFloat(line.totalPrice).toFixed(2) : "-"}</td>
+                    <td>&#8377;{line.totalPrice ? Number.parseFloat(line.totalPrice).toFixed(2) : "-"}</td>
                     <td>{formatDate(line.effectiveEndDate)}</td>
                   </tr>
                 ))

@@ -45,7 +45,7 @@ const LinesAddParent = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // Update the API_URL to match your code
-  const API_URL = "http://localhost:1111/api"
+  const API_URL = "http://localhost:5525/api"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
@@ -564,17 +564,7 @@ const LinesAddParent = ({ onCancel }) => {
               </div>
 
               <div className="form-row-kh-addparent">
-                <div className="form-field-container-kh-addparent">
-                  <label>Parent</label>
-                  <div className="checkbox-wrapper-kh-addparent">
-                    <input
-                      type="checkbox"
-                      id="isParent"
-                      checked={isParent}
-                      onChange={(e) => handleParentChange(e.target.checked)}
-                    />
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>

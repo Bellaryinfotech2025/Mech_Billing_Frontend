@@ -4,7 +4,8 @@ import { useState } from "react"
 import "../UserCredentialsDesign/Register_page_design.css"
 import { FaRupeeSign } from "react-icons/fa"
 import axios from "axios"
-import { useNavigate } from "react-router-dom"
+import {Link ,  useNavigate } from "react-router-dom"
+import logo from '../assets/blogo.jpg'
 
 const RegisterPage = () => {
   const [user, setUser] = useState({
@@ -15,6 +16,7 @@ const RegisterPage = () => {
     phoneNumber: "",
   })
 
+  
   const [error, setError] = useState(null)
   const navigate = useNavigate()
 
@@ -85,7 +87,7 @@ const RegisterPage = () => {
     e.preventDefault()
     if (validateForm()) {
       try {
-        const response = await axios.post("http://localhost:5522/api/register", user)
+        const response = await axios.post("http://localhost:5525/api/register", user)
 
         alert("Registration Successful!")
         navigate("/loginbilling") // Navigate to login page after successful registration
@@ -193,23 +195,7 @@ const RegisterPage = () => {
           <div className="register-right">
             <div className="register-form-container">
               <div className="logo-container">
-                <svg width="120" height="50" viewBox="0 0 120 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M40 15L30 25L40 35" stroke="#333" strokeWidth="2" />
-                  <path d="M50 15L60 25L50 35" stroke="#333" strokeWidth="2" />
-                  <path d="M48 10L42 40" stroke="#00B4D8" strokeWidth="2" />
-                  <path d="M65 25H90" stroke="#333" strokeWidth="2" />
-                  <path d="M70 20V30" stroke="#333" strokeWidth="2" />
-                  <path d="M80 20V30" stroke="#333" strokeWidth="2" />
-                  <path d="M90 20V30" stroke="#333" strokeWidth="2" />
-                  <path
-                    d="M95 20H105C107.5 20 110 22.5 110 25C110 27.5 107.5 30 105 30H95V20Z"
-                    stroke="#333"
-                    strokeWidth="2"
-                  />
-                  <path d="M115 20V30" stroke="#333" strokeWidth="2" />
-                  <path d="M25 25L20 20V30L25 25Z" fill="#00B4D8" />
-                  <path d="M30 15L20 25L30 35" stroke="#00B4D8" strokeWidth="2" />
-                </svg>
+                <img src={logo} alt="logoofbellary" style={{width:'50px',height:'50px'}}/>
                 <h1>MECH BILLING APP</h1>
               </div>
 
@@ -437,7 +423,7 @@ const RegisterPage = () => {
 
               <div className="footer-text">
                 <p>
-                  Already have an account? <a href="/login">Sign In</a>
+                  Already have an account? <Link to="/loginbilling">Sign In</Link>
                 </p>
               </div>
             </div>

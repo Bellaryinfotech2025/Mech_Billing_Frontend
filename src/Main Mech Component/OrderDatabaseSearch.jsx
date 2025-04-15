@@ -41,11 +41,8 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
 
   // API base URL
  
-<<<<<<< HEAD
-  const API_URL = "http://localhost:5522/api"
-=======
-  const API_URL = "http://localhost:4411/api"
->>>>>>> ab6fab8 (updated lines menu in server with new port please chanhe it before deployment)
+ 
+  const API_URL = "http://localhost:5525/api"
  
 
   // Fetch lookup values on component mount
@@ -110,7 +107,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
     setError(null)
 
     axios
-      .get(`${API_URL}/orderscontroller`)
+      .get(`${API_URL}/fetchorderdata`)
       .then((response) => {
         setOrders(response.data)
         setLoading(false)
@@ -167,10 +164,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
       <header className="order-search-header">
         <h1>Order Search</h1>
         <div className="header-actions">
-          <button className="load-orders-btn" onClick={handleLoadOrders}>
-            <Database size={16} />
-            Load Orders
-          </button>
+           
           <button className="add-order-btn" onClick={onAddOrderClick}>
             <Plus size={16} />
             Add Order
@@ -192,7 +186,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
-          <button className="search-button" onClick={handleSearch}>
+          <button className="search-button" onClick={handleLoadOrders}>
             <Search size={16} />
           </button>
         </div>
@@ -255,7 +249,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                   <td colSpan={18}>
                     <div className="load-orders-toast">
                       <AlertCircle size={18} />
-                      <span>Click the Load Orders button to display your orders</span>
+                      <span>Click on search icon to display your orders</span>
                     </div>
                   </td>
                 </tr>

@@ -2,7 +2,7 @@ import { useState } from "react"
 import "../UserCredentialsDesign/login-page.css";
 import logo from '../assets/blogo.jpg';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import {Link ,  useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({ 
@@ -62,7 +62,7 @@ const LoginPage = () => {
     
     try {
  
-      const response = await axios.post('http://localhost:5522/api/login', credentials);
+      const response = await axios.post('http://localhost:5525/api/login', credentials);
  
       alert('Login Successful!');
       navigate('/dashboardbilling');  // Navigate to dashboard after successful login
@@ -80,7 +80,9 @@ const LoginPage = () => {
           <div className="login-left">
             <div className="logo-container">
               <div className="logo-wrapper">
+              <center>
                 <img src={logo || "/placeholder.svg"} alt="terrolt-khaja" style={{width:'30px',height:'30px'}}/>
+                </center>
                 <h3>
                   Mech Billing App
                 </h3>
@@ -208,7 +210,9 @@ const LoginPage = () => {
               </form>
 
               <div className="help-link">
-                <a href="/register">Dont have an Account ? Register or Sign Up?</a>
+                <Link to="/registerpage">Dont have an Account ? Register or Sign Up?</Link>
+                <br/>
+                <br/>
               </div>
             </div>
 
