@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
 import "../Mech Lines Design/linesaddchild.css"
+import axios from "axios"
 
 const LinesAddChild = ({ onCancel }) => {
   const [activeTab, setActiveTab] = useState("product-details")
@@ -21,6 +22,8 @@ const LinesAddChild = ({ onCancel }) => {
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState("Child line created successfully")
+  const [isError, setIsError] = useState(false)
 
   // Calendar state
   const [calendarDate, setCalendarDate] = useState(new Date())
@@ -44,82 +47,95 @@ const LinesAddChild = ({ onCancel }) => {
   const parentDropdownRef = useRef(null)
   const [selectedParent, setSelectedParent] = useState("")
 
+  // API base URL
+  const API_URL = "http://localhost:1100/api"
+
+  // Lookup values state
+  const [lookupValues, setLookupValues] = useState({
+    billingFrequencies: [],
+    billingChannels: [],
+    uomList: [],
+  })
+  const [loadingLookupValues, setLoadingLookupValues] = useState(true)
+
   // Initial line state
   const [line, setLine] = useState({
-    parentId: "",
+    orderId: 1, // Default order ID
+    parentLineNumber: null,
     serviceName: "",
-    startDate: null,
-    endDate: null,
+    effectiveStartDate: null,
+    effectiveEndDate: null,
+    isParent: false, // Child lines are not parents
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
     salesrep: "",
-    quantity: "",
+    orderedQuantity: "",
     unitPrice: "",
     uom: "",
-    total: "",
+    totalPrice: "",
     billingFrequency: "",
-    billingChannel: "",
+    status: "ACTIVE",
   })
+
+  // Fetch lookup values from the backend
+  useEffect(() => {
+    const fetchLookupValues = async () => {
+      try {
+        setLoadingLookupValues(true)
+        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
+
+        if (response.data && response.data.status === "success") {
+          setLookupValues({
+            billingFrequencies: response.data.billingFrequencies || [],
+            billingChannels: response.data.billingChannels || [],
+            uomList: response.data.uomList || [],
+          })
+        } else {
+          console.error("Error in lookup response:", response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching lookup values:", error)
+      } finally {
+        setLoadingLookupValues(false)
+      }
+    }
+
+    fetchLookupValues()
+  }, [])
 
   // Parent options
   const parentOptions = [
-    { value: "PARENT001", label: "Parent Line 001" },
-    { value: "PARENT002", label: "Parent Line 002" },
-    { value: "PARENT003", label: "Parent Line 003" },
-    { value: "PARENT004", label: "Parent Line 004" },
-    { value: "PARENT005", label: "Parent Line 005" },
+    { value: "1", label: "Parent Line 001" },
+    { value: "2", label: "Parent Line 002" },
+    { value: "3", label: "Parent Line 003" },
+    { value: "4", label: "Parent Line 004" },
+    { value: "5", label: "Parent Line 005" },
   ]
 
   // Customer details options
   const billToCustomerOptions = [
-    { value: "001", label: "001" },
-    { value: "002", label: "002" },
-    { value: "003", label: "003" },
-    { value: "004", label: "004" },
-    { value: "CUST005", label: "005" },
+    { value: "1", label: "001" },
+    { value: "2", label: "002" },
+    { value: "3", label: "003" },
+    { value: "4", label: "004" },
+    { value: "5", label: "005" },
   ]
 
   const billToSiteOptions = [
-    { value: "001", label: "001" },
-    { value: "002", label: "002" },
-    { value: "003", label: "003" },
-    { value: "004", label: "004" },
-    { value: "005", label: "005" },
+    { value: "1", label: "001" },
+    { value: "2", label: "002" },
+    { value: "3", label: "003" },
+    { value: "4", label: "004" },
+    { value: "5", label: "005" },
   ]
 
   const billToContactOptions = [
-    { value: "001", label: " 001" },
-    { value: "002", label: " 002" },
-    { value: "003", label: " 003" },
-    { value: "004", label: " 004" },
-    { value: "005", label: "005" },
-  ]
-
-  // Billing frequency options
-  const billingFrequencyOptions = [
-    { value: "MONTHLY", label: "Monthly" },
-    { value: "QUARTERLY", label: "Quarterly" },
-    { value: "HALF_YEARLY", label: "Half Yearly" },
-    { value: "YEARLY", label: "Yearly" },
-    { value: "ONE_TIME", label: "One Time" },
-  ]
-
-  // Billing channel options
-  const billingChannelOptions = [
-    { value: "EMAIL", label: "Email" },
-    { value: "MAIL", label: "Mail" },
-    { value: "PORTAL", label: "Portal" },
-    { value: "IN_PERSON", label: "In Person" },
-  ]
-
-  // UOM options
-  const uomOptions = [
-    { value: "EA", label: "Each (EA)" },
-    { value: "HR", label: "Hour (HR)" },
-    { value: "DAY", label: "Day (DAY)" },
-    { value: "MTH", label: "Month (MTH)" },
-    { value: "YR", label: "Year (YR)" },
+    { value: "1", label: " 001" },
+    { value: "2", label: " 002" },
+    { value: "3", label: " 003" },
+    { value: "4", label: " 004" },
+    { value: "5", label: "005" },
   ]
 
   // Auto-hide toast after 2 seconds
@@ -128,22 +144,27 @@ const LinesAddChild = ({ onCancel }) => {
     if (showToast) {
       toastTimer = setTimeout(() => {
         setShowToast(false)
+
+        // If it was a successful save, navigate back to the search screen
+        if (!isError) {
+          setTimeout(() => onCancel && onCancel(), 500)
+        }
       }, 2000)
     }
     return () => {
       clearTimeout(toastTimer)
     }
-  }, [showToast])
+  }, [showToast, isError, onCancel])
 
   // Calculate total when quantity or unit price changes
   useEffect(() => {
     if (quantity && unitPrice) {
       const calculatedTotal = Number.parseFloat(quantity) * Number.parseFloat(unitPrice)
       setTotal(calculatedTotal.toFixed(2))
-      setLine((prev) => ({ ...prev, total: calculatedTotal.toFixed(2) }))
+      setLine((prev) => ({ ...prev, totalPrice: calculatedTotal.toFixed(2) }))
     } else {
       setTotal("")
-      setLine((prev) => ({ ...prev, total: "" }))
+      setLine((prev) => ({ ...prev, totalPrice: "" }))
     }
   }, [quantity, unitPrice])
 
@@ -157,9 +178,9 @@ const LinesAddChild = ({ onCancel }) => {
 
     // Update the line state
     if (field === "startDate") {
-      setLine({ ...line, startDate: date.toISOString().split("T")[0] })
+      setLine({ ...line, effectiveStartDate: date.toISOString().split("T")[0] })
     } else if (field === "endDate") {
-      setLine({ ...line, endDate: date.toISOString().split("T")[0] })
+      setLine({ ...line, effectiveEndDate: date.toISOString().split("T")[0] })
     }
 
     setShowDatePicker(null)
@@ -280,21 +301,21 @@ const LinesAddChild = ({ onCancel }) => {
   // Handle dropdown selection for Parent
   const handleParentSelect = (option) => {
     setSelectedParent(option.label)
-    setLine({ ...line, parentId: option.value })
+    setLine({ ...line, parentLineNumber: Number.parseInt(option.value) })
     setShowParentDropdown(false)
   }
 
   // Handle dropdown selection for Billing Frequency
   const handleBillingFrequencySelect = (option) => {
-    setSelectedBillingFrequency(option.label)
-    setLine({ ...line, billingFrequency: option.value })
+    setSelectedBillingFrequency(option.meaning)
+    setLine({ ...line, billingFrequency: option.lookupCode })
     setShowBillingFrequencyDropdown(false)
   }
 
   // Handle dropdown selection for Billing Channel
   const handleBillingChannelSelect = (option) => {
-    setSelectedBillingChannel(option.label)
-    setLine({ ...line, billingChannel: option.value })
+    setSelectedBillingChannel(option.meaning)
+    // Don't set billingChannel in the line state since it doesn't exist in the database
     setShowBillingChannelDropdown(false)
   }
 
@@ -304,8 +325,8 @@ const LinesAddChild = ({ onCancel }) => {
   const [selectedUOM, setSelectedUOM] = useState("")
 
   const handleUOMSelect = (option) => {
-    setSelectedUOM(option.label)
-    setLine({ ...line, uom: option.value })
+    setSelectedUOM(option.meaning)
+    setLine({ ...line, uom: option.lookupCode })
     setShowUOMDropdown(false)
   }
 
@@ -314,7 +335,7 @@ const LinesAddChild = ({ onCancel }) => {
     setLine({ ...line, [field]: value })
 
     // Update quantity and unitPrice state for calculation
-    if (field === "quantity") {
+    if (field === "orderedQuantity") {
       setQuantity(value)
     } else if (field === "unitPrice") {
       setUnitPrice(value)
@@ -338,14 +359,50 @@ const LinesAddChild = ({ onCancel }) => {
   }
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("Submitting child line data:", line)
-    setShowToast(true)
 
-    // After showing success toast, you might want to return to the LinesDatabaseSearch view
-    // Uncomment the following line if you want to automatically go back after saving
-    // setTimeout(() => onCancel(), 2000);
+    try {
+      // Validate parent line number is selected
+      if (!line.parentLineNumber) {
+        setToastMessage("Please select a parent line")
+        setIsError(true)
+        setShowToast(true)
+        return
+      }
+
+      // Prepare the data for submission
+      const lineData = {
+        ...line,
+        orderedQuantity: quantity ? Number.parseFloat(quantity) : null,
+        unitPrice: unitPrice ? Number.parseFloat(unitPrice) : null,
+        totalPrice: total ? Number.parseFloat(total) : null,
+        billToCustomerId: line.billToCustomerId ? Number.parseInt(line.billToCustomerId) : null,
+        billToSiteId: line.billToSiteId ? Number.parseInt(line.billToSiteId) : null,
+        billToContactId: line.billToContactId ? Number.parseInt(line.billToContactId) : null,
+        // Remove isParent from the data being sent to the server since it's now transient
+        // and will be set in the controller
+      }
+
+      console.log("Sending data to server:", lineData)
+
+      // Send the data to the backend
+      const response = await axios.post(`${API_URL}/lines/createChildLine`, lineData)
+
+      if (response.data && response.data.status === "success") {
+        console.log("Child line created successfully:", response.data)
+        setToastMessage("Child line created successfully")
+        setIsError(false)
+        setShowToast(true)
+      } else {
+        throw new Error(response.data.message || "Unknown error occurred")
+      }
+    } catch (error) {
+      console.error("Error creating child line:", error)
+      setToastMessage(`Error creating child line: ${error.message || "Unknown error"}`)
+      setIsError(true)
+      setShowToast(true)
+    }
   }
 
   // Handle cancel button click
@@ -401,464 +458,479 @@ const LinesAddChild = ({ onCancel }) => {
 
   return (
     <div className="bodyoflines">
-    <div className="order-details-container-kh-addchild">
-      {/* Success Toast */}
-      {showToast && (
-        <div className="toast-container-kh-addchild">
-          <div className="toast-kh-addchild success-toast-kh-addchild">
-            <CheckCircle size={20} />
-            <span>Child line created successfully</span>
-          </div>
-        </div>
-      )}
-
-      <div className="order-header-kh-addchild">
-        <h1>Add Child</h1>
-        <div className="order-actions-kh-addchild">
-          <button className="save-btn-kh-addchild" onClick={handleSubmit}>
-            <Save size={16} />
-            <span>Save</span>
-          </button>
-          <button className="cancel-btn-kh-addchild" onClick={handleCancelClick}>
-            <X size={16} />
-            <span>Cancel</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="order-tabs-kh-addchild">
-        <div
-          className={`tab-kh-addchild ${activeTab === "product-details" ? "active-kh-addchild" : ""}`}
-          onClick={() => handleTabClick("product-details")}
-        >
-          Product Details
-        </div>
-        <div
-          className={`tab-kh-addchild ${activeTab === "customer-details" ? "active-kh-addchild" : ""}`}
-          onClick={() => handleTabClick("customer-details")}
-        >
-          Customer Details
-        </div>
-        <div
-          className={`tab-kh-addchild ${activeTab === "billing" ? "active-kh-addchild" : ""}`}
-          onClick={() => handleTabClick("billing")}
-        >
-          Billing
-        </div>
-      </div>
-
-      {/* Product Details Tab */}
-      {activeTab === "product-details" && (
-        <div className="order-form-kh-addchild">
-          <div className="form-section-kh-addchild">
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Parent</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={parentDropdownRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowParentDropdown(!showParentDropdown)}
-                  >
-                    <span>{selectedParent || "Select Parent"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showParentDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {parentOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleParentSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-field-container-kh-addchild">
-                <label>Service Name</label>
-                <div className="input-wrapper-kh-addchild">
-                  <input
-                    type="text"
-                    placeholder="Enter service name"
-                    value={line.serviceName}
-                    onChange={(e) => handleChange("serviceName", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Start Date</label>
-                <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
-                  <input
-                    type="text"
-                    placeholder="Select date"
-                    value={dates.startDate}
-                    readOnly
-                    onClick={() => setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")}
-                  />
-                  <button
-                    className="calendar-btn-kh-addchild"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")
-                    }}
-                  >
-                    <Calendar size={14} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="form-field-container-kh-addchild">
-                <label>End Date</label>
-                <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
-                  <input
-                    type="text"
-                    placeholder="Select date"
-                    value={dates.endDate}
-                    readOnly
-                    onClick={() => setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")}
-                  />
-                  <button
-                    className="calendar-btn-kh-addchild"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")
-                    }}
-                  >
-                    <Calendar size={14} />
-                  </button>
-                </div>
-              </div>
+      <div className="order-details-container-kh-addchild">
+        {/* Success Toast */}
+        {showToast && (
+          <div className="toast-container-kh-addchild">
+            <div className={`toast-kh-addchild ${isError ? "error-toast-kh-addchild" : "success-toast-kh-addchild"}`}>
+              <CheckCircle size={20} />
+              <span>{toastMessage}</span>
             </div>
           </div>
+        )}
+
+        <div className="order-header-kh-addchild">
+          <h1>Add Child</h1>
+          <div className="order-actions-kh-addchild">
+            <button className="save-btn-kh-addchild" onClick={handleSubmit}>
+              <Save size={16} />
+              <span>Save</span>
+            </button>
+            <button className="cancel-btn-kh-addchild" onClick={handleCancelClick}>
+              <X size={16} />
+              <span>Cancel</span>
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Customer Details Tab */}
-      {activeTab === "customer-details" && (
-        <div className="order-form-kh-addchild">
-          <div className="form-section-kh-addchild">
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Customer details</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={billToCustomerRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
-                  >
-                    <span>{line.billToCustomerId || "Select Customer"}</span>
-                    <ChevronDown size={16} />
-                  </div>
+        <div className="order-tabs-kh-addchild">
+          <div
+            className={`tab-kh-addchild ${activeTab === "product-details" ? "active-kh-addchild" : ""}`}
+            onClick={() => handleTabClick("product-details")}
+          >
+            Product Details
+          </div>
+          <div
+            className={`tab-kh-addchild ${activeTab === "customer-details" ? "active-kh-addchild" : ""}`}
+            onClick={() => handleTabClick("customer-details")}
+          >
+            Customer Details
+          </div>
+          <div
+            className={`tab-kh-addchild ${activeTab === "billing" ? "active-kh-addchild" : ""}`}
+            onClick={() => handleTabClick("billing")}
+          >
+            Billing
+          </div>
+        </div>
 
-                  {showBillToCustomerDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {billToCustomerOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleBillToCustomerSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
+        {/* Product Details Tab */}
+        {activeTab === "product-details" && (
+          <div className="order-form-kh-addchild">
+            <div className="form-section-kh-addchild">
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Parent</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={parentDropdownRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowParentDropdown(!showParentDropdown)}
+                    >
+                      <span>{selectedParent || "Select Parent"}</span>
+                      <ChevronDown size={16} />
                     </div>
-                  )}
+
+                    {showParentDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {parentOptions.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item-kh-addchild"
+                              onClick={() => handleParentSelect(option)}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Service Name</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      placeholder="Enter service name"
+                      value={line.serviceName}
+                      onChange={(e) => handleChange("serviceName", e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="form-field-container-kh-addchild">
-                <label>Bill to Site</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={billToSiteRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
-                  >
-                    <span>{line.billToSiteId || "Select Site"}</span>
-                    <ChevronDown size={16} />
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Start Date</label>
+                  <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      placeholder="Select date"
+                      value={dates.startDate}
+                      readOnly
+                      onClick={() => setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")}
+                    />
+                    <button
+                      className="calendar-btn-kh-addchild"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")
+                      }}
+                    >
+                      <Calendar size={14} />
+                    </button>
                   </div>
-
-                  {showBillToSiteDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {billToSiteOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleBillToSiteSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            </div>
 
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Bill to Contact</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={billToContactRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
-                  >
-                    <span>{line.billToContactId || "Select Contact"}</span>
-                    <ChevronDown size={16} />
+                <div className="form-field-container-kh-addchild">
+                  <label>End Date</label>
+                  <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      placeholder="Select date"
+                      value={dates.endDate}
+                      readOnly
+                      onClick={() => setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")}
+                    />
+                    <button
+                      className="calendar-btn-kh-addchild"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")
+                      }}
+                    >
+                      <Calendar size={14} />
+                    </button>
                   </div>
-
-                  {showBillToContactDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {billToContactOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleBillToContactSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="form-field-container-kh-addchild">
-                <label>Sales Representative</label>
-                <div className="input-wrapper-kh-addchild">
-                  <input
-                    type="text"
-                    placeholder="Enter sales rep name"
-                    value={line.salesrep}
-                    onChange={(e) => handleChange("salesrep", e.target.value)}
-                  />
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Billing Tab */}
-      {activeTab === "billing" && (
-        <div className="order-form-kh-addchild">
-          <div className="form-section-kh-addchild">
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Quantity</label>
-                <div className="input-wrapper-kh-addchild">
-                  <input
-                    type="number"
-                    placeholder="Enter quantity"
-                    value={quantity}
-                    onChange={(e) => handleChange("quantity", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-field-container-kh-addchild">
-                <label>Unit Price</label>
-                <div className="input-wrapper-kh-addchild">
-                  <input
-                    type="number"
-                    placeholder="Enter unit price"
-                    value={unitPrice}
-                    onChange={(e) => handleChange("unitPrice", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>UOM</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={uomDropdownRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowUOMDropdown(!showUOMDropdown)}
-                  >
-                    <span>{selectedUOM || "Select UOM"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showUOMDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {uomOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleUOMSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
+        {/* Customer Details Tab */}
+        {activeTab === "customer-details" && (
+          <div className="order-form-kh-addchild">
+            <div className="form-section-kh-addchild">
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Customer details</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToCustomerRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
+                    >
+                      <span>{line.billToCustomerId || "Select Customer"}</span>
+                      <ChevronDown size={16} />
                     </div>
-                  )}
-                </div>
-              </div>
 
-              <div className="form-field-container-kh-addchild">
-                <label>Total</label>
-                <div className="input-wrapper-kh-addchild">
-                  <input type="text" placeholder="Calculated total" value={total} readOnly />
-                </div>
-              </div>
-            </div>
-
-            <div className="form-row-kh-addchild">
-              <div className="form-field-container-kh-addchild">
-                <label>Billing Frequency</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={billingFrequencyDropdownRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowBillingFrequencyDropdown(!showBillingFrequencyDropdown)}
-                  >
-                    <span>{selectedBillingFrequency || "Select Billing Frequency"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showBillingFrequencyDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {billingFrequencyOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleBillingFrequencySelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                    {showBillToCustomerDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {billToCustomerOptions.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item-kh-addchild"
+                              onClick={() => handleBillToCustomerSelect(option)}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Bill to Site</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToSiteRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
+                    >
+                      <span>{line.billToSiteId || "Select Site"}</span>
+                      <ChevronDown size={16} />
                     </div>
-                  )}
+
+                    {showBillToSiteDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {billToSiteOptions.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item-kh-addchild"
+                              onClick={() => handleBillToSiteSelect(option)}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="form-field-container-kh-addchild">
-                <label>Billing Channel</label>
-                <div className="custom-dropdown-wrapper-kh-addchild" ref={billingChannelDropdownRef}>
-                  <div
-                    className="custom-dropdown-trigger-kh-addchild"
-                    onClick={() => setShowBillingChannelDropdown(!showBillingChannelDropdown)}
-                  >
-                    <span>{selectedBillingChannel || "Select Billing Channel"}</span>
-                    <ChevronDown size={16} />
-                  </div>
-
-                  {showBillingChannelDropdown && (
-                    <div className="custom-dropdown-menu-kh-addchild">
-                      <div className="custom-dropdown-content-kh-addchild">
-                        {billingChannelOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item-kh-addchild"
-                            onClick={() => handleBillingChannelSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
-                      </div>
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Bill to Contact</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToContactRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
+                    >
+                      <span>{line.billToContactId || "Select Contact"}</span>
+                      <ChevronDown size={16} />
                     </div>
-                  )}
+
+                    {showBillToContactDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {billToContactOptions.map((option, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item-kh-addchild"
+                              onClick={() => handleBillToContactSelect(option)}
+                            >
+                              {option.label}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Sales Representative</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      placeholder="Enter sales rep name"
+                      value={line.salesrep}
+                      onChange={(e) => handleChange("salesrep", e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Enhanced Date Picker Popup */}
-      {showDatePicker && (
-        <div className="date-picker-overlay-kh-addchild">
-          <div className="date-picker-modal-kh-addchild" ref={datePickerRef}>
-            <div className="calendar-header-kh-addchild">
+        {/* Billing Tab */}
+        {activeTab === "billing" && (
+          <div className="order-form-kh-addchild">
+            <div className="form-section-kh-addchild">
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Quantity</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="number"
+                      placeholder="Enter quantity"
+                      value={quantity}
+                      onChange={(e) => handleChange("orderedQuantity", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Unit Price</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="number"
+                      placeholder="Enter unit price"
+                      value={unitPrice}
+                      onChange={(e) => handleChange("unitPrice", e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>UOM</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={uomDropdownRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowUOMDropdown(!showUOMDropdown)}
+                    >
+                      <span>{selectedUOM || "Select UOM"}</span>
+                      <ChevronDown size={16} />
+                    </div>
+
+                    {showUOMDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {loadingLookupValues ? (
+                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                          ) : (
+                            lookupValues.uomList &&
+                            lookupValues.uomList.map((option, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addchild"
+                                onClick={() => handleUOMSelect(option)}
+                              >
+                                {option.meaning}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Total</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input type="text" placeholder="Calculated total" value={total} readOnly />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row-kh-addchild">
+                <div className="form-field-container-kh-addchild">
+                  <label>Billing Frequency</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billingFrequencyDropdownRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowBillingFrequencyDropdown(!showBillingFrequencyDropdown)}
+                    >
+                      <span>{selectedBillingFrequency || "Select Billing Frequency"}</span>
+                      <ChevronDown size={16} />
+                    </div>
+
+                    {showBillingFrequencyDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {loadingLookupValues ? (
+                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                          ) : (
+                            lookupValues.billingFrequencies &&
+                            lookupValues.billingFrequencies.map((option, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addchild"
+                                onClick={() => handleBillingFrequencySelect(option)}
+                              >
+                                {option.meaning}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Billing Channel</label>
+                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billingChannelDropdownRef}>
+                    <div
+                      className="custom-dropdown-trigger-kh-addchild"
+                      onClick={() => setShowBillingChannelDropdown(!showBillingChannelDropdown)}
+                    >
+                      <span>{selectedBillingChannel || "Select Billing Channel"}</span>
+                      <ChevronDown size={16} />
+                    </div>
+
+                    {showBillingChannelDropdown && (
+                      <div className="custom-dropdown-menu-kh-addchild">
+                        <div className="custom-dropdown-content-kh-addchild">
+                          {loadingLookupValues ? (
+                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                          ) : (
+                            lookupValues.billingChannels &&
+                            lookupValues.billingChannels.map((option, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addchild"
+                                onClick={() => handleBillingChannelSelect(option)}
+                              >
+                                {option.meaning}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Date Picker Popup */}
+        {showDatePicker && (
+          <div className="date-picker-overlay-kh-addchild">
+            <div className="date-picker-modal-kh-addchild" ref={datePickerRef}>
+              <div className="calendar-header-kh-addchild">
+                {calendarView === "date" && (
+                  <>
+                    <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevMonth}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span onClick={handleMonthClick}>{calendarDate.toLocaleString("default", { month: "long" })}</span>
+                    <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
+                    <button className="calendar-nav-btn-kh-addchild" onClick={handleNextMonth}>
+                      <ChevronRight size={16} />
+                    </button>
+                  </>
+                )}
+
+                {calendarView === "month" && (
+                  <>
+                    <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevYear}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
+                    <button className="calendar-nav-btn-kh-addchild" onClick={handleNextYear}>
+                      <ChevronRight size={16} />
+                    </button>
+                  </>
+                )}
+
+                {calendarView === "year" && (
+                  <>
+                    <button
+                      className="calendar-nav-btn-kh-addchild"
+                      onClick={() => {
+                        setCalendarDate(new Date(calendarDate.getFullYear() - 12, calendarDate.getMonth(), 1))
+                      }}
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span>
+                      {calendarDate.getFullYear() - 6} - {calendarDate.getFullYear() + 5}
+                    </span>
+                    <button
+                      className="calendar-nav-btn-kh-addchild"
+                      onClick={() => {
+                        setCalendarDate(new Date(calendarDate.getFullYear() + 12, calendarDate.getMonth(), 1))
+                      }}
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </>
+                )}
+              </div>
+
               {calendarView === "date" && (
-                <>
-                  <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevMonth}>
-                    <ChevronLeft size={16} />
-                  </button>
-                  <span onClick={handleMonthClick}>{calendarDate.toLocaleString("default", { month: "long" })}</span>
-                  <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
-                  <button className="calendar-nav-btn-kh-addchild" onClick={handleNextMonth}>
-                    <ChevronRight size={16} />
-                  </button>
-                </>
+                <div className="calendar-days-kh-addchild">
+                  <div className="weekday-kh-addchild">Su</div>
+                  <div className="weekday-kh-addchild">Mo</div>
+                  <div className="weekday-kh-addchild">Tu</div>
+                  <div className="weekday-kh-addchild">We</div>
+                  <div className="weekday-kh-addchild">Th</div>
+                  <div className="weekday-kh-addchild">Fr</div>
+                  <div className="weekday-kh-addchild">Sa</div>
+                  {generateCalendar(showDatePicker)}
+                </div>
               )}
 
-              {calendarView === "month" && (
-                <>
-                  <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevYear}>
-                    <ChevronLeft size={16} />
-                  </button>
-                  <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
-                  <button className="calendar-nav-btn-kh-addchild" onClick={handleNextYear}>
-                    <ChevronRight size={16} />
-                  </button>
-                </>
-              )}
-
-              {calendarView === "year" && (
-                <>
-                  <button
-                    className="calendar-nav-btn-kh-addchild"
-                    onClick={() => {
-                      setCalendarDate(new Date(calendarDate.getFullYear() - 12, calendarDate.getMonth(), 1))
-                    }}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <span>
-                    {calendarDate.getFullYear() - 6} - {calendarDate.getFullYear() + 5}
-                  </span>
-                  <button
-                    className="calendar-nav-btn-kh-addchild"
-                    onClick={() => {
-                      setCalendarDate(new Date(calendarDate.getFullYear() + 12, calendarDate.getMonth(), 1))
-                    }}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </>
+              {(calendarView === "month" || calendarView === "year") && (
+                <div className="calendar-grid-kh-addchild">{generateCalendar(showDatePicker)}</div>
               )}
             </div>
-
-            {calendarView === "date" && (
-              <div className="calendar-days-kh-addchild">
-                <div className="weekday-kh-addchild">Su</div>
-                <div className="weekday-kh-addchild">Mo</div>
-                <div className="weekday-kh-addchild">Tu</div>
-                <div className="weekday-kh-addchild">We</div>
-                <div className="weekday-kh-addchild">Th</div>
-                <div className="weekday-kh-addchild">Fr</div>
-                <div className="weekday-kh-addchild">Sa</div>
-                {generateCalendar(showDatePicker)}
-              </div>
-            )}
-
-            {(calendarView === "month" || calendarView === "year") && (
-              <div className="calendar-grid-kh-addchild">{generateCalendar(showDatePicker)}</div>
-            )}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   )
 }

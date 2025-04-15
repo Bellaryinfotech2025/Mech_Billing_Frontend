@@ -1,15 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CheckCircle, Download, Plus, Edit } from "lucide-react"
 import "../Mech Lines Design/linesdatabasedesign.css"
+import axios from "axios"
 
-const LinesDatabaseSearch = ({ onAddOrderClick, onAddParentClick, onAddChildClick }) => {
-  // State for orders (simplified, no backend data)
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(false)
+const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
+  // State for orders
+  const [orderLines, setOrderLines] = useState([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [dataFetched, setDataFetched] = useState(false)
+
+  // Default order ID
+  const orderId = 1
+
+  // API base URL
+  const API_URL = "http://localhost:1111/api"
+
+  // Fetch order lines from the backend
+  useEffect(() => {
+    const fetchOrderLines = async () => {
+      try {
+        setLoading(true)
+        console.log("Fetching lines from:", `${API_URL}/lines/fetchLinesByOrder/${orderId}`)
+        const response = await axios.get(`${API_URL}/lines/fetchLinesByOrder/${orderId}`)
+
+        if (response.data && response.data.status === "success") {
+          console.log("Lines fetched successfully:", response.data)
+          setOrderLines(response.data.lines || [])
+          setDataFetched(true)
+        } else {
+          console.error("Error in response:", response.data)
+          throw new Error(response.data.message || "Failed to fetch lines")
+        }
+      } catch (err) {
+        console.error("Error fetching order lines:", err)
+        setError(`Failed to load order lines: ${err.message || "Unknown error"}`)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrderLines()
+  }, [])
 
   // Handle Add Parent button click
   const handleAddParent = () => {
@@ -92,18 +126,9 @@ const LinesDatabaseSearch = ({ onAddOrderClick, onAddParentClick, onAddChildClic
                     {error}
                   </td>
                 </tr>
-              ) : !dataFetched ? (
-                <tr className="no-records-rowlineskh">
-                  <td colSpan={7}>
-                    <div className="active-toastlineskh">
-                      <CheckCircle size={18} />
-                      <span>Order Number soheil_21 is active</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : orders.length > 0 ? (
-                orders.map((order, index) => (
-                  <tr key={index} className={index % 2 === 0 ? "table-row-evenlineskh" : ""}>
+              ) : orderLines.length > 0 ? (
+                orderLines.map((line, index) => (
+                  <tr key={line.lineId} className={index % 2 === 0 ? "table-row-evenlineskh" : ""}>
                     <td>
                       <div className="action-buttonslineskh">
                         <button className="action-btnlineskh">
@@ -111,17 +136,14 @@ const LinesDatabaseSearch = ({ onAddOrderClick, onAddParentClick, onAddChildClic
                         </button>
                       </div>
                     </td>
-                    <td>SRV-{index + 1001}</td>
+                    <td>SRV-{line.lineNumber}</td>
                     <td className="service-description-celllineskh">
-                      Service description with extended width to accommodate longer text and descriptions for better
-                      readability
+                      {line.serviceName || "No description available"}
                     </td>
-                    <td>EA</td>
-                    <td>{Math.floor(Math.random() * 10) + 1}</td>
-                    <td>${(Math.random() * 1000).toFixed(2)}</td>
-                    <td>
-                      {formatDate(new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1))}
-                    </td>
+                    <td>{line.uom || "-"}</td>
+                    <td>{line.orderedQuantity || "-"}</td>
+                    <td>${line.totalPrice ? Number.parseFloat(line.totalPrice).toFixed(2) : "-"}</td>
+                    <td>{formatDate(line.effectiveEndDate)}</td>
                   </tr>
                 ))
               ) : (

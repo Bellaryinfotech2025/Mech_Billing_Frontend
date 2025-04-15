@@ -20,7 +20,7 @@
 }
 
 .bodyoflines {
-  
+   
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: var(--text-primary);
@@ -28,12 +28,14 @@
 }
 
 .order-details-container-kh-addparent {
-  width: 1200px;
+  width: 1200px; /* Changed from fixed 1200px to 100% for better responsiveness */
+  max-width: 1200px; /* Added max-width instead */
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
   background-color: white;
+  margin: 0 auto; /* Center the container */
 }
 
 /* Toast notification styling */
@@ -218,13 +220,14 @@
 /* Section styling - kept ash color background */
 .form-section-kh-addparent {
   background-color: var(--background-section);
-  padding: 30px 24px;
+  padding: 30px 24px 60px 24px; /* Added more padding at the bottom */
   margin-bottom: 0;
   box-shadow: none;
   border-radius: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  min-height: 500px; /* Ensure minimum height for the form section */
 }
 
 .section-title-kh-addparent {
@@ -241,8 +244,9 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 30px;
-  margin-bottom: 24px;
+  margin-bottom: 40px; /* Increased from 24px to 40px for more space */
   width: 100%;
+  position: relative; /* Add position relative to contain absolute positioned dropdowns */
 }
 
 .form-field-container-kh-addparent {
@@ -376,6 +380,7 @@
   border-color: #2193b0;
 }
 
+/* Update the custom dropdown menu to ensure it's visible */
 .custom-dropdown-menu-kh-addparent {
   position: absolute;
   top: 100%;
@@ -387,18 +392,27 @@
   border-radius: 4px;
   margin-top: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  z-index: 1000; /* Increased z-index to ensure it appears above other elements */
+  overflow: visible; /* Ensure content isn't cut off */
 }
 
 .custom-dropdown-content-kh-addparent {
   max-height: 220px;
   overflow-y: auto;
+  background-color: white; /* Ensure background is solid */
+  border-radius: 4px;
 }
 
+/* Improve dropdown item styling */
 .custom-dropdown-item-kh-addparent {
-  padding: 8px 12px;
+  padding: 10px 12px; /* Increased padding for better clickability */
   cursor: pointer;
   transition: background 0.2s ease;
+  border-bottom: 1px solid #f0f0f0; /* Add subtle separator */
+}
+
+.custom-dropdown-item-kh-addparent:last-child {
+  border-bottom: none;
 }
 
 .custom-dropdown-item-kh-addparent:hover {
