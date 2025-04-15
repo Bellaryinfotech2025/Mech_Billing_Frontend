@@ -85,7 +85,7 @@ const RegisterPage = () => {
     e.preventDefault()
     if (validateForm()) {
       try {
-        const response = await axios.post("http://localhost:5522/api/register", user)
+        const response = await axios.post("http://195.35.45.56:5522/api/register", user)
 
         alert("Registration Successful!")
         navigate("/loginbilling") // Navigate to login page after successful registration
