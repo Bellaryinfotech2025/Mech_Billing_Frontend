@@ -16,7 +16,9 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
   const orderId = 1
 
   // API base URL
-  const API_URL = "http://localhost:5525/api"
+ 
+  const API_URL = "http://195.35.45.56:5522/api"
+ 
 
   // Fetch order lines from the backend
   useEffect(() => {

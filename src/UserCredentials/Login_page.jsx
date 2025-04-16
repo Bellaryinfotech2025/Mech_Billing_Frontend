@@ -61,8 +61,9 @@ const LoginPage = () => {
     setIsSubmitting(true);
     
     try {
+  
+      const response = await axios.post('http://195.35.45.56:5522/api/login', credentials);
  
-      const response = await axios.post('http://localhost:5525/api/login', credentials);
  
       alert('Login Successful!');
       navigate('/dashboardbilling');  // Navigate to dashboard after successful login

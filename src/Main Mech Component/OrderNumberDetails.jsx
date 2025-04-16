@@ -38,8 +38,9 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
   const billingCycleDropdownRef = useRef(null)
 
   // API base URL
+  
+  const API_URL = "http://195.35.45.56:5522/api"
  
-  const API_URL = "http://localhost:5525/api"
  
 
   useEffect(() => {

@@ -41,8 +41,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
 
   // API base URL
  
+  
+  const API_URL = "http://195.35.45.56:5522/api"
  
-  const API_URL = "http://localhost:5525/api"
+ 
  
 
   // Fetch lookup values on component mount
