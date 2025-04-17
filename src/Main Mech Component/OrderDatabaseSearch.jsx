@@ -31,8 +31,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // API base URL
-
-  const API_URL = "http://localhost:9988/api"
+ 
+  
+  const API_URL = "http://195.35.45.56:5522/api"
+ 
+ 
+ 
+ 
 
   // Fetch lookup values on component mount
   useEffect(() => {

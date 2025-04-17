@@ -81,7 +81,7 @@ const LoginPage = () => {
     setIsLoading(true)
 
     try {
-      const response = await axios.post("http://localhost:9955/api/login", credentials)
+      const response = await axios.post("http://195.35.45.56:5522/api/login", credentials)
 
       // Extract username from response or use email as fallback
       const username = response.data?.user?.username || credentials.email.split("@")[0]
