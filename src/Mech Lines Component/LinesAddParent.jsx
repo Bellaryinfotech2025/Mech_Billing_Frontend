@@ -43,7 +43,7 @@ const LinesAddParent = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:9988/api"
+  const API_URL = "http://195.35.45.56:5522/api"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
