@@ -5,7 +5,6 @@ import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle 
 import "../Mech Lines Design/linesaddparent.css"
 import axios from "axios"
 
-// Update the component to accept onCancel prop
 const LinesAddParent = ({ onCancel }) => {
   const [activeTab, setActiveTab] = useState("product-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
@@ -13,7 +12,6 @@ const LinesAddParent = ({ onCancel }) => {
     startDate: "",
     endDate: "",
   })
-  const [isParent, setIsParent] = useState(true) // Default to true for parent lines
   const [showBillingFrequencyDropdown, setShowBillingFrequencyDropdown] = useState(false)
   const [showBillingChannelDropdown, setShowBillingChannelDropdown] = useState(false)
   const [selectedBillingFrequency, setSelectedBillingFrequency] = useState("")
@@ -24,7 +22,7 @@ const LinesAddParent = ({ onCancel }) => {
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState("Line created successfully")
+  const [toastMessage, setToastMessage] = useState("Parent line created successfully")
   const [isError, setIsError] = useState(false)
 
   // Calendar state
@@ -44,10 +42,8 @@ const LinesAddParent = ({ onCancel }) => {
   const billToSiteRef = useRef(null)
   const billToContactRef = useRef(null)
 
-  // Update the API_URL to match your code
- 
-  const API_URL = "http://195.35.45.56:5522/api"
- 
+  // API base URL
+  const API_URL = "http://localhost:9988/api"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
@@ -64,7 +60,7 @@ const LinesAddParent = ({ onCancel }) => {
     serviceName: "",
     effectiveStartDate: null,
     effectiveEndDate: null,
-    isParent: true,
+    isParent: true, // This is a parent line
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
@@ -74,9 +70,52 @@ const LinesAddParent = ({ onCancel }) => {
     uom: "",
     totalPrice: "",
     billingFrequency: "",
-    // Remove billingChannel from the state since it doesn't exist in the database
     status: "ACTIVE",
   })
+
+  // Fetch lookup values from the backend
+  useEffect(() => {
+    const fetchLookupValues = async () => {
+      try {
+        setLoadingLookupValues(true)
+        // First try the order-lookup-values endpoint
+        try {
+          const response = await axios.get(`${API_URL}/order-lookup-values`)
+          if (response.data) {
+            console.log("Lookup values:", response.data)
+            setLookupValues({
+              billingFrequencies: response.data.billingFrequencies || [],
+              billingChannels: response.data.billingChannels || [],
+              uomList: response.data.uomList || [],
+            })
+            setLoadingLookupValues(false)
+            return
+          }
+        } catch (error) {
+          console.error("Error fetching from order-lookup-values:", error)
+          // Continue to fallback
+        }
+
+        // Fallback to the original endpoint
+        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
+        if (response.data && response.data.status === "success") {
+          setLookupValues({
+            billingFrequencies: response.data.billingFrequencies || [],
+            billingChannels: response.data.billingChannels || [],
+            uomList: response.data.uomList || [],
+          })
+        } else {
+          console.error("Error in lookup response:", response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching lookup values:", error)
+      } finally {
+        setLoadingLookupValues(false)
+      }
+    }
+
+    fetchLookupValues()
+  }, [])
 
   // Customer details options
   const billToCustomerOptions = [
@@ -102,35 +141,6 @@ const LinesAddParent = ({ onCancel }) => {
     { value: "4", label: " 004" },
     { value: "5", label: "005" },
   ]
-
-  // Update the fetchLookupValues function to properly handle the billing frequencies
-  const fetchLookupValues = async () => {
-    try {
-      setLoadingLookupValues(true)
-      // Fetch billing frequencies from the core lookup values
-      const response = await axios.get(`${API_URL}/lookups/all-lookups`)
-
-      if (response.data && response.data.status === "success") {
-        console.log("Lookup values:", response.data)
-        setLookupValues({
-          billingFrequencies: response.data.billingFrequencies || [],
-          billingChannels: response.data.billingChannels || [],
-          uomList: response.data.uomList || [],
-        })
-      } else {
-        console.error("Error in lookup response:", response.data)
-      }
-    } catch (error) {
-      console.error("Error fetching lookup values:", error)
-    } finally {
-      setLoadingLookupValues(false)
-    }
-  }
-
-  // Fetch lookup values from the backend
-  useEffect(() => {
-    fetchLookupValues()
-  }, [])
 
   // Auto-hide toast after 2 seconds
   useEffect(() => {
@@ -292,9 +302,8 @@ const LinesAddParent = ({ onCancel }) => {
     return <div className="calendar-years-kh-addparent">{years}</div>
   }
 
-  // Update the handleBillingFrequencySelect function to properly handle the selection
+  // Handle dropdown selection for Billing Frequency
   const handleBillingFrequencySelect = (option) => {
-    console.log("Selected billing frequency:", option)
     setSelectedBillingFrequency(option.meaning)
     setLine({ ...line, billingFrequency: option.lookupCode })
     setShowBillingFrequencyDropdown(false)
@@ -330,12 +339,6 @@ const LinesAddParent = ({ onCancel }) => {
     }
   }
 
-  // Handle checkbox change for Parent
-  const handleParentChange = (checked) => {
-    setIsParent(checked)
-    setLine({ ...line, isParent: checked })
-  }
-
   // Handle customer details dropdown selections
   const handleBillToCustomerSelect = (option) => {
     setLine({ ...line, billToCustomerId: option.value })
@@ -357,6 +360,14 @@ const LinesAddParent = ({ onCancel }) => {
     e.preventDefault()
 
     try {
+      // Validate line number is provided
+      if (!line.lineNumber) {
+        setToastMessage("Line number is required")
+        setIsError(true)
+        setShowToast(true)
+        return
+      }
+
       // Prepare the data for submission
       const lineData = {
         ...line,
@@ -366,8 +377,6 @@ const LinesAddParent = ({ onCancel }) => {
         billToCustomerId: line.billToCustomerId ? Number.parseInt(line.billToCustomerId) : null,
         billToSiteId: line.billToSiteId ? Number.parseInt(line.billToSiteId) : null,
         billToContactId: line.billToContactId ? Number.parseInt(line.billToContactId) : null,
-        // Remove isParent from the data being sent to the server since it's now transient
-        // and will be set in the controller
       }
 
       console.log("Sending data to server:", lineData)
@@ -376,16 +385,16 @@ const LinesAddParent = ({ onCancel }) => {
       const response = await axios.post(`${API_URL}/lines/createParentLine`, lineData)
 
       if (response.data && response.data.status === "success") {
-        console.log("Line created successfully:", response.data)
-        setToastMessage("Line created successfully")
+        console.log("Parent line created successfully:", response.data)
+        setToastMessage("Parent line created successfully")
         setIsError(false)
         setShowToast(true)
       } else {
         throw new Error(response.data.message || "Unknown error occurred")
       }
     } catch (error) {
-      console.error("Error creating line:", error)
-      setToastMessage(`Error creating line: ${error.message || "Unknown error"}`)
+      console.error("Error creating parent line:", error)
+      setToastMessage(`Error creating parent line: ${error.message || "Unknown error"}`)
       setIsError(true)
       setShowToast(true)
     }
@@ -453,7 +462,6 @@ const LinesAddParent = ({ onCancel }) => {
           </div>
         )}
 
-        {/* Find the order-header-kh-addparent div and add an Add Child button */}
         <div className="order-header-kh-addparent">
           <h1>Add Parent</h1>
           <div className="order-actions-kh-addparent">
@@ -495,18 +503,6 @@ const LinesAddParent = ({ onCancel }) => {
             <div className="form-section-kh-addparent">
               <div className="form-row-kh-addparent">
                 <div className="form-field-container-kh-addparent">
-                  <label>Line Number</label>
-                  <div className="input-wrapper-kh-addparent">
-                    <input
-                      type="text"
-                      placeholder="Enter line number"
-                      value={line.lineNumber}
-                      onChange={(e) => handleChange("lineNumber", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-field-container-kh-addparent">
                   <label>Service Name</label>
                   <div className="input-wrapper-kh-addparent">
                     <input
@@ -514,6 +510,19 @@ const LinesAddParent = ({ onCancel }) => {
                       placeholder="Enter service name"
                       value={line.serviceName}
                       onChange={(e) => handleChange("serviceName", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addparent">
+                  <label>Line Number</label>
+                  <div className="input-wrapper-kh-addparent">
+                    <input
+                      type="text"
+                      placeholder="Enter line number"
+                      value={line.lineNumber}
+                      onChange={(e) => handleChange("lineNumber", e.target.value)}
+                      required
                     />
                   </div>
                 </div>
@@ -563,10 +572,6 @@ const LinesAddParent = ({ onCancel }) => {
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <div className="form-row-kh-addparent">
-                
               </div>
             </div>
           </div>
@@ -755,7 +760,6 @@ const LinesAddParent = ({ onCancel }) => {
                 </div>
               </div>
 
-              {/* Update the billing frequency dropdown in the Billing tab */}
               <div className="form-row-kh-addparent">
                 <div className="form-field-container-kh-addparent">
                   <label>Billing Frequency</label>

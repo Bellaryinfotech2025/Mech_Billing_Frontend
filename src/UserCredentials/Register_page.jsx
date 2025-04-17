@@ -2,10 +2,14 @@
 
 import { useState } from "react"
 import "../UserCredentialsDesign/Register_page_design.css"
+import "../UserCredentialsDesign/toast-notification.css"
+import "../UserCredentialsDesign/loading-spinner.css"
 import { FaRupeeSign } from "react-icons/fa"
 import axios from "axios"
-import {Link ,  useNavigate } from "react-router-dom"
-import logo from '../assets/blogo.jpg'
+import { Link, useNavigate } from "react-router-dom"
+import logo from "../assets/blogo.jpg"
+import Toast from "../UserCredentials/Toast"
+import LoadingSpinner from "../UserCredentials/LoadingSpinner"
 
 const RegisterPage = () => {
   const [user, setUser] = useState({
@@ -16,7 +20,6 @@ const RegisterPage = () => {
     phoneNumber: "",
   })
 
-  
   const [error, setError] = useState(null)
   const navigate = useNavigate()
 
@@ -24,6 +27,15 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showGooglePopup, setShowGooglePopup] = useState(false)
   const [isStrongPassword, setIsStrongPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Toast state
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  })
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -87,14 +99,59 @@ const RegisterPage = () => {
     e.preventDefault()
     if (validateForm()) {
       try {
- 
-        const response = await axios.post("http://195.35.45.56:5522/api/register", user)
- 
+        // Show loading spinner
+        setIsLoading(true)
 
-        alert("Registration Successful!")
-        navigate("/loginbilling") // Navigate to login page after successful registration
+        const response = await axios.post("http://195.35.45.56:5522/api/register", user)
+
+        // Reset form fields
+        setUser({
+          fullname: "",
+          username: "",
+          email: "",
+          password: "",
+          phoneNumber: "",
+        })
+
+        // Show loading for 3 seconds before showing toast
+        setTimeout(() => {
+          setIsLoading(false)
+
+          // Show success toast instead of alert
+          setToast({
+            show: true,
+            type: "success",
+            title: "Registration Successful!",
+            message: `Congratulation registration successful ${user.username}`,
+          })
+
+          // Navigate after toast is shown (handled by the toast's onClose)
+          setTimeout(() => {
+            navigate("/loginbilling")
+          }, 3000)
+        }, 3000)
       } catch (err) {
-        setError("Registration failed. Please try again!")
+        setTimeout(() => {
+          setIsLoading(false)
+          setError("Registration failed. Please try again!")
+
+          // Reset form fields on error too
+          setUser({
+            fullname: "",
+            username: "",
+            email: "",
+            password: "",
+            phoneNumber: "",
+          })
+
+          // Show error toast
+          setToast({
+            show: true,
+            type: "error",
+            title: "Registration Failed",
+            message: "Please try again!",
+          })
+        }, 3000)
       }
     }
   }
@@ -111,8 +168,18 @@ const RegisterPage = () => {
     }, 3000)
   }
 
+  const handleCloseToast = () => {
+    setToast({ ...toast, show: false })
+  }
+
   return (
     <section className="bodyooo">
+      {/* Loading Spinner */}
+      {isLoading && <LoadingSpinner />}
+
+      {/* Toast Notification */}
+      {toast.show && <Toast type={toast.type} title={toast.title} message={toast.message} onClose={handleCloseToast} />}
+
       <div className="page-container">
         <div className="register-container">
           <div className="register-left">
@@ -197,7 +264,7 @@ const RegisterPage = () => {
           <div className="register-right">
             <div className="register-form-container">
               <div className="logo-container">
-                <img src={logo} alt="logoofbellary" style={{width:'50px',height:'50px'}}/>
+                <img src={logo || "/placeholder.svg"} alt="logoofbellary" style={{ width: "50px", height: "50px" }} />
                 <h1>MECH BILLING APP</h1>
               </div>
 
@@ -437,4 +504,3 @@ const RegisterPage = () => {
 }
 
 export default RegisterPage;
-

@@ -5,7 +5,7 @@ import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle 
 import "../Mech Lines Design/linesaddchild.css"
 import axios from "axios"
 
-const LinesAddChild = ({ onCancel }) => {
+const LinesAddChild = ({ onCancel, parentLine }) => {
   const [activeTab, setActiveTab] = useState("product-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
   const [dates, setDates] = useState({
@@ -42,13 +42,8 @@ const LinesAddChild = ({ onCancel }) => {
   const billToSiteRef = useRef(null)
   const billToContactRef = useRef(null)
 
-  // Parent dropdown state
-  const [showParentDropdown, setShowParentDropdown] = useState(false)
-  const parentDropdownRef = useRef(null)
-  const [selectedParent, setSelectedParent] = useState("")
-
   // API base URL
-  const API_URL = "http://195.35.45.56:5522/api"
+  const API_URL = "http://localhost:9988/api"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
@@ -58,10 +53,20 @@ const LinesAddChild = ({ onCancel }) => {
   })
   const [loadingLookupValues, setLoadingLookupValues] = useState(true)
 
+  // Generate a default line number for the child
+  const generateChildLineNumber = () => {
+    if (parentLine && parentLine.lineNumber) {
+      // Generate a hierarchical number for the child line (e.g., 846.1)
+      return `${parentLine.lineNumber}.1`
+    }
+    return ""
+  }
+
   // Initial line state
   const [line, setLine] = useState({
     orderId: 1, // Default order ID
-    parentLineNumber: null,
+    parentLineNumber: parentLine ? parentLine.lineNumber : null,
+    lineNumber: generateChildLineNumber(), // Set a hierarchical line number
     serviceName: "",
     effectiveStartDate: null,
     effectiveEndDate: null,
@@ -78,13 +83,52 @@ const LinesAddChild = ({ onCancel }) => {
     status: "ACTIVE",
   })
 
+  // Set the parent service number with decimal format
+  const [parentServiceNumber, setParentServiceNumber] = useState("")
+
+  // Set parent service number and line number when parentLine changes
+  useEffect(() => {
+    if (parentLine) {
+      // If parent line number is 1, child would be 1.1
+      const childServiceNumber = `${parentLine.lineNumber}.1`
+      setParentServiceNumber(childServiceNumber)
+
+      // Set the hierarchical line number for the child
+      const childLineNumber = `${parentLine.lineNumber}.1`
+      setLine((prev) => ({
+        ...prev,
+        parentLineNumber: parentLine.lineNumber,
+        lineNumber: childLineNumber,
+      }))
+    }
+  }, [parentLine])
+
   // Fetch lookup values from the backend
   useEffect(() => {
     const fetchLookupValues = async () => {
       try {
         setLoadingLookupValues(true)
-        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
 
+        // First try the order-lookup-values endpoint
+        try {
+          const response = await axios.get(`${API_URL}/order-lookup-values`)
+          if (response.data) {
+            console.log("Lookup values:", response.data)
+            setLookupValues({
+              billingFrequencies: response.data.billingFrequencies || [],
+              billingChannels: response.data.billingChannels || [],
+              uomList: response.data.uomList || [],
+            })
+            setLoadingLookupValues(false)
+            return
+          }
+        } catch (error) {
+          console.error("Error fetching from order-lookup-values:", error)
+          // Continue to fallback
+        }
+
+        // Fallback to the original endpoint
+        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
         if (response.data && response.data.status === "success") {
           setLookupValues({
             billingFrequencies: response.data.billingFrequencies || [],
@@ -103,15 +147,6 @@ const LinesAddChild = ({ onCancel }) => {
 
     fetchLookupValues()
   }, [])
-
-  // Parent options
-  const parentOptions = [
-    { value: "1", label: "Parent Line 001" },
-    { value: "2", label: "Parent Line 002" },
-    { value: "3", label: "Parent Line 003" },
-    { value: "4", label: "Parent Line 004" },
-    { value: "5", label: "Parent Line 005" },
-  ]
 
   // Customer details options
   const billToCustomerOptions = [
@@ -298,13 +333,6 @@ const LinesAddChild = ({ onCancel }) => {
     return <div className="calendar-years-kh-addchild">{years}</div>
   }
 
-  // Handle dropdown selection for Parent
-  const handleParentSelect = (option) => {
-    setSelectedParent(option.label)
-    setLine({ ...line, parentLineNumber: Number.parseInt(option.value) })
-    setShowParentDropdown(false)
-  }
-
   // Handle dropdown selection for Billing Frequency
   const handleBillingFrequencySelect = (option) => {
     setSelectedBillingFrequency(option.meaning)
@@ -371,17 +399,25 @@ const LinesAddChild = ({ onCancel }) => {
         return
       }
 
+      // Validate line number is provided
+      if (!line.lineNumber) {
+        setToastMessage("Line number is required")
+        setIsError(true)
+        setShowToast(true)
+        return
+      }
+
       // Prepare the data for submission
       const lineData = {
         ...line,
+        // Send the line number as a string to preserve the hierarchical format
+        lineNumber: line.lineNumber,
         orderedQuantity: quantity ? Number.parseFloat(quantity) : null,
         unitPrice: unitPrice ? Number.parseFloat(unitPrice) : null,
         totalPrice: total ? Number.parseFloat(total) : null,
         billToCustomerId: line.billToCustomerId ? Number.parseInt(line.billToCustomerId) : null,
         billToSiteId: line.billToSiteId ? Number.parseInt(line.billToSiteId) : null,
         billToContactId: line.billToContactId ? Number.parseInt(line.billToContactId) : null,
-        // Remove isParent from the data being sent to the server since it's now transient
-        // and will be set in the controller
       }
 
       console.log("Sending data to server:", lineData)
@@ -418,9 +454,6 @@ const LinesAddChild = ({ onCancel }) => {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
         setShowDatePicker(null)
       }
-      if (parentDropdownRef.current && !parentDropdownRef.current.contains(event.target)) {
-        setShowParentDropdown(false)
-      }
       if (billingFrequencyDropdownRef.current && !billingFrequencyDropdownRef.current.contains(event.target)) {
         setShowBillingFrequencyDropdown(false)
       }
@@ -447,7 +480,6 @@ const LinesAddChild = ({ onCancel }) => {
     }
   }, [
     datePickerRef,
-    parentDropdownRef,
     billingFrequencyDropdownRef,
     billingChannelDropdownRef,
     uomDropdownRef,
@@ -511,33 +543,28 @@ const LinesAddChild = ({ onCancel }) => {
               <div className="form-row-kh-addchild">
                 <div className="form-field-container-kh-addchild">
                   <label>Parent</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={parentDropdownRef}>
-                    <div
-                      className="custom-dropdown-trigger-kh-addchild"
-                      onClick={() => setShowParentDropdown(!showParentDropdown)}
-                    >
-                      <span>{selectedParent || "Select Parent"}</span>
-                      <ChevronDown size={16} />
-                    </div>
-
-                    {showParentDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
-                          {parentOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addchild"
-                              onClick={() => handleParentSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      value={
+                        parentLine
+                          ? `Line ${parentLine.lineNumber} - ${parentLine.serviceName || "No description"}`
+                          : ""
+                      }
+                      readOnly
+                    />
                   </div>
                 </div>
 
+                <div className="form-field-container-kh-addchild">
+                  <label>Service Number</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input type="text" value={parentServiceNumber} readOnly />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row-kh-addchild">
                 <div className="form-field-container-kh-addchild">
                   <label>Service Name</label>
                   <div className="input-wrapper-kh-addchild">
@@ -546,6 +573,19 @@ const LinesAddChild = ({ onCancel }) => {
                       placeholder="Enter service name"
                       value={line.serviceName}
                       onChange={(e) => handleChange("serviceName", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field-container-kh-addchild">
+                  <label>Line Number</label>
+                  <div className="input-wrapper-kh-addchild">
+                    <input
+                      type="text"
+                      placeholder="Enter line number"
+                      value={line.lineNumber}
+                      onChange={(e) => handleChange("lineNumber", e.target.value)}
+                      required
                     />
                   </div>
                 </div>

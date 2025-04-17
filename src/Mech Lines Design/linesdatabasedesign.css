@@ -3,7 +3,7 @@
 
 /* Base container styles */
 .order-search-containerlineskh {
-  width: 100%;
+  width: 1280px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -42,7 +42,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #4f46e5;
+  background: linear-gradient(to bottom, #9e9e9e, #757575);
   color: white;
   border: none;
   border-radius: 4px;
@@ -62,7 +62,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: #10b981;
+  background: linear-gradient(to bottom, #9e9e9e, #757575);
   color: white;
   border: none;
   border-radius: 4px;
@@ -181,7 +181,7 @@
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .orders-tablelineskh th {
@@ -201,25 +201,47 @@
 
 /* Column widths with proper spacing */
 .orders-tablelineskh th:nth-child(1) {
-  width: 100px;
-} /* ACTIONS */
-.orders-tablelineskh th:nth-child(2) {
-  width: 150px;
-} /* SERVICE NUMBER */
-.orders-tablelineskh th:nth-child(3) {
-  width: 300px;
-} /* SERVICE DESCRIPTION */
-.orders-tablelineskh th:nth-child(4) {
   width: 80px;
-} /* UOM */
+  min-width: 80px;
+} /* ACTIONS */
+
+.orders-tablelineskh th:nth-child(2) {
+  width: 120px;
+  min-width: 120px;
+} /* LINE NUMBER */
+
+.orders-tablelineskh th:nth-child(3) {
+  width: 150px;
+  min-width: 150px;
+} /* SERVICE NUMBER */
+
+.orders-tablelineskh th:nth-child(4) {
+  width: auto;
+  min-width: 250px;
+} /* SERVICE DESCRIPTION */
+
 .orders-tablelineskh th:nth-child(5) {
   width: 80px;
-} /* QTY */
+  min-width: 80px;
+  text-align: center;
+} /* UOM */
+
 .orders-tablelineskh th:nth-child(6) {
-  width: 100px;
-} /* TOTAL */
+  width: 80px;
+  min-width: 80px;
+  text-align: center;
+} /* QTY */
+
 .orders-tablelineskh th:nth-child(7) {
+  width: 100px;
+  min-width: 100px;
+  text-align: right;
+} /* TOTAL */
+
+.orders-tablelineskh th:nth-child(8) {
   width: 150px;
+  min-width: 150px;
+  text-align: center;
 } /* COMPLETION DATE */
 
 .orders-tablelineskh tr {
@@ -237,21 +259,45 @@
 .orders-tablelineskh td {
   padding: 12px 16px;
   border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: #334155;
+  vertical-align: middle;
 }
 
+/* Align columns consistently with headers */
+.orders-tablelineskh td:nth-child(5),
+.orders-tablelineskh td:nth-child(6) {
+  text-align: center;
+}
+
+.orders-tablelineskh td:nth-child(7) {
+  text-align: right;
+}
+
+.orders-tablelineskh td:nth-child(8) {
+  text-align: center;
+}
+
+/* Service number link styling */
+.service-number-linklineskh {
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.service-number-linklineskh:hover {
+  color: #4338ca;
+  text-decoration: underline;
+}
+
+/* Service description cell - ensure text is fully visible */
 .service-description-celllineskh {
-  padding: 12px 16px;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #334155;
-  width: 300px;
-  max-width: 300px;
+  white-space: normal !important;
+  overflow: visible !important;
+  word-wrap: break-word !important;
+  line-height: 1.4 !important;
+  max-width: none !important;
+  width: auto !important;
 }
 
 .action-buttonslineskh {

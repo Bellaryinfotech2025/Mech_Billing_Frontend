@@ -30,14 +30,13 @@ import Alignment from "../Main Mech Component/Alingment"
 import Erection from "../Main Mech Component/Erection"
 import LookupTable from "../Main Mech Component/LookUpTable"
 import LinesAddParent from "../Mech Lines Component/LinesAddParent"
-import LinesAddChild from "../Mech Lines Component/LinesAddChild"
+import LinesAddChild from "../Mech Lines Component/LineAddChild"
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
 import "../Design Component/user-dropdown.css"
 import "../Design Component/order-database-search.css"
 import "../Design Component/dashboard-fix.css"
- 
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -52,8 +51,23 @@ const MainDashboard = () => {
   const fileInputRef = useRef(null)
   const userDropdownRef = useRef(null)
   const [showLinesAddParent, setShowLinesAddParent] = useState(false)
-  // Add a new state for tracking LinesAddChild visibility
   const [showLinesAddChild, setShowLinesAddChild] = useState(false)
+  const [selectedParentLine, setSelectedParentLine] = useState(null)
+  const [username, setUsername] = useState("")
+
+  // Add this useEffect to get the username when the component mounts
+  useEffect(() => {
+    // Try to get username from localStorage or sessionStorage
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser)
+        setUsername(userData.username || "")
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+      }
+    }
+  }, [])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -157,14 +171,16 @@ const MainDashboard = () => {
     setShowLinesAddParent(false)
   }
 
-  // Add a handler for showing LinesAddChild
-  const handleAddChildClick = () => {
+  // Updated handler for showing LinesAddChild with parent line info
+  const handleAddChildClick = (parentLine) => {
+    setSelectedParentLine(parentLine)
     setShowLinesAddChild(true)
   }
 
-  // Add a handler for canceling from LinesAddChild
+  // Handler for canceling from LinesAddChild
   const handleLinesAddChildCancel = () => {
     setShowLinesAddChild(false)
+    setSelectedParentLine(null)
   }
 
   return (
@@ -321,10 +337,12 @@ const MainDashboard = () => {
               <Menu size={24} />
             </button>
             <h1 style={{ fontSize: "1rem", color: "white" }}>
-              {activeMenu === "home" && "Your Dashboard"}
+              {activeMenu === "home" && (username ? `Hi ${username}` : "Your")}
               {activeMenu === "orders" && !showOrderDetails && "Orders"}
               {activeMenu === "orders" && showOrderDetails && "Add Order"}
-              {activeMenu === "lines" && "Lines"}
+              {activeMenu === "lines" && !showLinesAddParent && !showLinesAddChild && "Lines"}
+              {activeMenu === "lines" && showLinesAddParent && "Add Parent Line"}
+              {activeMenu === "lines" && showLinesAddChild && "Add Child Line"}
               {activeMenu === "fabrication" && "Fabrication"}
               {activeMenu === "erection" && "Erection"}
               {activeMenu === "alignment" && "Alignment"}
@@ -384,7 +402,7 @@ const MainDashboard = () => {
               {showLinesAddParent ? (
                 <LinesAddParent onCancel={handleLinesAddParentCancel} />
               ) : showLinesAddChild ? (
-                <LinesAddChild onCancel={handleLinesAddChildCancel} />
+                <LinesAddChild onCancel={handleLinesAddChildCancel} parentLine={selectedParentLine} />
               ) : (
                 <LinesDatabaseSearch onAddParentClick={handleAddParentClick} onAddChildClick={handleAddChildClick} />
               )}

@@ -1,92 +1,170 @@
+"use client"
+
 import { useState } from "react"
-import "../UserCredentialsDesign/login-page.css";
-import logo from '../assets/blogo.jpg';
-import axios from 'axios';
-import {Link ,  useNavigate } from 'react-router-dom';
+import "../UserCredentialsDesign/login-page.css"
+import "../UserCredentialsDesign/toast-notification.css"
+import "../UserCredentialsDesign/loading-spinner.css"
+import logo from "../assets/blogo.jpg"
+import axios from "axios"
+import { Link, useNavigate } from "react-router-dom"
+import Toast from "../UserCredentials/Toast"
+import LoadingSpinner from "../UserCredentials/LoadingSpinner"
 
 const LoginPage = () => {
-  const [credentials, setCredentials] = useState({ 
-    email: '', 
-    password: '',
-    rememberMe: false 
-  });
-  const [error, setError] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const [credentials, setCredentials] = useState({
+    email: "",
+    password: "",
+    rememberMe: false,
+  })
+  const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+
+  // Loading state
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Toast state
+  const [toast, setToast] = useState({
+    show: false,
+    type: "success",
+    title: "",
+    message: "",
+  })
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target
     setCredentials({
       ...credentials,
-      [name]: type === 'checkbox' ? checked : value
-    });
+      [name]: type === "checkbox" ? checked : value,
+    })
 
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: ""
-      });
+        [name]: "",
+      })
     }
-  };
+  }
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors = {}
 
     if (!credentials.email.trim()) {
-      newErrors.email = "Email is required";
+      newErrors.email = "Email is required"
     } else if (!/\S+@\S+\.\S+/.test(credentials.email)) {
-      newErrors.email = "Email is invalid";
+      newErrors.email = "Email is invalid"
     }
 
     if (!credentials.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = "Password is required"
     } else if (credentials.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+      newErrors.password = "Password must be at least 6 characters"
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
+  // Update the handleSubmit function to store the username in localStorage
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (!validateForm()) {
-      return;
+      return
     }
-    
-    setIsSubmitting(true);
-    
+
+    setIsSubmitting(true)
+    // Show loading spinner
+    setIsLoading(true)
+
     try {
-  
-      const response = await axios.post('http://195.35.45.56:5522/api/login', credentials);
- 
- 
-      alert('Login Successful!');
-      navigate('/dashboardbilling');  // Navigate to dashboard after successful login
+      const response = await axios.post("http://localhost:9955/api/login", credentials)
+
+      // Extract username from response or use email as fallback
+      const username = response.data?.user?.username || credentials.email.split("@")[0]
+
+      // Store user data in localStorage
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          username: username,
+          email: credentials.email,
+        }),
+      )
+
+      // Reset form fields
+      setCredentials({
+        email: "",
+        password: "",
+        rememberMe: false,
+      })
+
+      // Show loading for 3 seconds before showing toast
+      setTimeout(() => {
+        setIsLoading(false)
+
+        // Show success toast
+        setToast({
+          show: true,
+          type: "success",
+          title: "Login Successful!",
+          message: `Login successful redirecting to Your Dashboard Mr ${username}`,
+        })
+
+        // Navigate after toast is shown
+        setTimeout(() => {
+          navigate("/dashboardbilling")
+        }, 3000)
+      }, 3000)
     } catch (err) {
-      setError('Invalid email or password!');
-    } finally {
-      setIsSubmitting(false);
+      // Hide loading after 3 seconds and show error
+      setTimeout(() => {
+        setIsLoading(false)
+        setError("Invalid email or password! Please try again")
+
+        // Reset form fields on error too
+        setCredentials({
+          email: "",
+          password: "",
+          rememberMe: false,
+        })
+
+        // Show error toast
+        setToast({
+          show: true,
+          type: "error",
+          title: "Login Failed",
+          message: "Invalid email or password! Please try again",
+        })
+        setIsSubmitting(false)
+      }, 3000)
     }
-  };
+  }
+
+  const handleCloseToast = () => {
+    setToast({ ...toast, show: false })
+  }
 
   return (
     <div className="bodyokok">
+      {/* Loading Spinner */}
+      {isLoading && <LoadingSpinner />}
+
+      {/* Toast Notification */}
+      {toast.show && <Toast type={toast.type} title={toast.title} message={toast.message} onClose={handleCloseToast} />}
+
       <div className="login-container">
         <div className="login-card">
           <div className="login-left">
             <div className="logo-container">
               <div className="logo-wrapper">
-              <center>
-                <img src={logo || "/placeholder.svg"} alt="terrolt-khaja" style={{width:'30px',height:'30px'}}/>
+                <center>
+                  <img src={logo || "/placeholder.svg"} alt="terrolt-khaja" style={{ width: "30px", height: "30px" }} />
                 </center>
-                <h3>
-                  Mech Billing App
-                </h3>
+                <h3>Mech Billing App</h3>
               </div>
             </div>
             <div className="stylish-divider"></div>
@@ -100,20 +178,7 @@ const LoginPage = () => {
                 <div className="form-group">
                   <div className={`input-wrapper ${errors.email ? "error" : ""}`}>
                     <span className="input-icon">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
+                      
                     </span>
                     <input
                       type="email"
@@ -152,11 +217,7 @@ const LoginPage = () => {
                       value={credentials.password}
                       onChange={handleChange}
                     />
-                    <button 
-                      type="button" 
-                      className="password-toggle" 
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
+                    <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -195,12 +256,7 @@ const LoginPage = () => {
 
                 <div className="remember-me">
                   <label>
-                    <input 
-                      type="checkbox" 
-                      name="rememberMe" 
-                      checked={credentials.rememberMe} 
-                      onChange={handleChange} 
-                    />
+                    <input type="checkbox" name="rememberMe" checked={credentials.rememberMe} onChange={handleChange} />
                     <span>Remember me</span>
                   </label>
                 </div>
@@ -212,8 +268,8 @@ const LoginPage = () => {
 
               <div className="help-link">
                 <Link to="/registerpage">Dont have an Account ? Register or Sign Up?</Link>
-                <br/>
-                <br/>
+                <br />
+                <br />
               </div>
             </div>
 
@@ -383,8 +439,8 @@ const LoginPage = () => {
             <div className="insights-section">
               <h2>On-Demand Insights</h2>
               <p>
-                bellaryinfotech's billing technology gives you the instant knowledge and insights you need to maintain financial rigor in
-                this evolving economy.
+                bellaryinfotech's billing technology gives you the instant knowledge and insights you need to maintain
+                financial rigor in this evolving economy.
               </p>
               <p>
                 Streamline your billing processes, manage complex revenue models, and gain actionable insights with our
@@ -395,7 +451,7 @@ const LoginPage = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 export default LoginPage;

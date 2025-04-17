@@ -45,9 +45,10 @@ const OrderDetails = ({ onCancel }) => {
 
   // API base URL
  
+ //http://localhost:9988/api
+ //http://195.35.45.56:5522
  
- 
-  const API_URL = "http://195.35.45.56:5522/api"
+  const API_URL = "http://localhost:9988/api"
  
  
   // Initial order state for form reset
