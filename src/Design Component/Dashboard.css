@@ -12,7 +12,7 @@
 /* Sidebar Styles - More compressed */
 .sidebar {
   width: 180px; /* Reduced width */
-  background: linear-gradient(180deg, #005099 0%, #003366 100%);
+  background: linear-gradient(180deg, #0a152f 0%, #0a152f 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -162,8 +162,8 @@
 
 /* Secondary Sidebar Styles */
 .secondary-sidebar {
-  width: 160px;
-  background-color: #0066cc;
+  width: 200px;
+  background-color: #0a152f;
   color: white;
   display: flex;
   flex-direction: column;
@@ -232,6 +232,7 @@
   height: 50px; /* Reduced height */
   display: flex;
   align-items: center;
+  border-radius: 8px;
   justify-content: space-between;
 }
 

@@ -23,7 +23,7 @@
 /* Sidebar Styles to match the image - More compressed */
 .sidebar {
   width: 180px !important; /* Reduced width */
-  background: linear-gradient(180deg, #005099 0%, #003366 100%) !important;
+  background: linear-gradient(180deg, #0a152f 0%, #0a152f 100%) !important;
   color: white !important;
   position: relative !important;
   transform: none !important;
@@ -40,8 +40,8 @@
 
 /* Secondary sidebar styles */
 .secondary-sidebar {
-  width: 160px !important;
-  background-color: #0066cc !important;
+  width: 200px !important;
+  background-color: #0a152f !important;
   color: white !important;
   display: flex !important;
   flex-direction: column !important;
