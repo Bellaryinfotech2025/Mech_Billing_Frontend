@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CheckCircle, Download, Plus, Edit } from "lucide-react"
+import { IoIosAddCircle } from "react-icons/io";
 import "../Mech Lines Design/linesdatabasedesign.css"
 import axios from "axios"
 import SelectParentPopup from "../Mech Lines Component/selectpopup"
@@ -94,10 +95,10 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
   return (
     <div className="order-search-containerlineskh">
       <header className="order-search-headerlineskh">
-        <h1 className="header-titlelineskh">Order Search</h1>
+        <h1 className="header-titlelineskh">Lines Search</h1>
         <div className="header-actionslineskh">
           <button className="add-parent-btnlineskh" onClick={handleAddParent}>
-            <Plus size={16} />
+            <IoIosAddCircle/>
             Add Parent
           </button>
           <button
@@ -106,7 +107,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
             disabled={!hasParentLines}
             style={{ opacity: hasParentLines ? 1 : 0.5, cursor: hasParentLines ? "pointer" : "not-allowed" }}
           >
-            <Plus size={16} />
+            <IoIosAddCircle/>
             Add Child
           </button>
         </div>

@@ -5,22 +5,13 @@ import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
 
 import axios from "axios"
-import {
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Filter,
-  Grid,
-  Plus,
-  Search,
-  Table,
-  Database,
-  AlertCircle,
-  Edit,
-} from "lucide-react"
+import { CheckCircle, Download, Search, AlertCircle, Edit } from "lucide-react"
+import { FaCloudUploadAlt } from "react-icons/fa"
+import { CgImport } from "react-icons/cg"
+import { IoIosAddCircle } from "react-icons/io"
+import { CgDetailsMore } from "react-icons/cg"
 import OrderDetails from "../Main Mech Component/OrderDetails"
-import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails";
+import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
 
 const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   // State for orders and lookup values
@@ -40,12 +31,8 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // API base URL
- 
-  
+
   const API_URL = "http://localhost:9988/api"
- 
- 
- 
 
   // Fetch lookup values on component mount
   useEffect(() => {
@@ -144,6 +131,27 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
     setSelectedOrder(null)
   }
 
+  // Handle Import/Export button click
+  const handleImportExport = () => {
+    // Create a link element
+    const link = document.createElement("a")
+
+    // Set the href to the Excel file URL
+    link.href = "/Orders_Export.xlsx"
+
+    // Set the download attribute with the filename
+    link.download = "Orders_Export.xlsx"
+
+    // Append the link to the body
+    document.body.appendChild(link)
+
+    // Trigger the click event
+    link.click()
+
+    // Remove the link from the body
+    document.body.removeChild(link)
+  }
+
   // If showing OrderDetails, render it instead of the table
   if (showOrderDetails) {
     return <OrderDetails onCancel={handleCancelOrderDetails} />
@@ -166,9 +174,20 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
       <header className="order-search-header">
         <h1>Order Search</h1>
         <div className="header-actions">
-           
           <button className="add-order-btn" onClick={onAddOrderClick}>
-            <Plus size={16} />
+            <CgDetailsMore />
+            Line Details
+          </button>
+          <button className="add-order-btn" onClick={onAddOrderClick}>
+            <FaCloudUploadAlt />
+            Upload
+          </button>
+          <button className="add-order-btn" onClick={handleImportExport}>
+            <CgImport />
+            Import / Export
+          </button>
+          <button className="add-order-btn" onClick={onAddOrderClick}>
+            <IoIosAddCircle />
             Add Order
           </button>
           {/* <button className="add-new-order-btn" onClick={handleAddNewOrder}>
@@ -251,7 +270,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                   <td colSpan={18}>
                     <div className="load-orders-toast">
                       <AlertCircle size={18} />
-                      <span>Click on search icon to display your orders</span>
+                      <span>No Orders</span>
                     </div>
                   </td>
                 </tr>
@@ -309,11 +328,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
       </div>
 
       <div className="table-pagination">
-        
-        <div className="pagination-slider">
-           
-        </div>
-         
+        <div className="pagination-slider"></div>
       </div>
     </div>
   )

@@ -1,63 +1,469 @@
-/* Add these styles to your Dashboard.css file */
-
-/* Ensure the dashboard container is always a flex container */
+/* Additional fixes for the dashboard - More compressed */
 .dashboard-container {
-    display: flex !important;
-    width: 100% !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-  }
-  
-  /* Make sure the sidebar is always visible on desktop */
+  display: flex !important;
+  width: 100% !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.content-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+
+.main-content {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 15px !important; /* Reduced padding */
+  background-color: #f0f2f5 !important;
+}
+
+/* Sidebar Styles to match the image - More compressed */
+.sidebar {
+  width: 180px !important; /* Reduced width */
+  background: linear-gradient(180deg, #005099 0%, #003366 100%) !important;
+  color: white !important;
+  position: relative !important;
+  transform: none !important;
+  z-index: 10 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: width 0.3s ease !important;
+}
+
+/* Collapsed sidebar styles */
+.sidebar.collapsed {
+  width: 60px !important;
+}
+
+/* Secondary sidebar styles */
+.secondary-sidebar {
+  width: 160px !important;
+  background-color: #0066cc !important;
+  color: white !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  z-index: 9 !important;
+}
+
+.secondary-sidebar-header {
+  padding: 15px 15px 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.secondary-sidebar-header h2 {
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+.secondary-sidebar-menu {
+  flex: 1 !important;
+  margin-top: 10px !important;
+}
+
+.secondary-sidebar-menu ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.secondary-nav-link {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 15px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-family: "Poppins", sans-serif !important;
+  transition: all 0.2s ease !important;
+}
+
+.secondary-nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+}
+
+.secondary-nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+/* Header Styles to match the image - More compressed */
+.header {
+  background: linear-gradient(90deg, #1976d2 0%, #2196f3 100%) !important;
+  color: white !important;
+  padding: 0 15px !important; /* Reduced padding */
+  height: 50px !important; /* Reduced height */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Only hide sidebar on mobile */
+@media (max-width: 768px) {
   .sidebar {
-    width: 200px !important;
-    position: relative !important;
-    transform: none !important;
-    z-index: 10 !important;
-    display: flex !important;
-    flex-direction: column !important;
+    position: fixed !important;
+    transform: translateX(-100%) !important;
   }
-  
-  /* Only hide sidebar on mobile */
-  @media (max-width: 768px) {
-    .sidebar {
-      position: fixed !important;
-      transform: translateX(-100%) !important;
-    }
-  
-    .sidebar.open {
-      transform: translateX(0) !important;
-    }
+
+  .sidebar.open {
+    transform: translateX(0) !important;
   }
-  
-  /* Ensure content wrapper takes remaining space */
-  .content-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    overflow: hidden !important;
+
+  .sidebar.collapsed {
+    width: 60px !important;
+    transform: translateX(0) !important;
   }
-  
-  /* Make main content scrollable */
-  .main-content {
-    flex: 1 !important;
-    overflow-y: auto !important;
-    padding: 20px !important;
-    background-color: #f0f2f5 !important;
+
+  .secondary-sidebar {
+    position: fixed !important;
+    left: 60px !important;
+    transform: translateX(-100%) !important;
   }
-  
-  /* Style the order search container to fit in the main content */
-  .order-search-container {
-    width: 100% !important;
-    height: auto !important;
-    background-color: #fff !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
-    overflow: hidden !important;
+
+  .sidebar.collapsed + .secondary-sidebar {
+    transform: translateX(0) !important;
   }
-  
-  /* Ensure the table container has a reasonable height */
-  .table-container {
-    max-height: calc(100vh - 280px) !important;
-  }
-  
+}
+
+/* Empty state styling to match the image - More compressed */
+.empty-orders,
+.empty-state {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 70vh !important;
+  text-align: center !important;
+}
+
+.empty-orders p,
+.empty-state p {
+  font-size: 24px !important; /* Smaller font */
+  color: #9e9e9e !important;
+  margin-bottom: 25px !important; /* Reduced margin */
+  font-family: "Poppins", sans-serif !important;
+}
+
+/* Add Order button styling to match the image - More compressed */
+.add-order-btn {
+  background-color: #00bcd4 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 8px 16px !important; /* Reduced padding */
+  font-size: 13px !important; /* Smaller font */
+  font-family: "Poppins", sans-serif !important;
+  display: flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.add-order-btn:hover {
+  background-color: #00a5b8 !important;
+}
+
+.add-order-btn svg {
+  margin-right: 6px !important; /* Reduced margin */
+  width: 16px !important; /* Smaller icon */
+  height: 16px !important; /* Smaller icon */
+}
+
+/* Order search container styling - More compressed */
+.order-search-container {
+  width: 100% !important;
+  height: auto !important;
+  background-color: #fff !important;
+  border-radius: 6px !important; /* Smaller radius */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden !important;
+}
+
+/* Nav link active state - More compressed */
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  font-weight: 500 !important;
+  border-left: 3px solid white !important;
+}
+
+/* Nav links - More compressed */
+.nav-link {
+  display: flex !important;
+  align-items: center !important;
+  padding: 8px 15px !important; /* Reduced padding */
+  color: rgba(255, 255, 255, 0.8) !important;
+  text-decoration: none !important;
+  font-size: 12px !important; /* Smaller font */
+  font-family: "Poppins", sans-serif !important;
+  transition: all 0.2s ease !important;
+  border-left: 3px solid transparent !important;
+}
+
+.nav-link svg {
+  margin-right: 10px !important; /* Reduced margin */
+  opacity: 0.8 !important;
+  width: 16px !important; /* Smaller icon */
+  height: 16px !important; /* Smaller icon */
+}
+
+/* Adjust icon margin when sidebar is collapsed */
+.sidebar.collapsed .nav-link svg {
+  margin-right: 0 !important;
+}
+
+/* Fix for logo container - More compressed */
+.logo-container {
+  padding: 12px 15px !important; /* Reduced padding */
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-bottom: 10px !important; /* Reduced padding */
+}
+
+/* Fix for company logo - More compressed */
+.company-logo {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Fix for logo image - More compressed */
+.logo-image {
+  width: 32px !important; /* Smaller logo */
+  height: 32px !important; /* Smaller logo */
+  border-radius: 4px !important;
+  object-fit: cover !important;
+}
+
+.company-name {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 14px !important; /* Smaller font */
+  font-weight: 600 !important;
+  color: white !important;
+  letter-spacing: 0.5px !important;
+}
+
+.company-tagline {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 10px !important; /* Smaller font */
+  color: rgba(255, 255, 255, 0.7) !important;
+  margin-top: 1px !important; /* Reduced margin */
+}
+
+/* Fix for header buttons - More compressed */
+.header-btn {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  cursor: pointer !important;
+  width: 32px !important; /* Smaller button */
+  height: 32px !important; /* Smaller button */
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.profile-btn {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Fix for header title - More compressed */
+.header h1 {
+  margin: 0 !important;
+  font-size: 20px !important; /* Smaller font */
+  font-weight: 500 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+/* Fix for user dropdown - More compressed */
+.user-dropdown {
+  position: absolute !important;
+  top: 40px !important; /* Adjusted position */
+  right: 0 !important;
+  background-color: white !important;
+  border-radius: 6px !important; /* Smaller radius */
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1) !important;
+  width: 180px !important; /* Reduced width */
+  z-index: 100 !important;
+}
+
+.user-dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 12px !important; /* Reduced padding */
+  color: #555 !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 13px !important; /* Smaller font */
+}
+
+.user-dropdown-item svg {
+  margin-right: 10px !important; /* Reduced margin */
+  color: #666 !important;
+  width: 14px !important; /* Smaller icon */
+  height: 14px !important; /* Smaller icon */
+}
+
+/* Fix for logout popup - More compressed */
+.logout-popup-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 1000 !important;
+}
+
+.logout-popup {
+  background-color: white !important;
+  border-radius: 6px !important; /* Smaller radius */
+  width: 100% !important;
+  max-width: 360px !important; /* Reduced width */
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+  animation: popup-appear 0.3s ease-out !important;
+}
+
+.logout-popup-header {
+  display: flex !important;
+  align-items: center !important;
+  padding: 15px !important; /* Reduced padding */
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+.logout-icon {
+  color: #f44336 !important;
+  margin-right: 12px !important; /* Reduced margin */
+  width: 22px !important; /* Smaller icon */
+  height: 22px !important; /* Smaller icon */
+}
+
+.logout-popup-header h3 {
+  margin: 0 !important;
+  font-size: 16px !important; /* Smaller font */
+  font-weight: 500 !important;
+  color: #333 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+.logout-popup-content {
+  padding: 15px !important; /* Reduced padding */
+}
+
+.logout-popup-content p {
+  margin: 0 !important;
+  font-size: 13px !important; /* Smaller font */
+  color: #555 !important;
+  line-height: 1.4 !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+.logout-popup-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  padding: 12px 15px !important; /* Reduced padding */
+  gap: 8px !important; /* Reduced gap */
+  border-top: 1px solid #e0e0e0 !important;
+}
+
+.stay-btn {
+  background-color: transparent !important;
+  color: #555 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important; /* Reduced padding */
+  font-size: 13px !important; /* Smaller font */
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+.stay-btn:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.logout-btn {
+  background-color: #f44336 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important; /* Reduced padding */
+  font-size: 13px !important; /* Smaller font */
+  cursor: pointer !important;
+  transition: background-color 0.2s !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+.logout-btn:hover {
+  background-color: #d32f2f !important;
+}
+
+/* Fix for table container */
+.table-container {
+  max-height: calc(100vh - 250px) !important; /* Adjusted for smaller header */
+  overflow-y: auto !important;
+}
+
+/* Fix for order table */
+.order-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+.order-table th {
+  background-color: #f5f5f5 !important;
+  padding: 10px 12px !important; /* Reduced padding */
+  text-align: left !important;
+  font-weight: 500 !important;
+  color: #333 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+  font-size: 13px !important; /* Smaller font */
+}
+
+.order-table td {
+  padding: 8px 12px !important; /* Reduced padding */
+  border-bottom: 1px solid #e0e0e0 !important;
+  color: #555 !important;
+  font-size: 13px !important; /* Smaller font */
+}
+
+/* Fix for order status */
+.order-status {
+  display: inline-block !important;
+  padding: 3px 6px !important; /* Reduced padding */
+  border-radius: 3px !important; /* Smaller radius */
+  font-size: 11px !important; /* Smaller font */
+  font-weight: 500 !important;
+}
+
+.status-pending {
+  background-color: #fff8e1 !important;
+  color: #ffa000 !important;
+}
+
+.status-completed {
+  background-color: #e8f5e9 !important;
+  color: #388e3c !important;
+}
+
+.status-cancelled {
+  background-color: #ffebee !important;
+  color: #d32f2f !important;
+}

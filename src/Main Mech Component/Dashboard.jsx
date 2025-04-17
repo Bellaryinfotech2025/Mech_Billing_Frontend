@@ -9,7 +9,6 @@ import {
   Sliders,
   FileText,
   FileQuestion,
-  History,
   Bell,
   Settings,
   LogOut,
@@ -19,6 +18,8 @@ import {
   AlertTriangle,
   UserCircle,
   Edit,
+  Package,
+  Upload,
 } from "lucide-react"
 import "../Design Component/Dashboard.css"
 
@@ -42,6 +43,7 @@ const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [activeMenu, setActiveMenu] = useState("home")
+  const [activeSubmenu, setActiveSubmenu] = useState("")
   const [showLogoutPopup, setShowLogoutPopup] = useState(false)
   const [logoImage, setLogoImage] = useState(logo)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -54,6 +56,21 @@ const MainDashboard = () => {
   const [showLinesAddChild, setShowLinesAddChild] = useState(false)
   const [selectedParentLine, setSelectedParentLine] = useState(null)
   const [username, setUsername] = useState("")
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [showContent, setShowContent] = useState(true)
+
+  // Submenu definitions for each main menu
+  const submenus = {
+    home: [],
+    orders: ["Orders", "Lines", "Fabrication", "Erection", "Alignment", "Billing"],
+    fabrication: ["Overview", "Schedule", "Materials", "Quality"],
+    erection: ["Overview", "Schedule", "Resources", "Safety"],
+    alignment: ["Overview", "Measurements", "Adjustments", "Reports"],
+    billing: ["Invoices", "Payments", "Reports", "Settings"],
+    reports: ["Financial", "Operational", "Custom", "Scheduled"],
+    requests: ["Pending", "Approved", "Rejected", "Archive"],
+    import: ["Upload", "History", "Settings"],
+  }
 
   // Add this useEffect to get the username when the component mounts
   useEffect(() => {
@@ -89,13 +106,46 @@ const MainDashboard = () => {
 
     if (menu === "logout") {
       setShowLogoutPopup(true)
+    } else if (menu === "home") {
+      setActiveMenu(menu)
+      setSidebarCollapsed(false)
+      setActiveSubmenu("")
+      setShowContent(true)
+      setShowCoreLookup(false)
+      setShowOrderDetails(false)
+      setShowLinesAddParent(false)
+      setShowLinesAddChild(false)
+    } else if (menu === "orders") {
+      setActiveMenu(menu)
+      setSidebarCollapsed(true)
+      setActiveSubmenu("")
+      setShowContent(false) // Don't show content yet
+      setShowCoreLookup(false)
+      setShowOrderDetails(false)
+      setShowLinesAddParent(false)
+      setShowLinesAddChild(false)
     } else {
       setActiveMenu(menu)
-      setShowCoreLookup(false) // Hide lookup table when navigating
-      setShowOrderDetails(false) // Hide order details when navigating
+      setSidebarCollapsed(true)
+      setActiveSubmenu(submenus[menu][0] || "")
+      setShowContent(true)
+      setShowCoreLookup(false)
+      setShowOrderDetails(false)
       setShowLinesAddParent(false)
       setShowLinesAddChild(false)
     }
+  }
+
+  const handleSubmenuClick = (e, submenu) => {
+    e.preventDefault()
+    setActiveSubmenu(submenu)
+    setShowContent(true)
+
+    // Reset all content states
+    setShowOrderDetails(false)
+    setShowLinesAddParent(false)
+    setShowLinesAddChild(false)
+    setShowCoreLookup(false)
   }
 
   const toggleSidebar = () => {
@@ -183,10 +233,98 @@ const MainDashboard = () => {
     setSelectedParentLine(null)
   }
 
+  // Get the icon for a menu item
+  const getMenuIcon = (menu) => {
+    switch (menu) {
+      case "home":
+        return <LayoutDashboard size={20} />
+      case "orders":
+        return <BarChart size={20} />
+      case "fabrication":
+        return <Package size={20} />
+      case "erection":
+        return <TrendingUp size={20} />
+      case "alignment":
+        return <Sliders size={20} />
+      case "billing":
+        return <CreditCard size={20} />
+      case "reports":
+        return <FileText size={20} />
+      case "requests":
+        return <FileQuestion size={20} />
+      case "notifications":
+        return <Bell size={20} />
+      case "settings":
+        return <Settings size={20} />
+      case "logout":
+        return <LogOut size={20} />
+      case "import":
+        return <Upload size={20} />
+      default:
+        return <FileText size={20} />
+    }
+  }
+
+  // Determine which content to render based on active menu and submenu
+  const renderContent = () => {
+    if (!showContent) return null
+
+    if (showCoreLookup) return <LookupTable />
+
+    // Handle different submenu content
+    if (activeSubmenu === "Orders") {
+      if (showOrderDetails) {
+        return <OrderDetails onCancel={handleBackToOrderSearch} />
+      }
+      return <OrderDatabaseSearch onAddOrderClick={handleAddOrderClick} />
+    }
+
+    if (activeSubmenu === "Lines") {
+      if (showLinesAddParent) {
+        return <LinesAddParent onCancel={handleLinesAddParentCancel} />
+      }
+      if (showLinesAddChild) {
+        return <LinesAddChild onCancel={handleLinesAddChildCancel} parentLine={selectedParentLine} />
+      }
+      return <LinesDatabaseSearch onAddParentClick={handleAddParentClick} onAddChildClick={handleAddChildClick} />
+    }
+
+    if (activeSubmenu === "Erection") {
+      return <Erection />
+    }
+
+    if (activeSubmenu === "Alignment") {
+      return <Alignment />
+    }
+
+    if (activeSubmenu === "Fabrication") {
+      return (
+        <div className="empty-state">
+          <p>Fabrication content will be displayed here.</p>
+        </div>
+      )
+    }
+
+    if (activeSubmenu === "Billing") {
+      return (
+        <div className="empty-state">
+          <p>Billing content will be displayed here.</p>
+        </div>
+      )
+    }
+
+    // Default content for other menus/submenus
+    return (
+      <div className="empty-state">
+        <p>{activeSubmenu || activeMenu} content will be displayed here.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+      {/* Main Sidebar */}
+      <div className={`sidebar ${sidebarOpen ? "open" : ""} ${sidebarCollapsed ? "collapsed" : ""}`}>
         <div className="logo-container">
           {/* Company Logo - Clickable and Editable */}
           <div className="company-logo">
@@ -200,10 +338,12 @@ const MainDashboard = () => {
                 style={{ display: "none" }}
               />
             </div>
-            <div className="logo-text">
-              <span className="company-name">Mech Billing</span>
-              <span className="company-tagline">Smart Solutions</span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="logo-text">
+                <span className="company-name">Mech Billing</span>
+                <span className="company-tagline">Smart Solutions</span>
+              </div>
+            )}
           </div>
 
           <button className="close-sidebar" onClick={toggleSidebar}>
@@ -219,8 +359,8 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "home" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "home")}
               >
-                <LayoutDashboard size={20} />
-                <span>Home</span>
+                {getMenuIcon("home")}
+                {!sidebarCollapsed && <span>Home</span>}
               </a>
             </li>
 
@@ -230,29 +370,19 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "orders" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "orders")}
               >
-                <BarChart size={20} />
-                <span>Orders</span>
+                {getMenuIcon("orders")}
+                {!sidebarCollapsed && <span>Orders</span>}
               </a>
             </li>
 
             <li>
               <a
                 href="#"
-                className={`nav-link ${activeMenu === "lines" ? "active" : ""}`}
-                onClick={(e) => handleLinkClick(e, "lines")}
-              >
-                <History size={20} />
-                <span>Lines</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
                 className={`nav-link ${activeMenu === "fabrication" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "fabrication")}
               >
-                <CreditCard size={20} />
-                <span>Fabrication</span>
+                {getMenuIcon("fabrication")}
+                {!sidebarCollapsed && <span>Fabrication</span>}
               </a>
             </li>
             <li>
@@ -261,8 +391,8 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "erection" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "erection")}
               >
-                <TrendingUp size={20} />
-                <span>Erection</span>
+                {getMenuIcon("erection")}
+                {!sidebarCollapsed && <span>Erection</span>}
               </a>
             </li>
             <li>
@@ -271,8 +401,8 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "alignment" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "alignment")}
               >
-                <Sliders size={20} />
-                <span>Alingnment</span>
+                {getMenuIcon("alignment")}
+                {!sidebarCollapsed && <span>Alignment</span>}
               </a>
             </li>
             <li>
@@ -281,8 +411,8 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "billing" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "billing")}
               >
-                <CreditCard size={20} />
-                <span>Billing</span>
+                {getMenuIcon("billing")}
+                {!sidebarCollapsed && <span>Billing</span>}
               </a>
             </li>
             <li>
@@ -291,19 +421,28 @@ const MainDashboard = () => {
                 className={`nav-link ${activeMenu === "reports" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "reports")}
               >
-                <FileText size={20} />
-                <span>Reports</span>
+                {getMenuIcon("reports")}
+                {!sidebarCollapsed && <span>Reports</span>}
               </a>
             </li>
-
             <li>
               <a
                 href="#"
                 className={`nav-link ${activeMenu === "requests" ? "active" : ""}`}
                 onClick={(e) => handleLinkClick(e, "requests")}
               >
-                <FileQuestion size={20} />
-                <span>Requests</span>
+                {getMenuIcon("requests")}
+                {!sidebarCollapsed && <span>Requests</span>}
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "import" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "import")}
+              >
+                {getMenuIcon("import")}
+                {!sidebarCollapsed && <span>Import</span>}
               </a>
             </li>
           </ul>
@@ -312,21 +451,50 @@ const MainDashboard = () => {
         <div className="bottom-menu">
           <ul>
             <li>
-              <a href="#" className="nav-link" onClick={(e) => handleLinkClick(e, "notifications")}>
-                <Bell size={20} />
-                <span>Notifications</span>
+              <a
+                href="#"
+                className={`nav-link ${activeMenu === "notifications" ? "active" : ""}`}
+                onClick={(e) => handleLinkClick(e, "notifications")}
+              >
+                {getMenuIcon("notifications")}
+                {!sidebarCollapsed && <span>Notifications</span>}
               </a>
             </li>
 
             <li>
               <a href="#" className="nav-link" onClick={(e) => handleLinkClick(e, "logout")}>
-                <LogOut size={20} />
-                <span>Logout</span>
+                {getMenuIcon("logout")}
+                {!sidebarCollapsed && <span>Logout</span>}
               </a>
             </li>
           </ul>
         </div>
       </div>
+
+      {/* Secondary Sidebar - Shows when a menu item is selected */}
+      {sidebarCollapsed && (
+        <div className="secondary-sidebar">
+          <div className="secondary-sidebar-header">
+            <h2>{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}</h2>
+          </div>
+          <nav className="secondary-sidebar-menu">
+            <ul>
+              {submenus[activeMenu] &&
+                submenus[activeMenu].map((submenu) => (
+                  <li key={submenu}>
+                    <a
+                      href="#"
+                      className={`secondary-nav-link ${activeSubmenu === submenu ? "active" : ""}`}
+                      onClick={(e) => handleSubmenuClick(e, submenu)}
+                    >
+                      <span>{submenu}</span>
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </nav>
+        </div>
+      )}
 
       {/* Content Area */}
       <div className="content-wrapper">
@@ -336,19 +504,12 @@ const MainDashboard = () => {
             <button className="hamburger-menu" onClick={toggleSidebar}>
               <Menu size={24} />
             </button>
-            <h1 style={{ fontSize: "1rem", color: "white" }}>
-              {activeMenu === "home" && (username ? `Hi ${username}` : "Your")}
-              {activeMenu === "orders" && !showOrderDetails && "Orders"}
-              {activeMenu === "orders" && showOrderDetails && "Add Order"}
-              {activeMenu === "lines" && !showLinesAddParent && !showLinesAddChild && "Lines"}
-              {activeMenu === "lines" && showLinesAddParent && "Add Parent Line"}
-              {activeMenu === "lines" && showLinesAddChild && "Add Child Line"}
-              {activeMenu === "fabrication" && "Fabrication"}
-              {activeMenu === "erection" && "Erection"}
-              {activeMenu === "alignment" && "Alignment"}
-              {activeMenu === "billing" && "Billing"}
-              {activeMenu === "reports" && "Reports"}
-              {activeMenu === "requests" && "Requests"}
+            <h1>
+              {activeMenu === "home" && (username ? `Hi ${username}` : "Welcome")}
+              {activeSubmenu ? activeSubmenu : activeMenu !== "home" ? activeMenu : ""}
+              {showOrderDetails && "Add Order"}
+              {showLinesAddParent && "Add Parent Line"}
+              {showLinesAddChild && "Add Child Line"}
               {showCoreLookup && "Core Lookup Values"}
             </h1>
           </div>
@@ -382,47 +543,17 @@ const MainDashboard = () => {
         </header>
 
         {/* Main Content */}
-        <main className="main-content">
-          {/* Conditional rendering based on active menu */}
-          {showCoreLookup && <LookupTable />}
-
-          {/* Render OrderDatabaseSearch when orders menu is active */}
-          {activeMenu === "orders" && !showCoreLookup && !showOrderDetails && (
-            <OrderDatabaseSearch onAddOrderClick={handleAddOrderClick} />
-          )}
-
-          {/* Render OrderDetails when Add Order is clicked */}
-          {activeMenu === "orders" && !showCoreLookup && showOrderDetails && (
-            <OrderDetails onCancel={handleBackToOrderSearch} />
-          )}
-
-          {/* Render LinesDatabaseSearch when lines menu is active */}
-          {activeMenu === "lines" && !showCoreLookup && (
-            <div style={{ padding: "20px" }}>
-              {showLinesAddParent ? (
-                <LinesAddParent onCancel={handleLinesAddParentCancel} />
-              ) : showLinesAddChild ? (
-                <LinesAddChild onCancel={handleLinesAddChildCancel} parentLine={selectedParentLine} />
-              ) : (
-                <LinesDatabaseSearch onAddParentClick={handleAddParentClick} onAddChildClick={handleAddChildClick} />
-              )}
-            </div>
-          )}
-
-          {activeMenu === "alignment" && !showCoreLookup && <Alignment />}
-
-          {activeMenu === "erection" && !showCoreLookup && <Erection />}
-
-          {/* Other menu content would go here */}
-        </main>
+        <main className="main-content">{renderContent()}</main>
       </div>
 
       {/* Settings Popup */}
-      <SettingsPopup
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        onCoreLookupClick={handleCoreLookupClick}
-      />
+      {settingsOpen && (
+        <SettingsPopup
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          onCoreLookupClick={handleCoreLookupClick}
+        />
+      )}
 
       {/* Logout Confirmation Popup */}
       {showLogoutPopup && (

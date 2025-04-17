@@ -39,7 +39,7 @@ const LookupTable = () => {
         params: {
           search: search,
           page: page,
-          size: 10,
+          size: 100,
         },
       })
       .then((res) => {
