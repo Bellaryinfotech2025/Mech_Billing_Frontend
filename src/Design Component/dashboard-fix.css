@@ -41,18 +41,33 @@
 /* Secondary sidebar styles */
 .secondary-sidebar {
   width: 200px !important;
-  background-color: #0a152f !important;
+  background: linear-gradient(180deg, #0a152f 0%, #0a152f 100%) !important;
   color: white !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100vh !important;
   overflow-y: auto !important;
   z-index: 9 !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2) !important;
+  animation: slideIn 0.3s ease-out !important;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .secondary-sidebar-header {
   padding: 15px 15px 10px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  position: relative !important;
 }
 
 .secondary-sidebar-header h2 {
@@ -60,6 +75,21 @@
   font-size: 16px !important;
   font-weight: 500 !important;
   font-family: "Poppins", sans-serif !important;
+  color: white !important;
+  position: relative !important;
+  padding-left: 10px !important;
+}
+
+.secondary-sidebar-header h2::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 3px !important;
+  height: 16px !important;
+  background: #3b82f6 !important;
+  border-radius: 2px !important;
 }
 
 .secondary-sidebar-menu {
@@ -82,17 +112,21 @@
   font-size: 13px !important;
   font-family: "Poppins", sans-serif !important;
   transition: all 0.2s ease !important;
+  border-radius: 4px !important;
+  margin: 0 5px 2px 5px !important;
 }
 
 .secondary-nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: white !important;
+  transform: translateX(3px) !important;
 }
 
 .secondary-nav-link.active {
-  background-color: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
   color: white !important;
   font-weight: 500 !important;
+  border-left: 3px solid #3b82f6 !important;
 }
 
 /* Header Styles to match the image - More compressed */
@@ -466,4 +500,22 @@
 .status-cancelled {
   background-color: #ffebee !important;
   color: #d32f2f !important;
+}
+
+/* Clickable row styling */
+.clickable-row {
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.clickable-row:hover {
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+.clickable-row.selected-row {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.clickable-row.selected-row:hover {
+  background-color: rgba(59, 130, 246, 0.15) !important;
 }

@@ -1,5 +1,6 @@
 /* Import Poppins font for consistent typography */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* Main Container */
 .dashboard-container {
@@ -163,16 +164,29 @@
 /* Secondary Sidebar Styles */
 .secondary-sidebar {
   width: 200px;
-  background-color: #0a152f;
+  background: linear-gradient(180deg, #0a152f 0%, #0a152f 100%);
   color: white;
   display: flex;
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
   z-index: 9;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .secondary-sidebar::-webkit-scrollbar {
@@ -182,6 +196,8 @@
 .secondary-sidebar-header {
   padding: 15px 15px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .secondary-sidebar-header h2 {
@@ -189,6 +205,21 @@
   font-size: 16px;
   font-weight: 500;
   font-family: "Poppins", sans-serif;
+  color: white;
+  position: relative;
+  padding-left: 10px;
+}
+
+.secondary-sidebar-header h2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 2px;
 }
 
 .secondary-sidebar-menu {
@@ -211,17 +242,21 @@
   font-size: 13px;
   font-family: "Poppins", sans-serif;
   transition: all 0.2s ease;
+  border-radius: 4px;
+  margin: 0 5px 2px 5px;
 }
 
 .secondary-nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
+  transform: translateX(3px);
 }
 
 .secondary-nav-link.active {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(59, 130, 246, 0.15);
   color: white;
   font-weight: 500;
+  border-left: 3px solid #3b82f6;
 }
 
 /* Header Styles - More compressed */
@@ -232,7 +267,6 @@
   height: 50px; /* Reduced height */
   display: flex;
   align-items: center;
-  border-radius: 8px;
   justify-content: space-between;
 }
 
@@ -767,6 +801,45 @@
 
 .add-line-btn:hover {
   background-color: #00a5b8;
+}
+
+/* Clickable row styling */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.clickable-row.selected-row {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.clickable-row.selected-row:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* Selected row styling */
+.orders-table tr.selected-row {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.orders-table tr.selected-row:hover {
+  background-color: rgba(59, 130, 246, 0.15);
+}
+
+.order-number-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.order-number-link:hover {
+  text-decoration: underline;
+  color: #2563eb;
 }
 
 /* Responsive Styles */

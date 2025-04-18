@@ -32,6 +32,7 @@ import Erection from "../Main Mech Component/Erection"
 import LookupTable from "../Main Mech Component/LookUpTable"
 import LinesAddParent from "../Mech Lines Component/LinesAddParent"
 import LinesAddChild from "../Mech Lines Component/LineAddChild"
+import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
@@ -58,6 +59,9 @@ const MainDashboard = () => {
   const [username, setUsername] = useState("")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [showContent, setShowContent] = useState(true)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [showSecondSidebar, setShowSecondSidebar] = useState(false)
+  const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // Submenu definitions for each main menu
   const submenus = {
@@ -115,15 +119,21 @@ const MainDashboard = () => {
       setShowOrderDetails(false)
       setShowLinesAddParent(false)
       setShowLinesAddChild(false)
+      setSelectedOrder(null)
+      setShowSecondSidebar(false)
+      setShowOrderNumberDetails(false)
     } else if (menu === "orders") {
       setActiveMenu(menu)
-      setSidebarCollapsed(true)
-      setActiveSubmenu("")
-      setShowContent(false) // Don't show content yet
+      // For orders, we want to show the OrderDatabaseSearch component directly
+      setActiveSubmenu("Orders")
+      setShowContent(true)
       setShowCoreLookup(false)
       setShowOrderDetails(false)
       setShowLinesAddParent(false)
       setShowLinesAddChild(false)
+      setSelectedOrder(null)
+      setShowSecondSidebar(false)
+      setShowOrderNumberDetails(false)
     } else {
       setActiveMenu(menu)
       setSidebarCollapsed(true)
@@ -133,6 +143,9 @@ const MainDashboard = () => {
       setShowOrderDetails(false)
       setShowLinesAddParent(false)
       setShowLinesAddChild(false)
+      setSelectedOrder(null)
+      setShowSecondSidebar(true)
+      setShowOrderNumberDetails(false)
     }
   }
 
@@ -146,6 +159,7 @@ const MainDashboard = () => {
     setShowLinesAddParent(false)
     setShowLinesAddChild(false)
     setShowCoreLookup(false)
+    setShowOrderNumberDetails(false)
   }
 
   const toggleSidebar = () => {
@@ -233,6 +247,16 @@ const MainDashboard = () => {
     setSelectedParentLine(null)
   }
 
+  // Handler for order number click
+  const handleOrderNumberClick = (order) => {
+    setSelectedOrder(order)
+    setActiveMenu("orders")
+    setActiveSubmenu("Orders")
+    setSidebarCollapsed(true)
+    setShowSecondSidebar(true)
+    setShowOrderNumberDetails(true)
+  }
+
   // Get the icon for a menu item
   const getMenuIcon = (menu) => {
     switch (menu) {
@@ -276,7 +300,33 @@ const MainDashboard = () => {
       if (showOrderDetails) {
         return <OrderDetails onCancel={handleBackToOrderSearch} />
       }
-      return <OrderDatabaseSearch onAddOrderClick={handleAddOrderClick} />
+      if (showOrderNumberDetails && selectedOrder) {
+        return (
+          <OrderNumberDetails
+            order={selectedOrder}
+            onCancel={() => {
+              setShowOrderNumberDetails(false)
+              setSelectedOrder(null)
+            }}
+            getLookupMeaning={(lookupType, lookupCode) => {
+              // Simple implementation to avoid errors
+              return lookupCode || "-"
+            }}
+            formatDate={(dateString) => {
+              if (!dateString) return "-"
+              const date = new Date(dateString)
+              return date.toLocaleDateString()
+            }}
+          />
+        )
+      }
+      return (
+        <OrderDatabaseSearch
+          onAddOrderClick={handleAddOrderClick}
+          onOrderNumberClick={handleOrderNumberClick}
+          selectedOrder={selectedOrder}
+        />
+      )
     }
 
     if (activeSubmenu === "Lines") {
@@ -316,7 +366,7 @@ const MainDashboard = () => {
     // Default content for other menus/submenus
     return (
       <div className="empty-state">
-        <p>{activeSubmenu || activeMenu} content will be displayed here.</p>
+        <p>Hi Viewers, {activeSubmenu || activeMenu} content will be displayed here.</p>
       </div>
     )
   }
@@ -471,8 +521,8 @@ const MainDashboard = () => {
         </div>
       </div>
 
-      {/* Secondary Sidebar - Shows when a menu item is selected */}
-      {sidebarCollapsed && (
+      {/* Secondary Sidebar - Shows when a menu item is selected or order number is clicked */}
+      {showSecondSidebar && (
         <div className="secondary-sidebar">
           <div className="secondary-sidebar-header">
             <h2>{activeMenu.charAt(0).toUpperCase() + activeMenu.slice(1)}</h2>
@@ -511,6 +561,7 @@ const MainDashboard = () => {
               {showLinesAddParent && "Add Parent Line"}
               {showLinesAddChild && "Add Child Line"}
               {showCoreLookup && "Core Lookup Values"}
+              {selectedOrder && ` - Order ${selectedOrder.orderNumber}`}
             </h1>
           </div>
           <div className="header-right">

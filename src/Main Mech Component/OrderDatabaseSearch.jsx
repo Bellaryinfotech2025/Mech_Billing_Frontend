@@ -11,9 +11,8 @@ import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
 import { CgDetailsMore } from "react-icons/cg"
 import OrderDetails from "../Main Mech Component/OrderDetails"
-import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
 
-const OrderDatabaseSearch = ({ onAddOrderClick }) => {
+const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrder }) => {
   // State for orders and lookup values
   const [orders, setOrders] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -27,17 +26,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   })
   const [dataFetched, setDataFetched] = useState(false)
   const [showOrderDetails, setShowOrderDetails] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState(null)
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
   // API base URL
- 
-  
   const API_URL = "http://195.35.45.56:5522/api"
- 
- 
- 
- 
 
   // Fetch lookup values on component mount
   useEffect(() => {
@@ -126,14 +118,16 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
 
   // Handle order number click
   const handleOrderNumberClick = (order) => {
-    setSelectedOrder(order)
-    setShowOrderNumberDetails(true)
+    if (onOrderNumberClick) {
+      onOrderNumberClick(order)
+    } else {
+      setShowOrderNumberDetails(true)
+    }
   }
 
   // Handle back to order search
   const handleBackToOrderSearch = () => {
     setShowOrderNumberDetails(false)
-    setSelectedOrder(null)
   }
 
   // Handle Import/Export button click
@@ -163,16 +157,17 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
   }
 
   // If showing OrderNumberDetails, render it instead of the table
-  if (showOrderNumberDetails && selectedOrder) {
-    return (
-      <OrderNumberDetails
-        order={selectedOrder}
-        onCancel={handleBackToOrderSearch}
-        getLookupMeaning={getLookupMeaning}
-        formatDate={formatDate}
-      />
-    )
-  }
+  // We don't need this condition anymore as OrderNumberDetails will be rendered by MainDashboard
+  // if (showOrderNumberDetails) {
+  //   return (
+  //     <OrderNumberDetails
+  //       order={selectedOrder}
+  //       onCancel={handleBackToOrderSearch}
+  //       getLookupMeaning={getLookupMeaning}
+  //       formatDate={formatDate}
+  //     />
+  //   )
+  // }
 
   return (
     <div className="order-search-container">
@@ -195,10 +190,6 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
             <IoIosAddCircle />
             Add Order
           </button>
-          {/* <button className="add-new-order-btn" onClick={handleAddNewOrder}>
-            <FileText size={16} />
-            Add New Order
-          </button> */}
         </div>
       </header>
 
@@ -221,15 +212,6 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
           <button className="table-action-btn">
             <Download size={16} />
           </button>
-          {/* <button className="table-action-btn">
-            <Table size={16} />
-          </button>
-          <button className="table-action-btn">
-            <Grid size={16} />
-          </button>
-          <button className="table-action-btn">
-            <Filter size={16} />
-          </button> */}
         </div>
       </div>
 
@@ -281,26 +263,19 @@ const OrderDatabaseSearch = ({ onAddOrderClick }) => {
                 </tr>
               ) : orders.length > 0 ? (
                 orders.map((order, index) => (
-                  <tr key={index}>
-                    <td>
+                  <tr
+                    key={index}
+                    className={`${selectedOrder && selectedOrder.orderNumber === order.orderNumber ? "selected-row" : ""} clickable-row`}
+                    onClick={() => handleOrderNumberClick(order)}
+                  >
+                    <td onClick={(e) => e.stopPropagation()}>
                       <div style={{ display: "flex", gap: "4px" }}>
                         <button className="action-btn">
                           <Edit size={14} style={{ marginRight: "4px", color: "#94a3b8" }} />
                         </button>
                       </div>
                     </td>
-                    <td>
-                      <a
-                        href="#"
-                        className="order-number-link"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleOrderNumberClick(order)
-                        }}
-                      >
-                        {order.orderNumber || "-"}
-                      </a>
-                    </td>
+                    <td>{order.orderNumber || "-"}</td>
                     <td>{getLookupMeaning("ORDER_TYPE", order.orderType)}</td>
                     <td>{order.businessUnit || "-"}</td>
                     <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
