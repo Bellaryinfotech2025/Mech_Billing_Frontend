@@ -682,7 +682,7 @@ const OrderDetails = ({ onCancel }) => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Customer details</label>
+                <label>Customer Name </label>
                 <div className="custom-dropdown-wrapper" ref={billToCustomerRef}>
                   <div
                     className="custom-dropdown-trigger"
@@ -771,19 +771,7 @@ const OrderDetails = ({ onCancel }) => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-field-container">
-                <label>Sales Representative</label>
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    placeholder="Enter sales rep name"
-                    value={order.salesrep}
-                    onChange={(e) => handleChange("salesrep", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+             
           </div>
         </div>
       )}
