@@ -28,10 +28,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const [showOrderDetails, setShowOrderDetails] = useState(false)
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
 
-  // API base URL
+  // API base URL calling
   const API_URL = "http://195.35.45.56:5522/api"
 
-  // Fetch lookup values on component mount
+   
   useEffect(() => {
     const fetchLookupValues = async () => {
       try {
@@ -80,7 +80,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
     return lookup ? lookup.meaning : lookupCode
   }
 
-  // Format date for display
+  
   const formatDate = (dateString) => {
     if (!dateString) return "-"
     const date = new Date(dateString)
@@ -226,7 +226,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 <th>Business Unit</th>
                 <th>Category</th>
                 <th>Bill To Customer</th>
-                <th>Deliver To Customer</th>
+                 
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Total Value</th>
@@ -280,7 +280,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                     <td>{order.businessUnit || "-"}</td>
                     <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
                     <td>{order.billToCustomerId || "-"}</td>
-                    <td>{order.deliverToCustomerId || "-"}</td>
+                    
                     <td>{formatDate(order.effectiveStartDate)}</td>
                     <td>{formatDate(order.effectiveEndDate)}</td>
                     <td>{order.totalValue || "-"}</td>
