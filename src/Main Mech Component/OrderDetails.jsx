@@ -682,7 +682,7 @@ const OrderDetails = ({ onCancel }) => {
 
             <div className="form-row">
               <div className="form-field-container">
-                <label>Customer Name </label>
+                <label>Customer Name</label>
                 <div className="custom-dropdown-wrapper" ref={billToCustomerRef}>
                   <div
                     className="custom-dropdown-trigger"

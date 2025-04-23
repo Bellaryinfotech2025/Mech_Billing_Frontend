@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "../IndexComponent/indexxx.css";
-import land from '../assets/landingimage.png';
+import land from '../assets/mec image.png';
 import { Link } from "react-router-dom";
 
 const LandingPage = () => {
@@ -79,7 +79,7 @@ const LandingPage = () => {
         <div className="hero-image">
           <img
             src={land}
-            alt="MechBill Dashboard Interface showing invoice management and parts inventory"
+            alt="MechBill Dashboard Interface showing invoice management and parts inventory" style={{width:'800px',height:'70vh'}}
           />
         </div>
       </section>
