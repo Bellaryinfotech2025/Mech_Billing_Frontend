@@ -260,7 +260,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
           <input
             type="text"
             className="search-input"
-            placeholder="Orders # Customer Number . Category . Type . Billing Details Search Here ..."
+            placeholder="Search Your Order Here ..."
             value={searchQuery}
             onChange={handleSearchInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
