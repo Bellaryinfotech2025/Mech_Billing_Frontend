@@ -153,10 +153,35 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
     return lookup ? lookup.meaning : lookupCode
   }
 
+  // Updated formatDate function to display dates as "DD-Month-YY"
   const formatDate = (dateString) => {
     if (!dateString) return "-"
+
     const date = new Date(dateString)
-    return date.toLocaleDateString()
+
+    // Array of month names
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ]
+
+    // Get day, month name, and last 2 digits of year
+    const day = date.getDate().toString().padStart(2, "0")
+    const month = months[date.getMonth()]
+    const year = date.getFullYear().toString().slice(-2)
+
+    // Format as "DD-Month-YY"
+    return `${day}-${month}-${year}`
   }
 
   // Handle load orders button click
@@ -336,7 +361,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                               background: "#808080",
                               color: "white",
                               transition: "all 0.3s ease",
-                              boxShadow: "inset 0 0 0 4px rgba(0, 0, 0, 0.3)",
+                               borderRadius:'8px',
                               fontWeight: "bold",
                             }
                           : {}
@@ -354,7 +379,6 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                       </td>
                       <td
                         style={{
-                         
                           textDecoration: "underline",
                           cursor: "pointer",
                           fontWeight: isHighlighted ? "bold" : "normal",
