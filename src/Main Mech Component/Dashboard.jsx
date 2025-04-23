@@ -1,44 +1,26 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import {
-  LayoutDashboard,
-  BarChart,
-  CreditCard,
-  TrendingUp,
-  Sliders,
-  FileText,
-  FileQuestion,
-  Bell,
-  Settings,
-  LogOut,
-  User,
-  Menu,
-  X,
-  AlertTriangle,
-  UserCircle,
-  Edit,
-  Package,
-  Upload,
+  LayoutDashboard,BarChart,CreditCard,TrendingUp,Sliders,
+  FileText,FileQuestion,Bell,Settings,LogOut,User,Menu,X,AlertTriangle,UserCircle,Edit,Package,Upload,
 } from "lucide-react"
-import "../Design Component/Dashboard.css"
+import "../Design Component/Dashboard.css";
 
-import SettingsPopup from "../Main Mech Component/Settings"
-import OrderDetails from "../Main Mech Component/OrderDetails"
-import OrderDatabaseSearch from "../Main Mech Component/OrderDatabaseSearch"
-import LinesDatabaseSearch from "../Mech Lines Component/LinesDatabaseSearch"
-import Alignment from "../Main Mech Component/Alingment"
-import Erection from "../Main Mech Component/Erection"
-import LookupTable from "../Main Mech Component/LookUpTable"
-import LinesAddParent from "../Mech Lines Component/LinesAddParent"
-import LinesAddChild from "../Mech Lines Component/LineAddChild"
-import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
+import SettingsPopup from "../Main Mech Component/Settings";
+import OrderDetails from "../Main Mech Component/OrderDetails";
+import OrderDatabaseSearch from "../Main Mech Component/OrderDatabaseSearch";
+import LinesDatabaseSearch from "../Mech Lines Component/LinesDatabaseSearch";
+import Alignment from "../Main Mech Component/Alingment";
+import Erection from "../Main Mech Component/Erection";
+import LookupTable from "../Main Mech Component/LookUpTable";
+import LinesAddParent from "../Mech Lines Component/LinesAddParent";
+import LinesAddChild from "../Mech Lines Component/LineAddChild";
+import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails";
 
-import logo from "../assets/blogo.jpg"
-import "../Design Component/logout-popup.css"
-import "../Design Component/user-dropdown.css"
-import "../Design Component/order-database-search.css"
-import "../Design Component/dashboard-fix.css"
+import logo from "../assets/blogo.jpg";
+import "../Design Component/logout-popup.css";
+import "../Design Component/user-dropdown.css";
+import "../Design Component/order-database-search.css";
+import "../Design Component/dashboard-fix.css";
 
 const MainDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -554,14 +536,14 @@ const MainDashboard = () => {
             <button className="hamburger-menu" onClick={toggleSidebar}>
               <Menu size={24} />
             </button>
-            <h1>
+            <h1 style={{color:'white',fontWeight:'bold'}}>
               {activeMenu === "home" && (username ? `Hi ${username}` : "Welcome")}
               {activeSubmenu ? activeSubmenu : activeMenu !== "home" ? activeMenu : ""}
-              {showOrderDetails && "Add Order"}
-              {showLinesAddParent && "Add Parent Line"}
+              {/* {showOrderDetails && "Add Order"} */}
+              {/* {showLinesAddParent && "Add Parent Line"}
               {showLinesAddChild && "Add Child Line"}
-              {showCoreLookup && "Core Lookup Values"}
-              {selectedOrder && ` - Order ${selectedOrder.orderNumber}`}
+              {showCoreLookup && "Core Lookup Values"} */}
+              {/* {selectedOrder && ` - Order ${selectedOrder.orderNumber}`} */}
             </h1>
           </div>
           <div className="header-right">

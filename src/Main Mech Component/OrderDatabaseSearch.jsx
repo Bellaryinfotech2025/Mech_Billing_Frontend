@@ -68,7 +68,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
       // Clear the highlight after 3 seconds
       highlightTimerRef.current = setTimeout(() => {
         setHighlightedOrders([])
-      }, 3000)
+      }, 500)
     } else {
       setHighlightedOrders([])
     }
