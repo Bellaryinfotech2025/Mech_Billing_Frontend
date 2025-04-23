@@ -330,13 +330,14 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                     <tr
                       key={index}
                       className={`${selectedOrder && selectedOrder.orderNumber === order.orderNumber ? "selected-row" : ""} clickable-row`}
-                      onClick={() => handleOrderNumberClick(order)}
                       style={
                         isHighlighted
                           ? {
                               background: "#808080",
                               color: "white",
                               transition: "all 0.3s ease",
+                              boxShadow: "inset 0 0 0 4px rgba(0, 0, 0, 0.3)",
+                              fontWeight: "bold",
                             }
                           : {}
                       }
@@ -351,13 +352,31 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                           </button>
                         </div>
                       </td>
-                      <td>{order.orderNumber || "-"}</td>
+                      <td
+                        style={{
+                         
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          fontWeight: isHighlighted ? "bold" : "normal",
+                          color: isHighlighted ? "white" : "#0066cc",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOrderNumberClick(order)
+                        }}
+                      >
+                        {order.orderNumber || "-"}
+                      </td>
                       <td>{getLookupMeaning("ORDER_TYPE", order.orderType)}</td>
                       <td>{order.businessUnit || "-"}</td>
                       <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
-                      <td>{order.billToCustomerId || "-"}</td>
+                      <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
+                        {order.billToCustomerId || "-"}
+                      </td>
 
-                      <td>{formatDate(order.effectiveStartDate)}</td>
+                      <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
+                        {formatDate(order.effectiveStartDate)}
+                      </td>
                       <td>{formatDate(order.effectiveEndDate)}</td>
                       <td>{order.totalValue || "-"}</td>
                       <td>{order.status || "-"}</td>
