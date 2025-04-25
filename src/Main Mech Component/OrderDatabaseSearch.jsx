@@ -31,7 +31,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const highlightTimerRef = useRef(null)
 
   // API base URL calling
-  const API_URL = "http://195.35.45.56:5522/api"
+  const API_URL = "http://195.35.45.56:5522/api/V2.0"
 
   useEffect(() => {
     const fetchLookupValues = async () => {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
+import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react'
 import "../Design Component/OrderDetails.css"
  
 import axios from "axios"
@@ -44,13 +44,16 @@ const OrderDetails = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
- 
- //http://localhost:9988/api
- //http://195.35.45.56:5522
- 
- 
-  const API_URL = "http://195.35.45.56:5522/api"
- 
+  const API_URL = "http://195.35.45.56:5522/api/V2.0"
+  
+  // Customer data states
+  const [customers, setCustomers] = useState([])
+  const [customerSites, setCustomerSites] = useState([])
+  const [customerContacts, setCustomerContacts] = useState([])
+  const [selectedCustomerName, setSelectedCustomerName] = useState("")
+  const [selectedSiteName, setSelectedSiteName] = useState("")
+  const [selectedContactName, setSelectedContactName] = useState("")
+  const [loadingCustomerData, setLoadingCustomerData] = useState(false)
  
   // Initial order state for form reset
   const initialOrderState = {
@@ -87,31 +90,6 @@ const OrderDetails = ({ onCancel }) => {
   // Add order state for backend submission
   const [order, setOrder] = useState({ ...initialOrderState })
 
-  // Customer details options
-  const billToCustomerOptions = [
-    { value: "001", label: "001" },
-    { value: "002", label: "002" },
-    { value: "003", label: "003" },
-    { value: "004", label: "004" },
-    { value: "005", label: "005" },
-  ]
-
-  const billToSiteOptions = [
-    { value: "001", label: "001" },
-    { value: "002", label: "002" },
-    { value: "003", label: "003" },
-    { value: "004", label: "004" },
-    { value: "005", label: "005" },
-  ]
-
-  const billToContactOptions = [
-    { value: "001", label: " 001" },
-    { value: "002", label: " 002" },
-    { value: "003", label: " 003" },
-    { value: "004", label: " 004" },
-    { value: "005", label: "005" },
-  ]
-
   // Auto-hide toast after 2 seconds
   useEffect(() => {
     let toastTimer
@@ -144,6 +122,75 @@ const OrderDetails = ({ onCancel }) => {
 
     fetchLookupValues()
   }, [])
+
+  // Fetch customer accounts data
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallcustomeraccount/details`)
+        
+        if (response.data) {
+          // Assuming the API returns an array of customer accounts
+          setCustomers(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer accounts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomers()
+  }, [])
+
+  // Fetch customer sites when a customer is selected
+  useEffect(() => {
+    const fetchCustomerSites = async () => {
+      if (!order.billToCustomerId) return
+      
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallaccountsitesall/details`, {
+          params: { customerId: order.billToCustomerId }
+        })
+        
+        if (response.data) {
+          setCustomerSites(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer sites:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerSites()
+  }, [order.billToCustomerId])
+
+  // Fetch customer contacts when a customer is selected
+  useEffect(() => {
+    const fetchCustomerContacts = async () => {
+      if (!order.billToCustomerId) return
+      
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallcustomercontacts/details`, {
+          params: { customerId: order.billToCustomerId }
+        })
+        
+        if (response.data) {
+          setCustomerContacts(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer contacts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerContacts()
+  }, [order.billToCustomerId])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -181,6 +228,9 @@ const OrderDetails = ({ onCancel }) => {
     setSelectedOrderType("")
     setSelectedBillingFrequency("")
     setSelectedBillingCycle("")
+    setSelectedCustomerName("")
+    setSelectedSiteName("")
+    setSelectedContactName("")
   }
 
   // Enhanced calendar functions
@@ -341,18 +391,26 @@ const OrderDetails = ({ onCancel }) => {
   }
 
   // Handle customer details dropdown selections
-  const handleBillToCustomerSelect = (option) => {
-    setOrder({ ...order, billToCustomerId: option.value })
+  const handleBillToCustomerSelect = (customer) => {
+    setSelectedCustomerName(customer.accountName)
+    setOrder({ ...order, billToCustomerId: customer.custAccountId })
     setShowBillToCustomerDropdown(false)
+    
+    // Reset site and contact selections when customer changes
+    setSelectedSiteName("")
+    setSelectedContactName("")
+    setOrder({ ...order, billToCustomerId: customer.custAccountId, billToSiteId: "", billToContactId: "" })
   }
 
-  const handleBillToSiteSelect = (option) => {
-    setOrder({ ...order, billToSiteId: option.value })
+  const handleBillToSiteSelect = (site) => {
+    setSelectedSiteName(site.siteName)
+    setOrder({ ...order, billToSiteId: site.custAcctSiteId })
     setShowBillToSiteDropdown(false)
   }
 
-  const handleBillToContactSelect = (option) => {
-    setOrder({ ...order, billToContactId: option.value })
+  const handleBillToContactSelect = (contact) => {
+    setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+    setOrder({ ...order, billToContactId: contact.contactId })
     setShowBillToContactDropdown(false)
   }
 
@@ -479,6 +537,7 @@ const OrderDetails = ({ onCancel }) => {
   ])
 
   return (
+    
     <div className="order-details-container">
       {/* Success Toast */}
       {showToast && (
@@ -688,22 +747,28 @@ const OrderDetails = ({ onCancel }) => {
                     className="custom-dropdown-trigger"
                     onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
                   >
-                    <span>{order.billToCustomerId || "Select Customer"}</span>
+                    <span>{selectedCustomerName || "Select Customer"}</span>
                     <ChevronDown size={16} />
                   </div>
 
                   {showBillToCustomerDropdown && (
                     <div className="custom-dropdown-menu">
                       <div className="custom-dropdown-content">
-                        {billToCustomerOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item"
-                            onClick={() => handleBillToCustomerSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                        {loadingCustomerData ? (
+                          <div className="custom-dropdown-item">Loading...</div>
+                        ) : customers.length > 0 ? (
+                          customers.map((customer, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleBillToCustomerSelect(customer)}
+                            >
+                              {customer.accountName}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item">No customers found</div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -717,22 +782,30 @@ const OrderDetails = ({ onCancel }) => {
                     className="custom-dropdown-trigger"
                     onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
                   >
-                    <span>{order.billToSiteId || "Select Site"}</span>
+                    <span>{selectedSiteName || "Select Site"}</span>
                     <ChevronDown size={16} />
                   </div>
 
                   {showBillToSiteDropdown && (
                     <div className="custom-dropdown-menu">
                       <div className="custom-dropdown-content">
-                        {billToSiteOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item"
-                            onClick={() => handleBillToSiteSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                        {!order.billToCustomerId ? (
+                          <div className="custom-dropdown-item">Select a customer first</div>
+                        ) : loadingCustomerData ? (
+                          <div className="custom-dropdown-item">Loading...</div>
+                        ) : customerSites.length > 0 ? (
+                          customerSites.map((site, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleBillToSiteSelect(site)}
+                            >
+                              {site.siteName || `Site ${site.custAcctSiteId}`}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item">No sites found</div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -748,22 +821,30 @@ const OrderDetails = ({ onCancel }) => {
                     className="custom-dropdown-trigger"
                     onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
                   >
-                    <span>{order.billToContactId || "Select Contact"}</span>
+                    <span>{selectedContactName || "Select Contact"}</span>
                     <ChevronDown size={16} />
                   </div>
 
                   {showBillToContactDropdown && (
                     <div className="custom-dropdown-menu">
                       <div className="custom-dropdown-content">
-                        {billToContactOptions.map((option, index) => (
-                          <div
-                            key={index}
-                            className="custom-dropdown-item"
-                            onClick={() => handleBillToContactSelect(option)}
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                        {!order.billToCustomerId ? (
+                          <div className="custom-dropdown-item">Select a customer first</div>
+                        ) : loadingCustomerData ? (
+                          <div className="custom-dropdown-item">Loading...</div>
+                        ) : customerContacts.length > 0 ? (
+                          customerContacts.map((contact, index) => (
+                            <div
+                              key={index}
+                              className="custom-dropdown-item"
+                              onClick={() => handleBillToContactSelect(contact)}
+                            >
+                              {contact.roleType || `Contact ${contact.contactId}`}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="custom-dropdown-item">No contacts found</div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1067,8 +1148,3 @@ const OrderDetails = ({ onCancel }) => {
 }
 
 export default OrderDetails;
-
-
-
-
-
