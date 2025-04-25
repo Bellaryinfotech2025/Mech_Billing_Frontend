@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ArrowLeft, Calendar, Search, Edit, Save, CheckCircle, ChevronDown } from "lucide-react"
+import { ArrowLeft, Calendar, Search, Edit, Save, CheckCircle, ChevronDown } from 'lucide-react'
 import axios from "axios"
 
 const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, formatDate }) => {
@@ -37,12 +37,10 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
   const billingFrequencyDropdownRef = useRef(null)
   const billingCycleDropdownRef = useRef(null)
 
-  // API base URL
-  
-  const API_URL = "http://195.35.45.56:5522/api"
+  // API base URL - Using the correct base URL
+  // const API_URL = "http://localhost:9955/api/V2.0"
+  const API_URL = "http://195.35.45.56:5522/api/V2.0"
  
- 
-
   useEffect(() => {
     setOrder(initialOrder || {})
 
@@ -181,7 +179,7 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
 
       console.log("Submitting updated order data:", orderData)
 
-      // Send the updated data to the backend
+      // Send the updated data to the backend - FIXED URL to match controller endpoint
       const response = await axios.put(`${API_URL}/update-order`, orderData)
 
       console.log("Server response:", response.data)
