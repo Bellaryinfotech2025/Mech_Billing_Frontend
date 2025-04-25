@@ -111,7 +111,7 @@ const LoginPage = () => {
           show: true,
           type: "success",
           title: "Login Successful!",
-          message: `Login successful redirecting to Your Dashboard Mr ${username}`,
+          message: `Login successful redirecting to Your Dashboard ${username}`,
         })
 
         // Navigate after toast is shown
@@ -162,7 +162,7 @@ const LoginPage = () => {
             <div className="logo-container">
               <div className="logo-wrapper">
                 <center>
-                  <img src={logo || "/placeholder.svg"} alt="terrolt-khaja" style={{ width: "30px", height: "30px" }} />
+                  <img src={logo || "/placeholder.svg"} alt="logo of company" style={{ width: "30px", height: "30px" }} />
                 </center>
                 <h3>Mech Billing App</h3>
               </div>

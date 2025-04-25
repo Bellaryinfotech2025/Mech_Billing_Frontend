@@ -43,7 +43,7 @@ const LinesAddParent = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://195.35.45.56:5522/api"
+  const API_URL = "http://localhost:9955/api"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
@@ -64,7 +64,7 @@ const LinesAddParent = ({ onCancel }) => {
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
-    salesrep: "",
+    
     orderedQuantity: "",
     unitPrice: "",
     uom: "",
@@ -583,7 +583,7 @@ const LinesAddParent = ({ onCancel }) => {
             <div className="form-section-kh-addparent">
               <div className="form-row-kh-addparent">
                 <div className="form-field-container-kh-addparent">
-                  <label>Customer details</label>
+                  <label>Customer Name </label>
                   <div className="custom-dropdown-wrapper-kh-addparent" ref={billToCustomerRef}>
                     <div
                       className="custom-dropdown-trigger-kh-addparent"
@@ -671,17 +671,7 @@ const LinesAddParent = ({ onCancel }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addparent">
-                  <label>Sales Representative</label>
-                  <div className="input-wrapper-kh-addparent">
-                    <input
-                      type="text"
-                      placeholder="Enter sales rep name"
-                      value={line.salesrep}
-                      onChange={(e) => handleChange("salesrep", e.target.value)}
-                    />
-                  </div>
-                </div>
+                 
               </div>
             </div>
           </div>

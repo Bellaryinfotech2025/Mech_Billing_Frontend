@@ -21,6 +21,18 @@ import LookupTablePractice from './lookuppractice/lookuptablepractice';
 
 
 
+//  import SidebarProfile from './Profile Component/Sidebar';
+
+//  import CreateProfile from './Profile Component/CreateAccount';
+//  import EditProfile from './Profile Component/EditProfile';
+
+//  import Profiler from './Profile Component/Profilepage';
+
+
+
+import Fake from './lookuppractice/FakeOrder';
+
+import AccountCreation from './Profile Component/CreateAccount';
 
 function App() {
   return (
@@ -42,7 +54,18 @@ function App() {
             <Route path="/lookuppractice" element={<LookupTablePractice/>}/>
 
             {/* <Route path="/orderdatabasesearch" element={<OrderDatabaseSearch/>}/> */}
-             
+{/* 
+              <Route path="/user" element={<SidebarProfile/>}/>
+              <Route path="/create-account" element={<CreateProfile/>}/>
+              <Route path="/edit-profile" element={<EditProfile/>}/>
+              <Route path="/ppp" element={<Profiler/>}/> */}
+
+
+
+              <Route path="/fake" element={<Fake/>}/>
+
+              <Route path="/signin" element={<AccountCreation/>}/>
+
 
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>

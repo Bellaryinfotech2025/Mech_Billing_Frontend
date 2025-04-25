@@ -74,7 +74,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
-    salesrep: "",
+    
     orderedQuantity: "",
     unitPrice: "",
     uom: "",
@@ -646,7 +646,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
             <div className="form-section-kh-addchild">
               <div className="form-row-kh-addchild">
                 <div className="form-field-container-kh-addchild">
-                  <label>Customer details</label>
+                  <label>Customer Name </label>
                   <div className="custom-dropdown-wrapper-kh-addchild" ref={billToCustomerRef}>
                     <div
                       className="custom-dropdown-trigger-kh-addchild"
@@ -734,17 +734,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
-                  <label>Sales Representative</label>
-                  <div className="input-wrapper-kh-addchild">
-                    <input
-                      type="text"
-                      placeholder="Enter sales rep name"
-                      value={line.salesrep}
-                      onChange={(e) => handleChange("salesrep", e.target.value)}
-                    />
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>
