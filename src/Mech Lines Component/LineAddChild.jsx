@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react"
-import "../Mech Lines Design/linesaddchild.css"
+import "../Mech Lines Design/linesaddparent.css"
 import axios from "axios"
 
-const LinesAddChild = ({ onCancel, parentLine }) => {
+const LinesAddParent = ({ onCancel }) => {
   const [activeTab, setActiveTab] = useState("product-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
   const [dates, setDates] = useState({
@@ -22,7 +22,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
   // Toast notification state
   const [showToast, setShowToast] = useState(false)
-  const [toastMessage, setToastMessage] = useState("Child line created successfully")
+  const [toastMessage, setToastMessage] = useState("Parent line created successfully")
   const [isError, setIsError] = useState(false)
 
   // Calendar state
@@ -44,37 +44,42 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
   // API base URL
   const API_URL = "http://195.35.45.56:5522/api"
+  const CUSTOMER_API_URL = "http://195.35.45.56:5522/api/V2.0"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
-    billingFrequencies: [],
+    billingFrequencies: [
+      { lookupCode: "MONTHLY", meaning: "Monthly" },
+      { lookupCode: "QUARTERLY", meaning: "Quarterly" },
+      { lookupCode: "ANNUALLY", meaning: "Annually" },
+      { lookupCode: "ONE_TIME", meaning: "One Time" },
+    ],
     billingChannels: [],
     uomList: [],
   })
-  const [loadingLookupValues, setLoadingLookupValues] = useState(true)
+  const [loadingLookupValues, setLoadingLookupValues] = useState(false)
 
-  // Generate a default line number for the child
-  const generateChildLineNumber = () => {
-    if (parentLine && parentLine.lineNumber) {
-      // Generate a hierarchical number for the child line (e.g., 846.1)
-      return `${parentLine.lineNumber}.1`
-    }
-    return ""
-  }
+  // Customer data states
+  const [customers, setCustomers] = useState([])
+  const [customerSites, setCustomerSites] = useState([])
+  const [customerContacts, setCustomerContacts] = useState([])
+  const [selectedCustomerName, setSelectedCustomerName] = useState("")
+  const [selectedSiteName, setSelectedSiteName] = useState("")
+  const [selectedContactName, setSelectedContactName] = useState("")
+  const [loadingCustomerData, setLoadingCustomerData] = useState(false)
 
   // Initial line state
   const [line, setLine] = useState({
-    orderId: 1, // Default order ID
-    parentLineNumber: parentLine ? parentLine.lineNumber : null,
-    lineNumber: generateChildLineNumber(), // Set a hierarchical line number
+    orderId: null, // Changed from hardcoded 1 to null to let the backend assign it
+    lineNumber: "",
     serviceName: "",
     effectiveStartDate: null,
     effectiveEndDate: null,
-    isParent: false, // Child lines are not parents
+    isParent: true, // This is a parent line
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
-    
+
     orderedQuantity: "",
     unitPrice: "",
     uom: "",
@@ -83,95 +88,133 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
     status: "ACTIVE",
   })
 
-  // Set the parent service number with decimal format
-  const [parentServiceNumber, setParentServiceNumber] = useState("")
-
-  // Set parent service number and line number when parentLine changes
+  // Fetch billing frequencies from the backend
   useEffect(() => {
-    if (parentLine) {
-      // If parent line number is 1, child would be 1.1
-      const childServiceNumber = `${parentLine.lineNumber}.1`
-      setParentServiceNumber(childServiceNumber)
-
-      // Set the hierarchical line number for the child
-      const childLineNumber = `${parentLine.lineNumber}.1`
-      setLine((prev) => ({
-        ...prev,
-        parentLineNumber: parentLine.lineNumber,
-        lineNumber: childLineNumber,
-      }))
-    }
-  }, [parentLine])
-
-  // Fetch lookup values from the backend
-  useEffect(() => {
-    const fetchLookupValues = async () => {
+    const fetchBillingFrequencies = async () => {
       try {
         setLoadingLookupValues(true)
 
-        // First try the order-lookup-values endpoint
+        // Try to fetch from V2.0 endpoint
         try {
-          const response = await axios.get(`${API_URL}/order-lookup-values`)
-          if (response.data) {
-            console.log("Lookup values:", response.data)
-            setLookupValues({
-              billingFrequencies: response.data.billingFrequencies || [],
-              billingChannels: response.data.billingChannels || [],
-              uomList: response.data.uomList || [],
-            })
-            setLoadingLookupValues(false)
-            return
+          const response = await axios.get(`${CUSTOMER_API_URL}/order-lookup-values`)
+          if (response.data && response.data.billingFrequencies) {
+            console.log("Billing frequencies from V2.0:", response.data)
+            setLookupValues((prev) => ({
+              ...prev,
+              billingFrequencies: response.data.billingFrequencies || prev.billingFrequencies,
+            }))
           }
         } catch (error) {
-          console.error("Error fetching from order-lookup-values:", error)
-          // Continue to fallback
+          console.error("Error fetching from V2.0 endpoint:", error)
+          // Continue with default values
         }
 
-        // Fallback to the original endpoint
-        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
-        if (response.data && response.data.status === "success") {
-          setLookupValues({
-            billingFrequencies: response.data.billingFrequencies || [],
-            billingChannels: response.data.billingChannels || [],
-            uomList: response.data.uomList || [],
+        // Try to fetch from lookup-values endpoint
+        try {
+          const response = await axios.get(`${API_URL}/lookup-values`, {
+            params: {
+              search: "BILLING_FREQUENCY",
+            },
           })
-        } else {
-          console.error("Error in lookup response:", response.data)
+
+          if (response.data && response.data.content) {
+            const billingFrequencies = response.data.content
+              .filter((item) => item.lookupType === "BILLING_FREQUENCY")
+              .map((item) => ({
+                lookupCode: item.lookupCode,
+                meaning: item.meaning,
+              }))
+
+            if (billingFrequencies.length > 0) {
+              console.log("Billing frequencies from lookup-values:", billingFrequencies)
+              setLookupValues((prev) => ({
+                ...prev,
+                billingFrequencies: billingFrequencies,
+              }))
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching from lookup-values endpoint:", error)
+          // Continue with default values
         }
       } catch (error) {
-        console.error("Error fetching lookup values:", error)
+        console.error("Error in fetchBillingFrequencies:", error)
       } finally {
         setLoadingLookupValues(false)
       }
     }
 
-    fetchLookupValues()
+    fetchBillingFrequencies()
   }, [])
 
-  // Customer details options
-  const billToCustomerOptions = [
-    { value: "1", label: "001" },
-    { value: "2", label: "002" },
-    { value: "3", label: "003" },
-    { value: "4", label: "004" },
-    { value: "5", label: "005" },
-  ]
+  // Fetch customer accounts data
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallcustomeraccount/details`)
 
-  const billToSiteOptions = [
-    { value: "1", label: "001" },
-    { value: "2", label: "002" },
-    { value: "3", label: "003" },
-    { value: "4", label: "004" },
-    { value: "5", label: "005" },
-  ]
+        if (response.data) {
+          // Assuming the API returns an array of customer accounts
+          setCustomers(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer accounts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
 
-  const billToContactOptions = [
-    { value: "1", label: " 001" },
-    { value: "2", label: " 002" },
-    { value: "3", label: " 003" },
-    { value: "4", label: " 004" },
-    { value: "5", label: "005" },
-  ]
+    fetchCustomers()
+  }, [])
+
+  // Fetch customer sites when a customer is selected
+  useEffect(() => {
+    const fetchCustomerSites = async () => {
+      if (!line.billToCustomerId) return
+
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallaccountsitesall/details`, {
+          params: { customerId: line.billToCustomerId },
+        })
+
+        if (response.data) {
+          setCustomerSites(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer sites:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerSites()
+  }, [line.billToCustomerId])
+
+  // Fetch customer contacts when a customer is selected
+  useEffect(() => {
+    const fetchCustomerContacts = async () => {
+      if (!line.billToCustomerId) return
+
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallcustomercontacts/details`, {
+          params: { customerId: line.billToCustomerId },
+        })
+
+        if (response.data) {
+          setCustomerContacts(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer contacts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerContacts()
+  }, [line.billToCustomerId])
 
   // Auto-hide toast after 2 seconds
   useEffect(() => {
@@ -202,6 +245,36 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
       setLine((prev) => ({ ...prev, totalPrice: "" }))
     }
   }, [quantity, unitPrice])
+
+  // Add a function to fetch the current order ID when the component mounts
+  useEffect(() => {
+    // Try to get the orderId from URL parameters or context if available
+    const urlParams = new URLSearchParams(window.location.search)
+    const orderIdFromUrl = urlParams.get("orderId")
+
+    if (orderIdFromUrl) {
+      setLine((prev) => ({ ...prev, orderId: Number.parseInt(orderIdFromUrl) }))
+    } else {
+      // If no orderId is provided, fetch the latest order ID from the backend
+      const fetchLatestOrderId = async () => {
+        try {
+          const response = await axios.get(`${API_URL}/V2.0/orders`)
+          if (response.data && response.data.length > 0) {
+            // Sort orders by ID to get the latest one
+            const orders = [...response.data].sort((a, b) => b.orderId - a.orderId)
+            const latestOrderId = orders[0].orderId
+            setLine((prev) => ({ ...prev, orderId: latestOrderId }))
+          }
+        } catch (error) {
+          console.error("Error fetching latest order ID:", error)
+          // If we can't fetch the latest order ID, use a default value
+          setLine((prev) => ({ ...prev, orderId: 1 }))
+        }
+      }
+
+      fetchLatestOrderId()
+    }
+  }, [])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -282,7 +355,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
     const days = []
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-day-kh-addchild empty-kh-addchild"></div>)
+      days.push(<div key={`empty-${i}`} className="calendar-day-kh-addparent empty-kh-addparent"></div>)
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
@@ -292,7 +365,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
       days.push(
         <div
           key={`day-${i}`}
-          className={`calendar-day-kh-addchild ${isToday ? "today-kh-addchild" : ""}`}
+          className={`calendar-day-kh-addparent ${isToday ? "today-kh-addparent" : ""}`}
           onClick={() => handleDateSelect(field, date)}
         >
           {i}
@@ -306,9 +379,9 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
   const generateMonthView = () => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     return (
-      <div className="calendar-months-kh-addchild">
+      <div className="calendar-months-kh-addparent">
         {months.map((month, index) => (
-          <div key={month} className="calendar-month-kh-addchild" onClick={() => handleMonthSelect(index)}>
+          <div key={month} className="calendar-month-kh-addparent" onClick={() => handleMonthSelect(index)}>
             {month}
           </div>
         ))}
@@ -324,18 +397,21 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
     for (let i = 0; i < 12; i++) {
       const year = startYear + i
       years.push(
-        <div key={year} className="calendar-year-kh-addchild" onClick={() => handleYearSelect(year)}>
+        <div key={year} className="calendar-year-kh-addparent" onClick={() => handleYearSelect(year)}>
           {year}
         </div>,
       )
     }
 
-    return <div className="calendar-years-kh-addchild">{years}</div>
+    return <div className="calendar-years-kh-addparent">{years}</div>
   }
 
   // Handle dropdown selection for Billing Frequency
   const handleBillingFrequencySelect = (option) => {
+    console.log("Selected billing frequency:", option)
+    // Display the meaning to the user
     setSelectedBillingFrequency(option.meaning)
+    // Store the lookup_code in the line state for database storage
     setLine({ ...line, billingFrequency: option.lookupCode })
     setShowBillingFrequencyDropdown(false)
   }
@@ -371,18 +447,31 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
   }
 
   // Handle customer details dropdown selections
-  const handleBillToCustomerSelect = (option) => {
-    setLine({ ...line, billToCustomerId: option.value })
+  const handleBillToCustomerSelect = (customer) => {
+    setSelectedCustomerName(customer.accountName)
+    setLine({ ...line, billToCustomerId: customer.custAccountId })
     setShowBillToCustomerDropdown(false)
+
+    // Reset site and contact selections when customer changes
+    setSelectedSiteName("")
+    setSelectedContactName("")
+    setLine((prev) => ({
+      ...prev,
+      billToCustomerId: customer.custAccountId,
+      billToSiteId: "",
+      billToContactId: "",
+    }))
   }
 
-  const handleBillToSiteSelect = (option) => {
-    setLine({ ...line, billToSiteId: option.value })
+  const handleBillToSiteSelect = (site) => {
+    setSelectedSiteName(site.siteName || `Site ${site.custAcctSiteId}`)
+    setLine({ ...line, billToSiteId: site.custAcctSiteId })
     setShowBillToSiteDropdown(false)
   }
 
-  const handleBillToContactSelect = (option) => {
-    setLine({ ...line, billToContactId: option.value })
+  const handleBillToContactSelect = (contact) => {
+    setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+    setLine({ ...line, billToContactId: contact.contactId })
     setShowBillToContactDropdown(false)
   }
 
@@ -391,14 +480,6 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
     e.preventDefault()
 
     try {
-      // Validate parent line number is selected
-      if (!line.parentLineNumber) {
-        setToastMessage("Please select a parent line")
-        setIsError(true)
-        setShowToast(true)
-        return
-      }
-
       // Validate line number is provided
       if (!line.lineNumber) {
         setToastMessage("Line number is required")
@@ -410,8 +491,6 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
       // Prepare the data for submission
       const lineData = {
         ...line,
-        // Send the line number as a string to preserve the hierarchical format
-        lineNumber: line.lineNumber,
         orderedQuantity: quantity ? Number.parseFloat(quantity) : null,
         unitPrice: unitPrice ? Number.parseFloat(unitPrice) : null,
         totalPrice: total ? Number.parseFloat(total) : null,
@@ -423,19 +502,19 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
       console.log("Sending data to server:", lineData)
 
       // Send the data to the backend
-      const response = await axios.post(`${API_URL}/lines/createChildLine`, lineData)
+      const response = await axios.post(`${API_URL}/lines/createParentLine`, lineData)
 
       if (response.data && response.data.status === "success") {
-        console.log("Child line created successfully:", response.data)
-        setToastMessage("Child line created successfully")
+        console.log("Parent line created successfully:", response.data)
+        setToastMessage("Parent line created successfully")
         setIsError(false)
         setShowToast(true)
       } else {
         throw new Error(response.data.message || "Unknown error occurred")
       }
     } catch (error) {
-      console.error("Error creating child line:", error)
-      setToastMessage(`Error creating child line: ${error.message || "Unknown error"}`)
+      console.error("Error creating parent line:", error)
+      setToastMessage(`Error creating parent line: ${error.message || "Unknown error"}`)
       setIsError(true)
       setShowToast(true)
     }
@@ -490,46 +569,48 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
   return (
     <div className="bodyoflines">
-      <div className="order-details-container-kh-addchild">
+      <div className="order-details-container-kh-addparent">
         {/* Success Toast */}
         {showToast && (
-          <div className="toast-container-kh-addchild">
-            <div className={`toast-kh-addchild ${isError ? "error-toast-kh-addchild" : "success-toast-kh-addchild"}`}>
+          <div className="toast-container-kh-addparent">
+            <div
+              className={`toast-kh-addparent ${isError ? "error-toast-kh-addparent" : "success-toast-kh-addparent"}`}
+            >
               <CheckCircle size={20} />
               <span>{toastMessage}</span>
             </div>
           </div>
         )}
 
-        <div className="order-header-kh-addchild">
-          <h1>Add Child</h1>
-          <div className="order-actions-kh-addchild">
-            <button className="save-btn-kh-addchild" onClick={handleSubmit}>
+        <div className="order-header-kh-addparent">
+          <h1>Add Parent</h1>
+          <div className="order-actions-kh-addparent">
+            <button className="save-btn-kh-addparent" onClick={handleSubmit}>
               <Save size={16} />
               <span>Save</span>
             </button>
-            <button className="cancel-btn-kh-addchild" onClick={handleCancelClick}>
+            <button className="cancel-btn-kh-addparent" onClick={handleCancelClick}>
               <X size={16} />
               <span>Cancel</span>
             </button>
           </div>
         </div>
 
-        <div className="order-tabs-kh-addchild">
+        <div className="order-tabs-kh-addparent">
           <div
-            className={`tab-kh-addchild ${activeTab === "product-details" ? "active-kh-addchild" : ""}`}
+            className={`tab-kh-addparent ${activeTab === "product-details" ? "active-kh-addparent" : ""}`}
             onClick={() => handleTabClick("product-details")}
           >
             Product Details
           </div>
           <div
-            className={`tab-kh-addchild ${activeTab === "customer-details" ? "active-kh-addchild" : ""}`}
+            className={`tab-kh-addparent ${activeTab === "customer-details" ? "active-kh-addparent" : ""}`}
             onClick={() => handleTabClick("customer-details")}
           >
             Customer Details
           </div>
           <div
-            className={`tab-kh-addchild ${activeTab === "billing" ? "active-kh-addchild" : ""}`}
+            className={`tab-kh-addparent ${activeTab === "billing" ? "active-kh-addparent" : ""}`}
             onClick={() => handleTabClick("billing")}
           >
             Billing
@@ -538,36 +619,12 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
         {/* Product Details Tab */}
         {activeTab === "product-details" && (
-          <div className="order-form-kh-addchild">
-            <div className="form-section-kh-addchild">
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
-                  <label>Parent</label>
-                  <div className="input-wrapper-kh-addchild">
-                    <input
-                      type="text"
-                      value={
-                        parentLine
-                          ? `Line ${parentLine.lineNumber} - ${parentLine.serviceName || "No description"}`
-                          : ""
-                      }
-                      readOnly
-                    />
-                  </div>
-                </div>
-
-                <div className="form-field-container-kh-addchild">
-                  <label>Service Number</label>
-                  <div className="input-wrapper-kh-addchild">
-                    <input type="text" value={parentServiceNumber} readOnly />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+          <div className="order-form-kh-addparent">
+            <div className="form-section-kh-addparent">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>Service Name</label>
-                  <div className="input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent">
                     <input
                       type="text"
                       placeholder="Enter service name"
@@ -577,9 +634,9 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>Line Number</label>
-                  <div className="input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent">
                     <input
                       type="text"
                       placeholder="Enter line number"
@@ -591,10 +648,10 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                 </div>
               </div>
 
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>Start Date</label>
-                  <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent date-input-wrapper-kh-addparent">
                     <input
                       type="text"
                       placeholder="Select date"
@@ -603,7 +660,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                       onClick={() => setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")}
                     />
                     <button
-                      className="calendar-btn-kh-addchild"
+                      className="calendar-btn-kh-addparent"
                       onClick={(e) => {
                         e.stopPropagation()
                         setShowDatePicker(showDatePicker === "startDate" ? null : "startDate")
@@ -614,9 +671,9 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>End Date</label>
-                  <div className="input-wrapper-kh-addchild date-input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent date-input-wrapper-kh-addparent">
                     <input
                       type="text"
                       placeholder="Select date"
@@ -625,7 +682,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                       onClick={() => setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")}
                     />
                     <button
-                      className="calendar-btn-kh-addchild"
+                      className="calendar-btn-kh-addparent"
                       onClick={(e) => {
                         e.stopPropagation()
                         setShowDatePicker(showDatePicker === "endDate" ? null : "endDate")
@@ -642,61 +699,75 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
         {/* Customer Details Tab */}
         {activeTab === "customer-details" && (
-          <div className="order-form-kh-addchild">
-            <div className="form-section-kh-addchild">
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
-                  <label>Customer Name </label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToCustomerRef}>
+          <div className="order-form-kh-addparent">
+            <div className="form-section-kh-addparent">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
+                  <label>Customer Name</label>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={billToCustomerRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
                     >
-                      <span>{line.billToCustomerId || "Select Customer"}</span>
+                      <span>{selectedCustomerName || "Select Customer"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToCustomerDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
-                          {billToCustomerOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addchild"
-                              onClick={() => handleBillToCustomerSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
+                          {loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customers.length > 0 ? (
+                            customers.map((customer, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToCustomerSelect(customer)}
+                              >
+                                {customer.accountName}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No customers found</div>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>Bill to Site</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToSiteRef}>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={billToSiteRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
                     >
-                      <span>{line.billToSiteId || "Select Site"}</span>
+                      <span>{selectedSiteName || "Select Site"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToSiteDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
-                          {billToSiteOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addchild"
-                              onClick={() => handleBillToSiteSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
+                          {!line.billToCustomerId ? (
+                            <div className="custom-dropdown-item-kh-addparent">Select a customer first</div>
+                          ) : loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customerSites.length > 0 ? (
+                            customerSites.map((site, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToSiteSelect(site)}
+                              >
+                                {site.siteName || `Site ${site.custAcctSiteId}`}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No sites found</div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -704,37 +775,43 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                 </div>
               </div>
 
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>Bill to Contact</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billToContactRef}>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={billToContactRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
                     >
-                      <span>{line.billToContactId || "Select Contact"}</span>
+                      <span>{selectedContactName || "Select Contact"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToContactDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
-                          {billToContactOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addchild"
-                              onClick={() => handleBillToContactSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
+                          {!line.billToCustomerId ? (
+                            <div className="custom-dropdown-item-kh-addparent">Select a customer first</div>
+                          ) : loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customerContacts.length > 0 ? (
+                            customerContacts.map((contact, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToContactSelect(contact)}
+                              >
+                                {contact.roleType || `Contact ${contact.contactId}`}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No contacts found</div>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-
-                
               </div>
             </div>
           </div>
@@ -742,12 +819,12 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
         {/* Billing Tab */}
         {activeTab === "billing" && (
-          <div className="order-form-kh-addchild">
-            <div className="form-section-kh-addchild">
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+          <div className="order-form-kh-addparent">
+            <div className="form-section-kh-addparent">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>Quantity</label>
-                  <div className="input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent">
                     <input
                       type="number"
                       placeholder="Enter quantity"
@@ -757,9 +834,9 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>Unit Price</label>
-                  <div className="input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent">
                     <input
                       type="number"
                       placeholder="Enter unit price"
@@ -770,12 +847,12 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                 </div>
               </div>
 
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>UOM</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={uomDropdownRef}>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={uomDropdownRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowUOMDropdown(!showUOMDropdown)}
                     >
                       <span>{selectedUOM || "Select UOM"}</span>
@@ -783,16 +860,16 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                     </div>
 
                     {showUOMDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
                           {loadingLookupValues ? (
-                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
                           ) : (
                             lookupValues.uomList &&
                             lookupValues.uomList.map((option, index) => (
                               <div
                                 key={index}
-                                className="custom-dropdown-item-kh-addchild"
+                                className="custom-dropdown-item-kh-addparent"
                                 onClick={() => handleUOMSelect(option)}
                               >
                                 {option.meaning}
@@ -805,20 +882,20 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>Total</label>
-                  <div className="input-wrapper-kh-addchild">
+                  <div className="input-wrapper-kh-addparent">
                     <input type="text" placeholder="Calculated total" value={total} readOnly />
                   </div>
                 </div>
               </div>
 
-              <div className="form-row-kh-addchild">
-                <div className="form-field-container-kh-addchild">
+              <div className="form-row-kh-addparent">
+                <div className="form-field-container-kh-addparent">
                   <label>Billing Frequency</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billingFrequencyDropdownRef}>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={billingFrequencyDropdownRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillingFrequencyDropdown(!showBillingFrequencyDropdown)}
                     >
                       <span>{selectedBillingFrequency || "Select Billing Frequency"}</span>
@@ -826,16 +903,16 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                     </div>
 
                     {showBillingFrequencyDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
                           {loadingLookupValues ? (
-                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
                           ) : (
                             lookupValues.billingFrequencies &&
                             lookupValues.billingFrequencies.map((option, index) => (
                               <div
                                 key={index}
-                                className="custom-dropdown-item-kh-addchild"
+                                className="custom-dropdown-item-kh-addparent"
                                 onClick={() => handleBillingFrequencySelect(option)}
                               >
                                 {option.meaning}
@@ -848,11 +925,11 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                   </div>
                 </div>
 
-                <div className="form-field-container-kh-addchild">
+                <div className="form-field-container-kh-addparent">
                   <label>Billing Channel</label>
-                  <div className="custom-dropdown-wrapper-kh-addchild" ref={billingChannelDropdownRef}>
+                  <div className="custom-dropdown-wrapper-kh-addparent" ref={billingChannelDropdownRef}>
                     <div
-                      className="custom-dropdown-trigger-kh-addchild"
+                      className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillingChannelDropdown(!showBillingChannelDropdown)}
                     >
                       <span>{selectedBillingChannel || "Select Billing Channel"}</span>
@@ -860,16 +937,16 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                     </div>
 
                     {showBillingChannelDropdown && (
-                      <div className="custom-dropdown-menu-kh-addchild">
-                        <div className="custom-dropdown-content-kh-addchild">
+                      <div className="custom-dropdown-menu-kh-addparent">
+                        <div className="custom-dropdown-content-kh-addparent">
                           {loadingLookupValues ? (
-                            <div className="custom-dropdown-item-kh-addchild">Loading...</div>
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
                           ) : (
                             lookupValues.billingChannels &&
                             lookupValues.billingChannels.map((option, index) => (
                               <div
                                 key={index}
-                                className="custom-dropdown-item-kh-addchild"
+                                className="custom-dropdown-item-kh-addparent"
                                 onClick={() => handleBillingChannelSelect(option)}
                               >
                                 {option.meaning}
@@ -888,17 +965,17 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
         {/* Enhanced Date Picker Popup */}
         {showDatePicker && (
-          <div className="date-picker-overlay-kh-addchild">
-            <div className="date-picker-modal-kh-addchild" ref={datePickerRef}>
-              <div className="calendar-header-kh-addchild">
+          <div className="date-picker-overlay-kh-addparent">
+            <div className="date-picker-modal-kh-addparent" ref={datePickerRef}>
+              <div className="calendar-header-kh-addparent">
                 {calendarView === "date" && (
                   <>
-                    <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevMonth}>
+                    <button className="calendar-nav-btn-kh-addparent" onClick={handlePrevMonth}>
                       <ChevronLeft size={16} />
                     </button>
                     <span onClick={handleMonthClick}>{calendarDate.toLocaleString("default", { month: "long" })}</span>
                     <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
-                    <button className="calendar-nav-btn-kh-addchild" onClick={handleNextMonth}>
+                    <button className="calendar-nav-btn-kh-addparent" onClick={handleNextMonth}>
                       <ChevronRight size={16} />
                     </button>
                   </>
@@ -906,11 +983,11 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
 
                 {calendarView === "month" && (
                   <>
-                    <button className="calendar-nav-btn-kh-addchild" onClick={handlePrevYear}>
+                    <button className="calendar-nav-btn-kh-addparent" onClick={handlePrevYear}>
                       <ChevronLeft size={16} />
                     </button>
                     <span onClick={handleYearClick}>{calendarDate.getFullYear()}</span>
-                    <button className="calendar-nav-btn-kh-addchild" onClick={handleNextYear}>
+                    <button className="calendar-nav-btn-kh-addparent" onClick={handleNextYear}>
                       <ChevronRight size={16} />
                     </button>
                   </>
@@ -919,7 +996,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                 {calendarView === "year" && (
                   <>
                     <button
-                      className="calendar-nav-btn-kh-addchild"
+                      className="calendar-nav-btn-kh-addparent"
                       onClick={() => {
                         setCalendarDate(new Date(calendarDate.getFullYear() - 12, calendarDate.getMonth(), 1))
                       }}
@@ -930,7 +1007,7 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
                       {calendarDate.getFullYear() - 6} - {calendarDate.getFullYear() + 5}
                     </span>
                     <button
-                      className="calendar-nav-btn-kh-addchild"
+                      className="calendar-nav-btn-kh-addparent"
                       onClick={() => {
                         setCalendarDate(new Date(calendarDate.getFullYear() + 12, calendarDate.getMonth(), 1))
                       }}
@@ -942,20 +1019,20 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
               </div>
 
               {calendarView === "date" && (
-                <div className="calendar-days-kh-addchild">
-                  <div className="weekday-kh-addchild">Su</div>
-                  <div className="weekday-kh-addchild">Mo</div>
-                  <div className="weekday-kh-addchild">Tu</div>
-                  <div className="weekday-kh-addchild">We</div>
-                  <div className="weekday-kh-addchild">Th</div>
-                  <div className="weekday-kh-addchild">Fr</div>
-                  <div className="weekday-kh-addchild">Sa</div>
+                <div className="calendar-days-kh-addparent">
+                  <div className="weekday-kh-addparent">Su</div>
+                  <div className="weekday-kh-addparent">Mo</div>
+                  <div className="weekday-kh-addparent">Tu</div>
+                  <div className="weekday-kh-addparent">We</div>
+                  <div className="weekday-kh-addparent">Th</div>
+                  <div className="weekday-kh-addparent">Fr</div>
+                  <div className="weekday-kh-addparent">Sa</div>
                   {generateCalendar(showDatePicker)}
                 </div>
               )}
 
               {(calendarView === "month" || calendarView === "year") && (
-                <div className="calendar-grid-kh-addchild">{generateCalendar(showDatePicker)}</div>
+                <div className="calendar-grid-kh-addparent">{generateCalendar(showDatePicker)}</div>
               )}
             </div>
           </div>
@@ -965,4 +1042,4 @@ const LinesAddChild = ({ onCancel, parentLine }) => {
   )
 }
 
-export default LinesAddChild;
+export default LinesAddParent;

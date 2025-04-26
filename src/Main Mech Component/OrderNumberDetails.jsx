@@ -239,7 +239,7 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
             <ArrowLeft size={18} />
             <span>Back to Orders</span>
           </button>
-          <h1>Order: {order.orderNumber || "soheil_21"}</h1>
+          <h1>Order Number: {order.orderNumber || "soheil_21"}</h1>
           {!isEditing && (
             <button className="edit-button" onClick={handleEditClick}>
               <Edit size={16} />

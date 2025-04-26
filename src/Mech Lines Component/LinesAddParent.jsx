@@ -43,19 +43,34 @@ const LinesAddParent = ({ onCancel }) => {
   const billToContactRef = useRef(null)
 
   // API base URL
-  const API_URL = "http://localhost:9955/api"
+  const API_URL = "http://195.35.45.56:5522/api"
+  const CUSTOMER_API_URL = "http://195.35.45.56:5522/api/V2.0"
 
   // Lookup values state
   const [lookupValues, setLookupValues] = useState({
-    billingFrequencies: [],
+    billingFrequencies: [
+      { lookupCode: "MONTHLY", meaning: "Monthly" },
+      { lookupCode: "QUARTERLY", meaning: "Quarterly" },
+      { lookupCode: "ANNUALLY", meaning: "Annually" },
+      { lookupCode: "ONE_TIME", meaning: "One Time" },
+    ],
     billingChannels: [],
     uomList: [],
   })
-  const [loadingLookupValues, setLoadingLookupValues] = useState(true)
+  const [loadingLookupValues, setLoadingLookupValues] = useState(false)
+
+  // Customer data states
+  const [customers, setCustomers] = useState([])
+  const [customerSites, setCustomerSites] = useState([])
+  const [customerContacts, setCustomerContacts] = useState([])
+  const [selectedCustomerName, setSelectedCustomerName] = useState("")
+  const [selectedSiteName, setSelectedSiteName] = useState("")
+  const [selectedContactName, setSelectedContactName] = useState("")
+  const [loadingCustomerData, setLoadingCustomerData] = useState(false)
 
   // Initial line state
   const [line, setLine] = useState({
-    orderId: 1, // Default order ID
+    orderId: null, // Changed from hardcoded 1 to null to let the backend assign it
     lineNumber: "",
     serviceName: "",
     effectiveStartDate: null,
@@ -64,7 +79,7 @@ const LinesAddParent = ({ onCancel }) => {
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
-    
+
     orderedQuantity: "",
     unitPrice: "",
     uom: "",
@@ -73,74 +88,133 @@ const LinesAddParent = ({ onCancel }) => {
     status: "ACTIVE",
   })
 
-  // Fetch lookup values from the backend
+  // Fetch billing frequencies from the backend
   useEffect(() => {
-    const fetchLookupValues = async () => {
+    const fetchBillingFrequencies = async () => {
       try {
         setLoadingLookupValues(true)
-        // First try the order-lookup-values endpoint
+
+        // Try to fetch from V2.0 endpoint
         try {
-          const response = await axios.get(`${API_URL}/order-lookup-values`)
-          if (response.data) {
-            console.log("Lookup values:", response.data)
-            setLookupValues({
-              billingFrequencies: response.data.billingFrequencies || [],
-              billingChannels: response.data.billingChannels || [],
-              uomList: response.data.uomList || [],
-            })
-            setLoadingLookupValues(false)
-            return
+          const response = await axios.get(`${CUSTOMER_API_URL}/order-lookup-values`)
+          if (response.data && response.data.billingFrequencies) {
+            console.log("Billing frequencies from V2.0:", response.data)
+            setLookupValues((prev) => ({
+              ...prev,
+              billingFrequencies: response.data.billingFrequencies || prev.billingFrequencies,
+            }))
           }
         } catch (error) {
-          console.error("Error fetching from order-lookup-values:", error)
-          // Continue to fallback
+          console.error("Error fetching from V2.0 endpoint:", error)
+          // Continue with default values
         }
 
-        // Fallback to the original endpoint
-        const response = await axios.get(`${API_URL}/lookups/all-lookups`)
-        if (response.data && response.data.status === "success") {
-          setLookupValues({
-            billingFrequencies: response.data.billingFrequencies || [],
-            billingChannels: response.data.billingChannels || [],
-            uomList: response.data.uomList || [],
+        // Try to fetch from lookup-values endpoint
+        try {
+          const response = await axios.get(`${API_URL}/lookup-values`, {
+            params: {
+              search: "BILLING_FREQUENCY",
+            },
           })
-        } else {
-          console.error("Error in lookup response:", response.data)
+
+          if (response.data && response.data.content) {
+            const billingFrequencies = response.data.content
+              .filter((item) => item.lookupType === "BILLING_FREQUENCY")
+              .map((item) => ({
+                lookupCode: item.lookupCode,
+                meaning: item.meaning,
+              }))
+
+            if (billingFrequencies.length > 0) {
+              console.log("Billing frequencies from lookup-values:", billingFrequencies)
+              setLookupValues((prev) => ({
+                ...prev,
+                billingFrequencies: billingFrequencies,
+              }))
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching from lookup-values endpoint:", error)
+          // Continue with default values
         }
       } catch (error) {
-        console.error("Error fetching lookup values:", error)
+        console.error("Error in fetchBillingFrequencies:", error)
       } finally {
         setLoadingLookupValues(false)
       }
     }
 
-    fetchLookupValues()
+    fetchBillingFrequencies()
   }, [])
 
-  // Customer details options
-  const billToCustomerOptions = [
-    { value: "1", label: "001" },
-    { value: "2", label: "002" },
-    { value: "3", label: "003" },
-    { value: "4", label: "004" },
-    { value: "5", label: "005" },
-  ]
+  // Fetch customer accounts data
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallcustomeraccount/details`)
 
-  const billToSiteOptions = [
-    { value: "1", label: "001" },
-    { value: "2", label: "002" },
-    { value: "3", label: "003" },
-    { value: "4", label: "004" },
-    { value: "5", label: "005" },
-  ]
+        if (response.data) {
+          // Assuming the API returns an array of customer accounts
+          setCustomers(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer accounts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
 
-  const billToContactOptions = [
-    { value: "1", label: " 001" },
-    { value: "2", label: " 002" },
-    { value: "3", label: " 003" },
-    { value: "4", label: " 004" },
-    { value: "5", label: "005" },
-  ]
+    fetchCustomers()
+  }, [])
+
+  // Fetch customer sites when a customer is selected
+  useEffect(() => {
+    const fetchCustomerSites = async () => {
+      if (!line.billToCustomerId) return
+
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallaccountsitesall/details`, {
+          params: { customerId: line.billToCustomerId },
+        })
+
+        if (response.data) {
+          setCustomerSites(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer sites:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerSites()
+  }, [line.billToCustomerId])
+
+  // Fetch customer contacts when a customer is selected
+  useEffect(() => {
+    const fetchCustomerContacts = async () => {
+      if (!line.billToCustomerId) return
+
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${CUSTOMER_API_URL}/getallcustomercontacts/details`, {
+          params: { customerId: line.billToCustomerId },
+        })
+
+        if (response.data) {
+          setCustomerContacts(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer contacts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerContacts()
+  }, [line.billToCustomerId])
 
   // Auto-hide toast after 2 seconds
   useEffect(() => {
@@ -171,6 +245,59 @@ const LinesAddParent = ({ onCancel }) => {
       setLine((prev) => ({ ...prev, totalPrice: "" }))
     }
   }, [quantity, unitPrice])
+
+  // Add a function to fetch the next sequential order ID when the component mounts
+  useEffect(() => {
+    // Try to get the orderId from URL parameters or context if available
+    const urlParams = new URLSearchParams(window.location.search)
+    const orderIdFromUrl = urlParams.get("orderId")
+
+    if (orderIdFromUrl) {
+      setLine((prev) => ({ ...prev, orderId: Number.parseInt(orderIdFromUrl) }))
+    } else {
+      // If no orderId is provided, fetch the highest order ID from the backend and add 1
+      const fetchNextOrderId = async () => {
+        try {
+          // First try to get all orders to find the highest ID
+          const response = await axios.get(`${API_URL}/orders/all`)
+
+          if (response.data && response.data.length > 0) {
+            // Find the highest order ID
+            const highestOrderId = Math.max(...response.data.map((order) => order.orderId || 0))
+            // Set the next order ID (highest + 1) or start with 1 if no orders exist
+            const nextOrderId = highestOrderId > 0 ? highestOrderId + 1 : 1
+            console.log("Next sequential order ID:", nextOrderId)
+            setLine((prev) => ({ ...prev, orderId: nextOrderId }))
+          } else {
+            // If no orders exist, start with order ID 1
+            setLine((prev) => ({ ...prev, orderId: 1 }))
+          }
+        } catch (error) {
+          console.error("Error fetching order IDs:", error)
+
+          // Try an alternative endpoint if the first one fails
+          try {
+            const altResponse = await axios.get(`${API_URL}/V2.0/orders`)
+            if (altResponse.data && altResponse.data.length > 0) {
+              const highestOrderId = Math.max(...altResponse.data.map((order) => order.orderId || 0))
+              const nextOrderId = highestOrderId > 0 ? highestOrderId + 1 : 1
+              console.log("Next sequential order ID (alt method):", nextOrderId)
+              setLine((prev) => ({ ...prev, orderId: nextOrderId }))
+            } else {
+              // If no orders exist, start with order ID 1
+              setLine((prev) => ({ ...prev, orderId: 1 }))
+            }
+          } catch (altError) {
+            console.error("Error with alternative endpoint:", altError)
+            // If all else fails, use order ID 1
+            setLine((prev) => ({ ...prev, orderId: 1 }))
+          }
+        }
+      }
+
+      fetchNextOrderId()
+    }
+  }, [API_URL])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -304,7 +431,10 @@ const LinesAddParent = ({ onCancel }) => {
 
   // Handle dropdown selection for Billing Frequency
   const handleBillingFrequencySelect = (option) => {
+    console.log("Selected billing frequency:", option)
+    // Display the meaning to the user
     setSelectedBillingFrequency(option.meaning)
+    // Store the lookup_code in the line state for database storage
     setLine({ ...line, billingFrequency: option.lookupCode })
     setShowBillingFrequencyDropdown(false)
   }
@@ -340,18 +470,31 @@ const LinesAddParent = ({ onCancel }) => {
   }
 
   // Handle customer details dropdown selections
-  const handleBillToCustomerSelect = (option) => {
-    setLine({ ...line, billToCustomerId: option.value })
+  const handleBillToCustomerSelect = (customer) => {
+    setSelectedCustomerName(customer.accountName)
+    setLine({ ...line, billToCustomerId: customer.custAccountId })
     setShowBillToCustomerDropdown(false)
+
+    // Reset site and contact selections when customer changes
+    setSelectedSiteName("")
+    setSelectedContactName("")
+    setLine((prev) => ({
+      ...prev,
+      billToCustomerId: customer.custAccountId,
+      billToSiteId: "",
+      billToContactId: "",
+    }))
   }
 
-  const handleBillToSiteSelect = (option) => {
-    setLine({ ...line, billToSiteId: option.value })
+  const handleBillToSiteSelect = (site) => {
+    setSelectedSiteName(site.siteName || `Site ${site.custAcctSiteId}`)
+    setLine({ ...line, billToSiteId: site.custAcctSiteId })
     setShowBillToSiteDropdown(false)
   }
 
-  const handleBillToContactSelect = (option) => {
-    setLine({ ...line, billToContactId: option.value })
+  const handleBillToContactSelect = (contact) => {
+    setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+    setLine({ ...line, billToContactId: contact.contactId })
     setShowBillToContactDropdown(false)
   }
 
@@ -583,28 +726,34 @@ const LinesAddParent = ({ onCancel }) => {
             <div className="form-section-kh-addparent">
               <div className="form-row-kh-addparent">
                 <div className="form-field-container-kh-addparent">
-                  <label>Customer Name </label>
+                  <label>Customer Name</label>
                   <div className="custom-dropdown-wrapper-kh-addparent" ref={billToCustomerRef}>
                     <div
                       className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToCustomerDropdown(!showBillToCustomerDropdown)}
                     >
-                      <span>{line.billToCustomerId || "Select Customer"}</span>
+                      <span>{selectedCustomerName || "Select Customer"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToCustomerDropdown && (
                       <div className="custom-dropdown-menu-kh-addparent">
                         <div className="custom-dropdown-content-kh-addparent">
-                          {billToCustomerOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addparent"
-                              onClick={() => handleBillToCustomerSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                          {loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customers.length > 0 ? (
+                            customers.map((customer, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToCustomerSelect(customer)}
+                              >
+                                {customer.accountName}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No customers found</div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -618,22 +767,30 @@ const LinesAddParent = ({ onCancel }) => {
                       className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
                     >
-                      <span>{line.billToSiteId || "Select Site"}</span>
+                      <span>{selectedSiteName || "Select Site"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToSiteDropdown && (
                       <div className="custom-dropdown-menu-kh-addparent">
                         <div className="custom-dropdown-content-kh-addparent">
-                          {billToSiteOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addparent"
-                              onClick={() => handleBillToSiteSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                          {!line.billToCustomerId ? (
+                            <div className="custom-dropdown-item-kh-addparent">Select a customer first</div>
+                          ) : loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customerSites.length > 0 ? (
+                            customerSites.map((site, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToSiteSelect(site)}
+                              >
+                                {site.siteName || `Site ${site.custAcctSiteId}`}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No sites found</div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -649,29 +806,35 @@ const LinesAddParent = ({ onCancel }) => {
                       className="custom-dropdown-trigger-kh-addparent"
                       onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
                     >
-                      <span>{line.billToContactId || "Select Contact"}</span>
+                      <span>{selectedContactName || "Select Contact"}</span>
                       <ChevronDown size={16} />
                     </div>
 
                     {showBillToContactDropdown && (
                       <div className="custom-dropdown-menu-kh-addparent">
                         <div className="custom-dropdown-content-kh-addparent">
-                          {billToContactOptions.map((option, index) => (
-                            <div
-                              key={index}
-                              className="custom-dropdown-item-kh-addparent"
-                              onClick={() => handleBillToContactSelect(option)}
-                            >
-                              {option.label}
-                            </div>
-                          ))}
+                          {!line.billToCustomerId ? (
+                            <div className="custom-dropdown-item-kh-addparent">Select a customer first</div>
+                          ) : loadingCustomerData ? (
+                            <div className="custom-dropdown-item-kh-addparent">Loading...</div>
+                          ) : customerContacts.length > 0 ? (
+                            customerContacts.map((contact, index) => (
+                              <div
+                                key={index}
+                                className="custom-dropdown-item-kh-addparent"
+                                onClick={() => handleBillToContactSelect(contact)}
+                              >
+                                {contact.roleType || `Contact ${contact.contactId}`}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="custom-dropdown-item-kh-addparent">No contacts found</div>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-
-                 
               </div>
             </div>
           </div>
@@ -902,4 +1065,4 @@ const LinesAddParent = ({ onCancel }) => {
   )
 }
 
-export default LinesAddParent;
+export default LinesAddParent

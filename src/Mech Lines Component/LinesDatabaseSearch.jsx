@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, Download, Plus, Edit } from "lucide-react"
-import { IoIosAddCircle } from "react-icons/io";
+import { CheckCircle, Download, Edit } from "lucide-react"
+import { IoIosAddCircle } from "react-icons/io"
 import "../Mech Lines Design/linesdatabasedesign.css"
 import axios from "axios"
 import SelectParentPopup from "../Mech Lines Component/selectpopup"
 
-const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
+const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder }) => {
   // State for orders
   const [orderLines, setOrderLines] = useState([])
   const [loading, setLoading] = useState(true)
@@ -20,7 +20,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
   const orderId = 1
 
   // API base URL
-  const API_URL = "http://localhost:9955/api"
+  const API_URL = "http://195.35.45.56:5522/api"
 
   // Fetch order lines from the backend
   useEffect(() => {
@@ -98,7 +98,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
         <h1 className="header-titlelineskh">Lines Search</h1>
         <div className="header-actionslineskh">
           <button className="add-parent-btnlineskh" onClick={handleAddParent}>
-            <IoIosAddCircle/>
+            <IoIosAddCircle />
             Add Parent
           </button>
           <button
@@ -107,7 +107,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
             disabled={!hasParentLines}
             style={{ opacity: hasParentLines ? 1 : 0.5, cursor: hasParentLines ? "pointer" : "not-allowed" }}
           >
-            <IoIosAddCircle/>
+            <IoIosAddCircle />
             Add Child
           </button>
         </div>
@@ -115,7 +115,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick }) => {
 
       <div className="order-number-sectionlineskh">
         <div className="order-number-displaylineskh">
-          <span>Order Number: soheil_21</span>
+          <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : "soheil_21"}</span>
           <span className="active-statuslineskh">
             <CheckCircle size={14} />
             Active
