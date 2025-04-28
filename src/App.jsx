@@ -34,6 +34,8 @@ import Fake from './lookuppractice/FakeOrder';
 
 import AccountCreation from './Profile Component/CreateAccount';
 
+import FabricationTable from './Fabrication Component/FabricationTable';
+
 function App() {
   return (
     <>
@@ -65,8 +67,9 @@ function App() {
               <Route path="/fake" element={<Fake/>}/>
 
               <Route path="/signin" element={<AccountCreation/>}/>
-
-
+               
+              <Route path="/fabrication" element={<FabricationTable/>}/>
+              
 
             <Route path="/dashboardbilling" element={<MainDashboard/>}/>
           </Routes>
