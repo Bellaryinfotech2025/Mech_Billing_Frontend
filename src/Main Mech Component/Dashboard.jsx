@@ -33,6 +33,7 @@ import LookupTable from "../Main Mech Component/LookUpTable"
 import LinesAddParent from "../Mech Lines Component/LinesAddParent"
 import LinesAddChild from "../Mech Lines Component/LineAddChild"
 import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
+import FabricationTable from "../Fabrication Component/FabricationTable" // Import the FabricationTable component
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
@@ -353,12 +354,9 @@ const MainDashboard = () => {
       return <Alignment />
     }
 
+    // Display FabricationTable when Fabrication submenu is selected
     if (activeSubmenu === "Fabrication") {
-      return (
-        <div className="empty-state">
-          <p>Fabrication content will be displayed here.</p>
-        </div>
-      )
+      return <FabricationTable />
     }
 
     if (activeSubmenu === "Billing") {
