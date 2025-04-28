@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from "react"
+"use client"
+
+import { useState, useRef } from "react"
 import axios from "axios" // Import axios
 import {
   Save,
@@ -8,22 +10,21 @@ import {
   Plus,
   CheckCircle,
   FileText,
-  Hash,
-  FileBarChart,
   AlertCircle,
   Download,
+  RefreshCw,
+  Search,
 } from "lucide-react"
+
 import "../Fabrication Design/FabricationTable.css"
 import "../Fabrication Design/importfile.css"
 import "../Fabrication Design/confirmation.css"
-import { FaJediOrder } from "react-icons/fa6";
-import { AiFillBank } from "react-icons/ai";
-import { CgBmw } from "react-icons/cg";
-
-
+import { FaJediOrder } from "react-icons/fa6"
+import { AiFillBank } from "react-icons/ai"
+import { CgBmw } from "react-icons/cg"
 
 // API base URL with port 8866
-const API_BASE_URL = "http://localhost:8888/api/fabrication"
+const API_BASE_URL = "http://localhost:9988/api/fabrication"
 
 const FabricationTable = () => {
   const [rows, setRows] = useState([])
@@ -43,6 +44,10 @@ const FabricationTable = () => {
   const [totalPages, setTotalPages] = useState(0)
   const [pageSize, setPageSize] = useState(10)
   const [importedRecords, setImportedRecords] = useState(0)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [totalItems, setTotalItems] = useState(0)
+  const [importedData, setImportedData] = useState([])
 
   const fileInputRef = useRef(null)
 
@@ -56,7 +61,7 @@ const FabricationTable = () => {
     },
     {
       id: "origLineNo",
-      label: "Orig Line No",
+      label: "Original Line No",
       width: "120px",
       placeholder: "Enter original line ",
       icon: <CgBmw size={16} className="column-icon" />,
@@ -82,55 +87,14 @@ const FabricationTable = () => {
     { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
   ]
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchData()
-  }, [currentPage, pageSize])
+  // Removed useEffect and fetchLatestData function
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true)
-      const response = await axios.get(`${API_BASE_URL}/imported-data`, {
-        params: {
-          page: currentPage,
-          size: pageSize,
-        },
-      })
-
-      // Map the data to match our row structure
-      const mappedRows = response.data.data.map((item) => ({
-        id: item.ifaceId,
-        orderNumber: item.orderNumber || "",
-        origLineNo: item.origLineNumber ? item.origLineNumber.toString() : "",
-        lineNo: item.lineNumber ? item.lineNumber.toString() : "",
-        drawingNo: item.drawingNo || "",
-        description: item.drawingDescription || "",
-        erectionMkd: item.erectionMkd || "",
-        itemNo: item.itemNo || "",
-        section: item.section || "",
-        length: item.length || "",
-        qty: item.quantity || "",
-        unit: item.unitPrice || "",
-        totalWt: item.totalQuantity || "",
-        qtyReqd: item.originalQuantity || "",
-        erecMkdWt: item.repeatedQty || "",
-        remarks: item.remark || "",
-        isNew: false,
-      }))
-
-      setRows(mappedRows)
-      setTotalPages(response.data.totalPages)
-      setSavedRows(mappedRows.map((row) => row.id))
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      showToastNotification(
-        "Failed to fetch data: " + (error.response?.data?.message || error.message),
-        "Error",
-        "error",
-      )
-    } finally {
-      setIsLoading(false)
-    }
+  const handleRefresh = () => {
+    setRefreshing(true)
+    // Just simulate a refresh without actually fetching data
+    setTimeout(() => {
+      setRefreshing(false)
+    }, 500)
   }
 
   const addNewRow = () => {
@@ -190,14 +154,14 @@ const FabricationTable = () => {
     )
   }
 
-  const showToastNotification = (message, title = "Success", type = "success") => {
+  const showToastNotification = (message, title = "Success", type = "success", duration = 3000) => {
     setToastMessage(message)
     setToastTitle(title)
     setToastType(type)
     setShowToast(true)
     setTimeout(() => {
       setShowToast(false)
-    }, 3000)
+    }, duration)
   }
 
   const toggleSelectRow = (id) => {
@@ -213,19 +177,6 @@ const FabricationTable = () => {
       setSelectedRows([])
     } else {
       setSelectedRows(rows.map((row) => row.id))
-    }
-  }
-
-  // Pagination handlers
-  const handlePrevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1)
     }
   }
 
@@ -272,6 +223,7 @@ const FabricationTable = () => {
   const handleConfirmationYes = async () => {
     try {
       setIsImporting(true)
+      setShowSuccessMessage(false)
 
       // Create FormData to send the file
       const formData = new FormData()
@@ -281,12 +233,7 @@ const FabricationTable = () => {
       const loadingPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
       // Send the file to the backend using axios
-      const importPromise = axios.post(`${API_BASE_URL}/import`, formData, {
-        headers: {
-          // Let the browser set the correct Content-Type with boundary
-          // for multipart/form-data
-        },
-      })
+      const importPromise = axios.post(`${API_BASE_URL}/import`, formData)
 
       // Wait for both the loading time and the API call to complete
       const [_, importResponse] = await Promise.all([loadingPromise, importPromise])
@@ -295,19 +242,29 @@ const FabricationTable = () => {
       const recordsImported = importResponse.data.recordsImported || 0
       setImportedRecords(recordsImported)
 
+      // Show success message for at least 3 seconds
+      setShowSuccessMessage(true)
+
+      // Wait for 3 seconds before closing the popup
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+
       setShowConfirmationPopup(false)
       setSelectedFile(null)
+      setShowSuccessMessage(false)
+
+      // Show toast notification
       showToastNotification(
         `Excel data imported successfully! ${recordsImported} records were added to the database.`,
         "Success",
         "success",
+        3000,
       )
 
-      // Refresh the table data after import
-      fetchData()
+      // Don't update the table with imported data
     } catch (error) {
       console.error("Import error:", error)
       showToastNotification(`Import failed: ${error.response?.data?.message || error.message}`, "Error", "error")
+      setIsImporting(false)
     } finally {
       setIsImporting(false)
     }
@@ -325,6 +282,14 @@ const FabricationTable = () => {
   const handleDownloadTemplate = () => {
     // In a real application, this would download a template Excel file
     showToastNotification("Template download functionality would be implemented here")
+  }
+
+  const handlePrevPage = () => {
+    setCurrentPage(currentPage - 1)
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage(currentPage + 1)
   }
 
   return (
@@ -351,6 +316,14 @@ const FabricationTable = () => {
         </div>
       </div>
 
+      <div className="table-controls">
+         
+        <div className="table-info">
+          <span>Total: {rows.length} records</span>
+          
+        </div>
+      </div>
+
       <div className="table-wrapper">
         <table className="fabrication-table">
           <thead>
@@ -367,13 +340,16 @@ const FabricationTable = () => {
             {isLoading ? (
               <tr>
                 <td colSpan={columns.length + 1} className="loading-table">
-                  Loading data...
+                  <div className="table-loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Loading data...</p>
+                  </div>
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 1} className="empty-table">
-                  No records found. Click "Add Service" to create a new row or import data.
+                  No records found. Click "Add Service" to create a new row.
                 </td>
               </tr>
             ) : (
@@ -384,7 +360,7 @@ const FabricationTable = () => {
                       {editingRow === row.id ? (
                         <input
                           type="text"
-                          value={row[column.id]}
+                          value={row[column.id] || ""}
                           onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
                           className="edit-input"
                           placeholder={column.placeholder}
@@ -392,7 +368,7 @@ const FabricationTable = () => {
                       ) : (
                         <div className="cell-content">
                           {column.icon && savedRows.includes(row.id) && column.icon}
-                          <span>{row[column.id] || "-"}</span>
+                          <span>{row[column.id] || ""}</span>
                         </div>
                       )}
                     </td>
@@ -417,13 +393,17 @@ const FabricationTable = () => {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="pagination">
-          <button className="pagination-btn" onClick={handlePrevPage} disabled={currentPage === 0}>
+          <button className="pagination-btn" onClick={handlePrevPage} disabled={currentPage === 0 || isLoading}>
             Previous
           </button>
           <span className="pagination-info">
             Page {currentPage + 1} of {totalPages}
           </span>
-          <button className="pagination-btn" onClick={handleNextPage} disabled={currentPage === totalPages - 1}>
+          <button
+            className="pagination-btn"
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages - 1 || isLoading}
+          >
             Next
           </button>
         </div>
@@ -518,6 +498,16 @@ const FabricationTable = () => {
                 <div className="loading-container">
                   <div className="loading-spinner"></div>
                   <p className="loading-text">Loading...</p>
+                  <p className="loading-subtext">Your file is uploading in our platform please wait</p>
+                </div>
+              ) : showSuccessMessage ? (
+                <div className="success-container">
+                  <div className="success-icon">
+                    <CheckCircle size={40} color="#4caf50" />
+                  </div>
+                  <p className="success-text">
+                    Excel data imported successfully! {importedRecords} records were added to the database.
+                  </p>
                 </div>
               ) : (
                 <>
@@ -533,10 +523,18 @@ const FabricationTable = () => {
             </div>
 
             <div className="confirmation-popup-actions">
-              <button className="confirmation-no-btn" onClick={handleConfirmationNo} disabled={isImporting}>
+              <button
+                className="confirmation-no-btn"
+                onClick={handleConfirmationNo}
+                disabled={isImporting || showSuccessMessage}
+              >
                 No
               </button>
-              <button className="confirmation-yes-btn" onClick={handleConfirmationYes} disabled={isImporting}>
+              <button
+                className="confirmation-yes-btn"
+                onClick={handleConfirmationYes}
+                disabled={isImporting || showSuccessMessage}
+              >
                 {isImporting ? "Importing..." : "Yes"}
               </button>
             </div>
