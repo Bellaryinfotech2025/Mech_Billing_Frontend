@@ -1,6 +1,28 @@
 /* Import modern fonts */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
+
+
+/* Add this to your existing CSS file */
+@keyframes blink {
+  0% {
+    color: navy;
+  }
+  50% {
+    color: transparent;
+  }
+  100% {
+    color: navy;
+  }
+}
+
+.parent-line-input {
+  animation: blink 1s infinite;
+  font-weight: 600 !important;
+  background-color: #f8fafc !important;
+}
+
+
 :root {
   --primary-gradient: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
   --secondary-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -20,7 +42,6 @@
 }
 
 .bodyoflines {
-   
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: var(--text-primary);
@@ -68,6 +89,16 @@
 
 .success-toast-kh-addchild svg {
   color: #22c55e;
+}
+
+.error-toast-kh-addchild {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.error-toast-kh-addchild svg {
+  color: #ef4444;
 }
 
 @keyframes toastFadeIn-kh-addchild {
@@ -283,6 +314,15 @@
   outline: none;
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Parent line input styling */
+.parent-line-input {
+  background-color: #f8fafc !important;
+  color: navy !important;
+  font-weight: 600 !important;
+  cursor: not-allowed;
+  border: 1px solid #e2e8f0;
 }
 
 /* Select styling */

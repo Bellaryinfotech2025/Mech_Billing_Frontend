@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, Download, Edit } from "lucide-react"
+import { CheckCircle, Download, Edit, Search, Filter, MoreVertical } from "lucide-react"
 import { IoIosAddCircle } from "react-icons/io"
 import "../Mech Lines Design/linesdatabasedesign.css"
 import axios from "axios"
 import SelectParentPopup from "../Mech Lines Component/selectpopup"
+import LinesAddParent from "../Mech Lines Component/LinesAddParent"
+import LinesAddChild from "../Mech Lines Component/LineAddChild"
 
-const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder }) => {
+const LinesDatabaseSearch = ({ selectedOrder }) => {
   // State for orders
   const [orderLines, setOrderLines] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,10 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
   const [showSelectParentPopup, setShowSelectParentPopup] = useState(false)
   const [selectedParentLine, setSelectedParentLine] = useState(null)
 
+  // State for showing add forms
+  const [showAddParent, setShowAddParent] = useState(false)
+  const [showAddChild, setShowAddChild] = useState(false)
+
   // Default order ID
   const orderId = 1
 
@@ -23,29 +29,29 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
   const API_URL = "http://195.35.45.56:5522/api"
 
   // Fetch order lines from the backend
-  useEffect(() => {
-    const fetchOrderLines = async () => {
-      try {
-        setLoading(true)
-        console.log("Fetching lines from:", `${API_URL}/lines/fetchLinesByOrder/${orderId}`)
-        const response = await axios.get(`${API_URL}/lines/fetchLinesByOrder/${orderId}`)
+  const fetchOrderLines = async () => {
+    try {
+      setLoading(true)
+      console.log("Fetching lines from:", `${API_URL}/lines/fetchLinesByOrder/${orderId}`)
+      const response = await axios.get(`${API_URL}/lines/fetchLinesByOrder/${orderId}`)
 
-        if (response.data && response.data.status === "success") {
-          console.log("Lines fetched successfully:", response.data)
-          setOrderLines(response.data.lines || [])
-          setDataFetched(true)
-        } else {
-          console.error("Error in response:", response.data)
-          throw new Error(response.data.message || "Failed to fetch lines")
-        }
-      } catch (err) {
-        console.error("Error fetching order lines:", err)
-        setError(`Failed to load order lines: ${err.message || "Unknown error"}`)
-      } finally {
-        setLoading(false)
+      if (response.data && response.data.status === "success") {
+        console.log("Lines fetched successfully:", response.data)
+        setOrderLines(response.data.lines || [])
+        setDataFetched(true)
+      } else {
+        console.error("Error in response:", response.data)
+        throw new Error(response.data.message || "Failed to fetch lines")
       }
+    } catch (err) {
+      console.error("Error fetching order lines:", err)
+      setError(`Failed to load order lines: ${err.message || "Unknown error"}`)
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchOrderLines()
   }, [])
 
@@ -55,9 +61,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
   // Handle Add Parent button click
   const handleAddParent = () => {
     console.log("Add Parent clicked")
-    if (onAddParentClick) {
-      onAddParentClick()
-    }
+    setShowAddParent(true)
   }
 
   // Handle Add Child button click
@@ -74,15 +78,24 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
   const handleParentSelected = (parentLine) => {
     setSelectedParentLine(parentLine)
     setShowSelectParentPopup(false)
-    if (onAddChildClick) {
-      // Pass the selected parent line to the parent component
-      onAddChildClick(parentLine)
-    }
+    setShowAddChild(true)
   }
 
   // Handle popup close
   const handleClosePopup = () => {
     setShowSelectParentPopup(false)
+  }
+
+  // Handle cancel from add forms
+  const handleCancelAddParent = () => {
+    setShowAddParent(false)
+    fetchOrderLines() // Refresh the data
+  }
+
+  const handleCancelAddChild = () => {
+    setShowAddChild(false)
+    setSelectedParentLine(null)
+    fetchOrderLines() // Refresh the data
   }
 
   // Format date for display
@@ -92,13 +105,23 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
     return date.toLocaleDateString()
   }
 
+  // If showing add parent form
+  if (showAddParent) {
+    return <LinesAddParent onCancel={handleCancelAddParent} />
+  }
+
+  // If showing add child form
+  if (showAddChild && selectedParentLine) {
+    return <LinesAddChild onCancel={handleCancelAddChild} selectedParentLine={selectedParentLine} />
+  }
+
   return (
-    <div className="order-search-containerlineskh">
+    <div className="order-search-containerlineskh elevation-1">
       <header className="order-search-headerlineskh">
         <h1 className="header-titlelineskh">Lines Search</h1>
         <div className="header-actionslineskh">
           <button className="add-parent-btnlineskh" onClick={handleAddParent}>
-            <IoIosAddCircle />
+            <IoIosAddCircle size={16} />
             Add Parent
           </button>
           <button
@@ -107,7 +130,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
             disabled={!hasParentLines}
             style={{ opacity: hasParentLines ? 1 : 0.5, cursor: hasParentLines ? "pointer" : "not-allowed" }}
           >
-            <IoIosAddCircle />
+            <IoIosAddCircle size={16} />
             Add Child
           </button>
         </div>
@@ -116,15 +139,18 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
       <div className="order-number-sectionlineskh">
         <div className="order-number-displaylineskh">
           <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : "soheil_21"}</span>
-          <span className="active-statuslineskh">
-            <CheckCircle size={14} />
+          {/* <span className="active-statuslineskh">
+            <CheckCircle size={12} />
             Active
-          </span>
+          </span> */}
         </div>
         <div className="table-actionslineskh">
-          <button className="table-action-btnlineskh">
-            <Download size={16} />
+           
+           
+          <button className="table-action-btnlineskh" title="Download">
+            <Download size={14} />
           </button>
+           
         </div>
       </div>
 
@@ -134,13 +160,13 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
             <thead>
               <tr>
                 <th>ACTIONS</th>
-                <th>LINE NUMBER</th>
-                <th>SERVICE NUMBER</th>
+                <th>LINE </th>
+                <th>SERVICE </th>
                 <th>SERVICE DESCRIPTION</th>
                 <th>UOM</th>
                 <th>QTY</th>
                 <th>TOTAL</th>
-                <th>COMPLETION DATE</th>
+                <th>COMPLETION</th>
               </tr>
             </thead>
             <tbody>
@@ -162,7 +188,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
                     <td>
                       <div className="action-buttonslineskh">
                         <button className="action-btnlineskh">
-                          <Edit size={14} className="edit-iconlineskh" />
+                          <Edit size={12} className="edit-iconlineskh" />
                         </button>
                       </div>
                     </td>
@@ -185,7 +211,7 @@ const LinesDatabaseSearch = ({ onAddParentClick, onAddChildClick, selectedOrder 
                 <tr className="no-records-rowlineskh">
                   <td colSpan={8}>
                     <div className="no-records-toastlineskh">
-                      <CheckCircle size={18} />
+                      <CheckCircle size={16} />
                       <span>No records found.</span>
                     </div>
                   </td>

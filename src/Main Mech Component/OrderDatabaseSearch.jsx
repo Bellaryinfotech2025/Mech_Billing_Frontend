@@ -5,7 +5,7 @@ import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
 
 import axios from "axios"
-import { CheckCircle, Download, Search, AlertCircle, Edit } from "lucide-react"
+import { CheckCircle, Download, Search, AlertCircle, Edit } from 'lucide-react'
 import { FaCloudUploadAlt } from "react-icons/fa"
 import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
@@ -29,19 +29,27 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
   const [highlightedOrders, setHighlightedOrders] = useState([])
   const highlightTimerRef = useRef(null)
+  // Add this ref to track if we've already fetched lookup values
+  const lookupValuesFetchedRef = useRef(false)
 
   // API base URL calling
   const API_URL = "http://195.35.45.56:5522/api/V2.0"
 
   useEffect(() => {
     const fetchLookupValues = async () => {
+      // Only fetch if we haven't already fetched
+      if (lookupValuesFetchedRef.current) return;
+      
       try {
+        lookupValuesFetchedRef.current = true; // Mark as fetched before the API call
         const response = await axios.get(`${API_URL}/order-lookup-values`)
         if (response.data) {
           setLookupValues(response.data)
         }
       } catch (error) {
         console.error("Error fetching lookup values:", error)
+        // Reset the flag if there was an error, so we can try again
+        lookupValuesFetchedRef.current = false;
       }
     }
 
@@ -153,7 +161,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
     return lookup ? lookup.meaning : lookupCode
   }
 
-  // Updated formatDate function to display dates as "DD-Month-YY"
+  // Updated formatDate function to display dates as "DD Month, YYYY"
   const formatDate = (dateString) => {
     if (!dateString) return "-"
 
@@ -175,13 +183,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
       "December",
     ]
 
-    // Get day, month name, and last 2 digits of year
-    const day = date.getDate().toString().padStart(2, "0")
+    // Get day, month name, and full year
+    const day = date.getDate()
     const month = months[date.getMonth()]
-    const year = date.getFullYear().toString().slice(-2)
+    const year = date.getFullYear()
 
-    // Format as "DD-Month-YY"
-    return `${day}-${month}-${year}`
+    // Format as "29 April, 2025"
+    return `${day} ${month}, ${year}`
   }
 
   // Handle load orders button click
@@ -261,20 +269,20 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
       <header className="order-search-header">
         <h1>Order Search</h1>
         <div className="header-actions">
-          <button className="add-order-btn" onClick={onAddOrderClick}>
-            <CgDetailsMore />
+          {/* <button className="add-order-btn" onClick={onAddOrderClick}>
+            <CgDetailsMore size={14} />
             Line Details
-          </button>
-          <button className="add-order-btn" onClick={onAddOrderClick}>
-            <FaCloudUploadAlt />
+          </button> */}
+          {/* <button className="add-order-btn" onClick={onAddOrderClick}>
+            <FaCloudUploadAlt size={14} />
             Upload
-          </button>
+          </button> */}
           <button className="add-order-btn" onClick={handleImportExport}>
-            <CgImport />
+            <CgImport size={14} />
             Import / Export
           </button>
           <button className="add-order-btn" onClick={onAddOrderClick}>
-            <IoIosAddCircle />
+            <IoIosAddCircle size={14} />
             Add Order
           </button>
         </div>
@@ -291,19 +299,19 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
           <button className="search-button" onClick={handleLoadOrders}>
-            <Search size={16} />
+            <Search size={25}/>
           </button>
         </div>
 
         <div className="table-actions">
           <button className="table-action-btn">
-            <Download size={16} />
+            <Download size={14} />
           </button>
         </div>
       </div>
 
       <div className="table-wrapper">
-        <div className="table-container">
+        <div className="table-container compact">
           <table className="orders-table">
             <thead>
               <tr>
@@ -313,11 +321,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 <th>Business Unit</th>
                 <th>Category</th>
                 <th>Bill To Customer</th>
-
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Total Value</th>
-                {/* Additional 8 columns as requested - will be visible only when scrolling */}
+                {/* Additional columns as requested - will be visible only when scrolling */}
                 <th>Status</th>
                 <th>Bill to Site</th>
                 <th>Bill to Contact</th>
@@ -329,13 +336,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={18} style={{ textAlign: "center", padding: "20px" }}>
+                  <td colSpan={18} style={{ textAlign: "center", padding: "16px" }}>
                     Loading orders...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={18} style={{ textAlign: "center", padding: "20px", color: "#e53e3e" }}>
+                  <td colSpan={18} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
                     {error}
                   </td>
                 </tr>
@@ -343,7 +350,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 <tr className="no-records-row">
                   <td colSpan={18}>
                     <div className="load-orders-toast">
-                      <AlertCircle size={18} />
+                      <AlertCircle size={16} />
                       <span>No Orders</span>
                     </div>
                   </td>
@@ -361,29 +368,24 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                               background: "#808080",
                               color: "white",
                               transition: "all 0.3s ease",
-                               borderRadius:'8px',
+                              borderRadius:'6px',
                               fontWeight: "bold",
                             }
                           : {}
                       }
                     >
                       <td onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: "flex", gap: "4px" }}>
+                        <div style={{ display: "flex", gap: "2px" }}>
                           <button className="action-btn">
                             <Edit
-                              size={14}
-                              style={{ marginRight: "4px", color: isHighlighted ? "white" : "#94a3b8" }}
+                              size={12}
+                              style={{ marginRight: "2px", color: isHighlighted ? "white" : "#94a3b8" }}
                             />
                           </button>
                         </div>
                       </td>
                       <td
-                        style={{
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                          fontWeight: isHighlighted ? "bold" : "normal",
-                          color: isHighlighted ? "white" : "#0066cc",
-                        }}
+                        className="order-number-cell"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleOrderNumberClick(order)
@@ -397,7 +399,6 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                       <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
                         {order.billToCustomerId || "-"}
                       </td>
-
                       <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
                         {formatDate(order.effectiveStartDate)}
                       </td>
@@ -416,7 +417,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 <tr className="no-records-row">
                   <td colSpan={18}>
                     <div className="no-records-toast">
-                      <CheckCircle size={18} />
+                      <CheckCircle size={16} />
                       <span>No records found.</span>
                     </div>
                   </td>

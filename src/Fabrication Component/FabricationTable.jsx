@@ -24,7 +24,7 @@ import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
 
 // API base URL with port 8866
-const API_BASE_URL = "http://localhost:9988/api/fabrication"
+const API_BASE_URL = "http://localhost:9988/api/V2.0"
 
 const FabricationTable = () => {
   const [rows, setRows] = useState([])
@@ -87,7 +87,7 @@ const FabricationTable = () => {
     { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
   ]
 
-  // Removed useEffect and fetchLatestData function
+
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -233,7 +233,7 @@ const FabricationTable = () => {
       const loadingPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
       // Send the file to the backend using axios
-      const importPromise = axios.post(`${API_BASE_URL}/import`, formData)
+      const importPromise = axios.post(`${API_BASE_URL}/imports`, formData)
 
       // Wait for both the loading time and the API call to complete
       const [_, importResponse] = await Promise.all([loadingPromise, importPromise])

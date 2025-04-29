@@ -1065,4 +1065,4 @@ const LinesAddParent = ({ onCancel }) => {
   )
 }
 
-export default LinesAddParent
+export default LinesAddParent;

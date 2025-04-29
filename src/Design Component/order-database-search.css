@@ -19,13 +19,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
   background-color: #fff;
 }
 
 .order-search-header h1 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #111827;
   margin: 0;
@@ -34,19 +34,19 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .add-order-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: linear-gradient(to bottom, #9e9e9e, #757575);
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -60,13 +60,13 @@
 .add-new-order-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background-color: #10b981;
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -79,7 +79,7 @@
 
 /* Search section styles */
 .search-section {
-  padding: 12px 20px;
+  padding: 10px 16px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #e5e7eb;
@@ -100,12 +100,12 @@
 
 .search-input {
   width: 100%;
-  height: 38px;
-  padding: 0 12px;
-  padding-right: 40px;
+  height: 34px;
+  padding: 0 10px;
+  padding-right: 36px;
   border: 1px solid #d1d5db;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   color: #4b5563;
   background-color: #fff;
   transition: all 0.2s ease;
@@ -114,7 +114,7 @@
 
 .search-input::placeholder {
   color: #9ca3af;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .search-input:focus {
@@ -127,8 +127,8 @@
   position: absolute;
   right: 0;
   top: 0;
-  height: 38px;
-  width: 38px;
+  height: 34px;
+  width: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,12 +148,12 @@
 
 .table-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .table-action-btn {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -186,15 +186,15 @@
   width: 100%;
   overflow-x: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 260px);
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
 /* Make scrollbar always visible */
 .table-container::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  height: 6px;
+  width: 6px;
 }
 
 .table-container::-webkit-scrollbar-track {
@@ -203,11 +203,18 @@
 
 .table-container::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Compact table styles */
+.table-container.compact .orders-table th,
+.table-container.compact .orders-table td {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 .orders-table {
@@ -216,15 +223,15 @@
   border-collapse: collapse;
   border-spacing: 0;
   table-layout: fixed;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .orders-table th {
   background-color: #f8fafc;
-  padding: 10px 16px;
+  padding: 8px 12px;
   text-align: left;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
@@ -232,48 +239,45 @@
   top: 0;
   z-index: 10;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .orders-table th.column-actions {
-  width: 80px;
+  width: 70px;
 }
 
 /* Adjusted column widths to ensure all are visible */
 .orders-table th:nth-child(1) {
-  width: 80px;
+  width: 120px;
 } /* Actions */
 .orders-table th:nth-child(2) {
-  width: 120px;
+  width: 110px;
 } /* Order Number */
 .orders-table th:nth-child(3) {
-  width: 120px;
+  width: 110px;
 } /* Order Type */
 .orders-table th:nth-child(4) {
-  width: 140px;
+  width: 120px;
 } /* Business Unit */
 .orders-table th:nth-child(5) {
-  width: 100px;
+  width: 90px;
 } /* Category */
 .orders-table th:nth-child(6) {
-  width: 140px;
+  width: 120px;
 } /* Bill To Customer */
 .orders-table th:nth-child(7) {
-  width: 140px;
-} /* Deliver To Customer */
-.orders-table th:nth-child(8) {
-  width: 100px;
+  width: 130px;
 } /* Start Date */
-.orders-table th:nth-child(9) {
-  width: 100px;
+.orders-table th:nth-child(8) {
+  width: 130px;
 } /* End Date */
-.orders-table th:nth-child(10) {
-  width: 100px;
+.orders-table th:nth-child(9) {
+  width: 90px;
 } /* Total Value */
 
 /* Additional columns (will require scrolling) */
-.orders-table th:nth-child(n + 11) {
-  width: 120px;
+.orders-table th:nth-child(n + 10) {
+  width: 110px;
 }
 
 .orders-table tr {
@@ -289,12 +293,25 @@
 }
 
 .orders-table td {
-  padding: 10px 16px;
+  padding: 6px 12px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #334155;
+  font-size: 12px;
+}
+
+/* Order number cell styling */
+.order-number-cell {
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: normal;
+  color: #0066cc;
+}
+
+.order-number-cell:hover {
+  color: #004c99;
 }
 
 /* Style for links in the table */
@@ -315,20 +332,20 @@
 }
 
 .no-records-row {
-  height: 120px;
+  height: 100px;
 }
 
 /* No records toast styling - updated to match design */
 .no-records-toast {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 10px 14px;
   background-color: #f0f9ff;
   color: #0284c7;
   border: 1px solid #bae6fd;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   text-align: center;
   margin: 0 auto;
@@ -340,18 +357,57 @@
   color: #0284c7;
 }
 
+/* Load orders toast styling */
+.load-orders-toast {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background-color: #ecfdf5;
+  color: #059669;
+  border: 1px solid #10b981;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  margin: 16px auto;
+  width: fit-content;
+  max-width: 90%;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  animation: greenPulse 2s infinite;
+}
+
+.load-orders-toast svg {
+  color: #059669;
+}
+
+@keyframes greenPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    transform: scale(1);
+  }
+}
+
 /* Pagination styles */
 .table-pagination {
   display: flex;
   align-items: center;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border-top: 1px solid #e2e8f0;
   background-color: #f8fafc;
 }
 
 .pagination-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -371,8 +427,8 @@
 
 .pagination-slider {
   flex: 1;
-  height: 4px;
-  margin: 0 16px;
+  height: 3px;
+  margin: 0 12px;
   position: relative;
   background-color: #e2e8f0;
   border-radius: 2px;
@@ -392,8 +448,8 @@
   position: absolute;
   top: -4px;
   left: 30%;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   background-color: #64748b;
   border-radius: 50%;
   cursor: pointer;
@@ -407,11 +463,11 @@
 
 /* Action button for table rows */
 .action-btn {
-  padding: 4px 10px;
+  padding: 3px 8px;
   background-color: #f8fafc;
   border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 3px;
+  font-size: 11px;
   font-weight: 500;
   color: #64748b;
   cursor: pointer;
@@ -424,12 +480,48 @@
   border-color: #94a3b8;
 }
 
+/* Action buttons styling */
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 4px;
+  background-color: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+tr:hover .action-btn {
+  border-color: #cbd5e1;
+}
+
+tr.selected-row .action-btn,
+tr:hover.selected-row .action-btn {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
 /* Loading state */
 .loading-indicator {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 200px;
+  height: 160px;
   width: 100%;
 }
 
@@ -465,13 +557,13 @@
   .search-section {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
   }
 
   .search-input-container {
     width: 100%;
     margin-right: 0;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .table-actions {
@@ -479,76 +571,14 @@
   }
 }
 
-/* Load Orders button styles */
-.load-orders-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-right: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.load-orders-btn:hover {
-  background-color: #4f46e5;
-}
-
-/* Green blinking toast for "Click Load Orders" message */
-.load-orders-toast {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: #ecfdf5;
-  color: #059669;
-  border: 1px solid #10b981;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-  margin: 20px auto;
-  width: fit-content;
-  max-width: 90%;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-  animation: greenPulse 2s infinite;
-}
-
-.load-orders-toast svg {
-  color: #059669;
-}
-
-@keyframes greenPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-    transform: scale(1.02);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    transform: scale(1);
-  }
-}
-
 /* Order number link styling */
 .order-number-link {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 500;
+  color: #0066cc;
+  text-decoration: underline;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .order-number-link:hover {
-  text-decoration: underline;
-  color: #2563eb;
+  color: #004c99;
 }

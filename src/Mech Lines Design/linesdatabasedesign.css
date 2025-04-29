@@ -179,9 +179,9 @@
 .orders-tablelineskh {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0;
+  
   font-size: 13px;
-  table-layout: auto;
+  
 }
 
 .orders-tablelineskh th {
@@ -192,7 +192,7 @@
   font-size: 12px;
   color: #64748b;
   border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
+   
   position: sticky;
   top: 0;
   z-index: 10;
