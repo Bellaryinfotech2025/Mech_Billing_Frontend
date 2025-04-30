@@ -5,6 +5,7 @@ import "../IndexComponent/indexxx.css"
 import land from "../assets/mec image.png"
 import { Link } from "react-router-dom"
 import logo from '../assets/logo.jpg'
+import billingimage from '../assets/billing image.png'
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -182,8 +183,8 @@ const LandingPage = () => {
         <div className="about-container">
           <div className="about-image">
             <img
-              src="/placeholder.svg?height=400&width=500"
-              alt="Mechanic using MechBill software on a tablet in an auto repair shop"
+              src={billingimage}
+              alt="Mechanic using MechBill software on a tablet in an auto repair shop" style={{height:'350px'}}
             />
           </div>
           <div className="about-content">

@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect } from "react"
 import {
   LayoutDashboard,
@@ -33,7 +31,7 @@ import LookupTable from "../Main Mech Component/LookUpTable"
 import LinesAddParent from "../Mech Lines Component/LinesAddParent"
 import LinesAddChild from "../Mech Lines Component/LineAddChild"
 import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
-import FabricationTable from "../Fabrication Component/FabricationTable" // Import the FabricationTable component
+import FabricationTable from "../Fabrication Component/FabricationTable" 
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
