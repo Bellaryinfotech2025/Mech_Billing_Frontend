@@ -1,7 +1,10 @@
-import { useState } from "react";
-import "../IndexComponent/indexxx.css";
-import land from '../assets/mec image.png';
-import { Link } from "react-router-dom";
+"use client"
+
+import { useState } from "react"
+import "../IndexComponent/indexxx.css"
+import land from "../assets/mec image.png"
+import { Link } from "react-router-dom"
+import logo from '../assets/logo.jpg'
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,17 +19,9 @@ const LandingPage = () => {
       <nav className="navbar">
         <div className="logo">
           <div className="logo-icon">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M14 11H10V13H14V11Z" fill="currentColor" />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M7 5V4C7 2.89543 7.89543 2 9 2H15C16.1046 2 17 2.89543 17 4V5H20C21.6569 5 23 6.34315 23 8V18C23 19.6569 21.6569 21 20 21H4C2.34315 21 1 19.6569 1 18V8C1 6.34315 2.34315 5 4 5H7ZM9 4H15V5H9V4ZM4 7C3.44772 7 3 7.44772 3 8V14H21V8C21 7.44772 20.5523 7 20 7H4ZM3 18V16H21V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z"
-                fill="currentColor"
-              />
-            </svg>
+             <img src={logo} alt="terran" style={{width:'40px',height:'40px'}}/>
           </div>
-          <h1>MechBill</h1>
+          <h3>Bellary Infotech MechBill</h3>
         </div>
 
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
@@ -49,13 +44,12 @@ const LandingPage = () => {
           </ul>
           <div className="auth-buttons">
             <button className="login-btn">
-<Link to="/loginbilling">Login</Link>
-             
-
+              <Link to="/loginbilling">Login</Link>
             </button>
-             
-            <button className="register-btn"> <Link to="/registerpage">Register</Link></button>
-            
+
+            <button className="register-btn">
+              <Link to="/registerpage">Register</Link>
+            </button>
           </div>
         </div>
 
@@ -74,12 +68,12 @@ const LandingPage = () => {
             Powerful, intuitive software designed specifically for auto repair shops and mechanical workshops. Save
             time, reduce errors, and focus on what matters most - your customers.
           </p>
-          
         </div>
         <div className="hero-image">
           <img
-            src={land}
-            alt="MechBill Dashboard Interface showing invoice management and parts inventory" style={{width:'800px',height:'70vh'}}
+            src={land || "/placeholder.svg"}
+            alt="MechBill Dashboard Interface showing invoice management and parts inventory"
+             style={{width:'700px',height:'500px'}}
           />
         </div>
       </section>
@@ -155,19 +149,7 @@ const LandingPage = () => {
             </p>
           </div>
 
-          <div className="feature-card">
-            <div className="feature-icon">
-              <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8V12L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-              </svg>
-            </div>
-            <h3>Time Tracking</h3>
-            <p>
-              Track labor hours with precision. Assign technicians to jobs, monitor productivity, and automatically
-              calculate labor costs for billing.
-            </p>
-          </div>
+          
 
           <div className="feature-card">
             <div className="feature-icon">
@@ -194,8 +176,8 @@ const LandingPage = () => {
       {/* About Section */}
       <section id="about" className="about-section">
         <div className="section-header">
-          <h2>Why Choose MechBill</h2>
-          <p>Built by mechanics for mechanics</p>
+          <h3>Why Choose Bellary Mechanical Billing Software</h3>
+          <p>Built by developers for mechanical Workshops</p>
         </div>
         <div className="about-container">
           <div className="about-image">
@@ -292,61 +274,7 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonial Section */}
-      <section id="testimonials" className="testimonial-section">
-        <div className="section-header light">
-          <h2>What Our Customers Say</h2>
-          <p>Join hundreds of satisfied workshop owners</p>
-        </div>
-        <div className="testimonial-container">
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <p>
-                "MechBill has transformed how we handle our workshop billing. We've saved hours every week on paperwork
-                and reduced billing errors by 95%. The inventory management is a game-changer."
-              </p>
-            </div>
-            <div className="testimonial-author">
-              <img src="/placeholder.svg?height=60&width=60" alt="John Smith" className="author-image" />
-              <div className="author-info">
-                <h4>John Smith</h4>
-                <p>Smith's Auto Repair</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <p>
-                "The customer database feature alone has paid for the subscription. We can now track vehicle history,
-                set service reminders, and provide a much more personalized experience to our customers."
-              </p>
-            </div>
-            <div className="testimonial-author">
-              <img src="/placeholder.svg?height=60&width=60" alt="Sarah Johnson" className="author-image" />
-              <div className="author-info">
-                <h4>Sarah Johnson</h4>
-                <p>Johnson's Mechanics</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <p>
-                "As someone who's not tech-savvy, I was worried about implementing new software. MechBill's interface is
-                so intuitive, and their support team helped me every step of the way. Couldn't be happier!"
-              </p>
-            </div>
-            <div className="testimonial-author">
-              <img src="/placeholder.svg?height=60&width=60" alt="Mike Rodriguez" className="author-image" />
-              <div className="author-info">
-                <h4>Mike Rodriguez</h4>
-                <p>Rodriguez Auto Care</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+       
 
       {/* Contact Section */}
       <section id="contact" className="contact-section">
@@ -413,8 +341,8 @@ const LandingPage = () => {
               <div>
                 <h4>Visit Us</h4>
                 <p>
-                Plot No 7, Ward No 18/21, Kappagal Road,
-                <br/> M V Nagar 9th Cross, Bellary 583103
+                  Plot No 7, Ward No 18/21, Kappagal Road,
+                  <br /> M V Nagar 9th Cross, Bellary 583103
                 </p>
               </div>
             </div>
@@ -434,27 +362,22 @@ const LandingPage = () => {
           <form className="contact-form">
             <h3>Send Us a Message</h3>
             <div className="form-group">
-            
               <input type="text" id="name" placeholder="Your Name" required />
             </div>
 
             <div className="form-group">
-               
               <input type="email" id="email" placeholder="Your Email" required />
             </div>
 
             <div className="form-group">
-               
               <input type="tel" id="phone" placeholder="Your Phone Number" />
             </div>
 
             <div className="form-group">
-               
               <input type="text" id="subject" placeholder="Subject" required />
             </div>
 
             <div className="form-group">
-              
               <textarea id="message" rows="5" placeholder="How can we help you?" required></textarea>
             </div>
 
@@ -470,17 +393,9 @@ const LandingPage = () => {
         <div className="footer-content">
           <div className="footer-logo">
             <div className="logo-icon">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 11H10V13H14V11Z" fill="currentColor" />
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M7 5V4C7 2.89543 7.89543 2 9 2H15C16.1046 2 17 2.89543 17 4V5H20C21.6569 5 23 6.34315 23 8V18C23 19.6569 21.6569 21 20 21H4C2.34315 21 1 19.6569 1 18V8C1 6.34315 2.34315 5 4 5H7ZM9 4H15V5H9V4ZM4 7C3.44772 7 3 7.44772 3 8V14H21V8C21 7.44772 20.5523 7 20 7H4ZM3 18V16H21V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18Z"
-                  fill="currentColor"
-                />
-              </svg>
+            <img src={logo} alt="terran" style={{width:'40px',height:'40px'}}/>
             </div>
-            <h2 style={{color:'white'}}>MechBill</h2>
+            <h2 style={{ color: "white" }}>Bellary Infotech MechBill</h2>
             <p>
               Streamlining mechanical workshop billing since 2023. Our mission is to help auto repair shops run more
               efficiently with powerful, easy-to-use software.
@@ -488,60 +403,82 @@ const LandingPage = () => {
           </div>
 
           <div className="footer-links">
-            
             <ul>
               <li>
-                <a href="#home" style={{color:'white'}}>Home</a>
+                <a href="#home" style={{ color: "white" }}>
+                  Home
+                </a>
               </li>
               <li>
-                <a href="#features" style={{color:'white'}}>Features</a>
+                <a href="#features" style={{ color: "white" }}>
+                  Features
+                </a>
               </li>
               <li>
-                <a href="#about" style={{color:'white'}}>About Us</a>
+                <a href="#about" style={{ color: "white" }}>
+                  About Us
+                </a>
               </li>
               <li>
-                <a href="#testimonials" style={{color:'white'}}>Testimonials</a>
+                <a href="#testimonials" style={{ color: "white" }}>
+                  Testimonials
+                </a>
               </li>
               <li>
-                <a href="#contact" style={{color:'white'}}>Contact</a>
+                <a href="#contact" style={{ color: "white" }}>
+                  Contact
+                </a>
               </li>
             </ul>
           </div>
 
           <div className="footer-links">
-             
             <ul>
               <li>
-                <a href="#" style={{color:'white'}}>Help Center</a>
+                <a href="#" style={{ color: "white" }}>
+                  Help Center
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>Blog</a>
+                <a href="#" style={{ color: "white" }}>
+                  Blog
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>Video Tutorials</a>
+                <a href="#" style={{ color: "white" }}>
+                  Video Tutorials
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>API Documentation</a>
+                <a href="#" style={{ color: "white" }}>
+                  API Documentation
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>System Status</a>
+                <a href="#" style={{ color: "white" }}>
+                  System Status
+                </a>
               </li>
             </ul>
           </div>
 
           <div className="footer-links">
-            
             <ul>
               <li>
-                <a href="#" style={{color:'white'}}>Privacy Policy</a>
+                <a href="#" style={{ color: "white" }}>
+                  Privacy Policy
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>Terms of Service</a>
+                <a href="#" style={{ color: "white" }}>
+                  Terms of Service
+                </a>
               </li>
               <li>
-                <a href="#" style={{color:'white'}}>Cookie Policy</a>
+                <a href="#" style={{ color: "white" }}>
+                  Cookie Policy
+                </a>
               </li>
-             
             </ul>
           </div>
         </div>
@@ -606,7 +543,8 @@ const LandingPage = () => {
                   strokeLinejoin="round"
                 />
                 <path
-                  d="M16 2H8C4.68629 2 2 4.68629 2 8V16C2 19.3137 4.68629 22 8 22H16C19.3137 22 22 19.3137 22 16V8C22 4.68629 19.3137 2 16 2Z"
+                  d="M16 2H8C4.68629 2 2 4.68629 2 8V16C2 19.3137 4.68629 22 8 22H16C19.3137 22 22 19.3137 22 16V8C22 4.68629  2 2 4.68629 2 8V16C2 19.3137 4.68629 22 8 22H16C19.3137 22 22 19.3137 22 16V8C22 4.68629
+                  19.3137 2 16 2Z"
                   stroke="currentColor"
                   strokeWidth="2"
                 />
@@ -627,4 +565,3 @@ const LandingPage = () => {
 }
 
 export default LandingPage;
-

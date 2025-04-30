@@ -16,6 +16,7 @@ import {
   Check,
 } from "lucide-react";
 import "../Design Component/LookupTable.css";
+import { IoSearchCircle } from "react-icons/io5";
 
 const LookupTable = () => {
   const [search, setSearch] = useState("")
@@ -113,8 +114,8 @@ const LookupTable = () => {
             <span>Add</span>
           </button>
           <button className=" refresh-btn" onClick={handleRefreshCache}>
-            <RefreshCw size={16} />
-            <span>Refresh Cache</span>
+            <IoSearchCircle size={16} />
+            <span>Search</span>
           </button>
           {/* <button className="action-btn excel-btn" onClick={handleExcelExport}>
             <FileSpreadsheet size={16} />
@@ -137,10 +138,7 @@ const LookupTable = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={handleSearch} className="search-button">
-            <Search size={16} />
-            <span>Search</span>
-          </button>
+           
         </div>
       </div>
 

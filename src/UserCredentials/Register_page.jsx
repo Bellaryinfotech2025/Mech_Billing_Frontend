@@ -190,7 +190,7 @@ const RegisterPage = () => {
           <div className="register-left">
             <div className="billing-software-content">
               <h1 className="main-heading">Welcome to Mech Billing Software</h1>
-              <p className="sub-heading">Streamline your invoicing process with our powerful tools</p>
+               
 
               <div className="feature-tables">
                 
@@ -273,7 +273,7 @@ const RegisterPage = () => {
               )}
 
               <div className="divider-text">
-                <span>or register with email</span>
+                <span>or sign in with email</span>
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -458,7 +458,7 @@ const RegisterPage = () => {
                 </div>
 
                 <button type="submit" className="submit-btn">
-                  Register
+                  Sign in with Bellary Infotech
                 </button>
               </form>
 
