@@ -5,11 +5,9 @@ import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
 
 import axios from "axios"
-import { CheckCircle, Download, Search, AlertCircle, Edit } from 'lucide-react'
-import { FaCloudUploadAlt } from "react-icons/fa"
+import { CheckCircle, Download, Search, AlertCircle } from "lucide-react"
 import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
-import { CgDetailsMore } from "react-icons/cg"
 import OrderDetails from "../Main Mech Component/OrderDetails"
 
 const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrder }) => {
@@ -38,10 +36,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   useEffect(() => {
     const fetchLookupValues = async () => {
       // Only fetch if we haven't already fetched
-      if (lookupValuesFetchedRef.current) return;
-      
+      if (lookupValuesFetchedRef.current) return
+
       try {
-        lookupValuesFetchedRef.current = true; // Mark as fetched before the API call
+        lookupValuesFetchedRef.current = true // Mark as fetched before the API call
         const response = await axios.get(`${API_URL}/order-lookup-values`)
         if (response.data) {
           setLookupValues(response.data)
@@ -49,7 +47,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
       } catch (error) {
         console.error("Error fetching lookup values:", error)
         // Reset the flag if there was an error, so we can try again
-        lookupValuesFetchedRef.current = false;
+        lookupValuesFetchedRef.current = false
       }
     }
 
@@ -299,7 +297,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
           <button className="search-button" onClick={handleLoadOrders}>
-            <Search size={25}/>
+            <Search size={25} />
           </button>
         </div>
 
@@ -315,7 +313,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
           <table className="orders-table">
             <thead>
               <tr>
-                <th className="column-actions">Actions</th>
+                {/* Removed the Actions column */}
                 <th>Order Number</th>
                 <th>Order Type</th>
                 <th>Business Unit</th>
@@ -336,19 +334,19 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={18} style={{ textAlign: "center", padding: "16px" }}>
+                  <td colSpan={17} style={{ textAlign: "center", padding: "16px" }}>
                     Loading orders...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={18} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
+                  <td colSpan={17} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
                     {error}
                   </td>
                 </tr>
               ) : !dataFetched ? (
                 <tr className="no-records-row">
-                  <td colSpan={18}>
+                  <td colSpan={17}>
                     <div className="load-orders-toast">
                       <AlertCircle size={16} />
                       <span>No Orders</span>
@@ -368,22 +366,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                               background: "#808080",
                               color: "white",
                               transition: "all 0.3s ease",
-                              borderRadius:'6px',
+                              borderRadius: "6px",
                               fontWeight: "bold",
                             }
                           : {}
                       }
                     >
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <div style={{ display: "flex", gap: "2px" }}>
-                          <button className="action-btn">
-                            <Edit
-                              size={12}
-                              style={{ marginRight: "2px", color: isHighlighted ? "white" : "#94a3b8" }}
-                            />
-                          </button>
-                        </div>
-                      </td>
+                      {/* Removed the Actions cell */}
                       <td
                         className="order-number-cell"
                         onClick={(e) => {
@@ -415,7 +404,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 })
               ) : (
                 <tr className="no-records-row">
-                  <td colSpan={18}>
+                  <td colSpan={17}>
                     <div className="no-records-toast">
                       <CheckCircle size={16} />
                       <span>No records found.</span>

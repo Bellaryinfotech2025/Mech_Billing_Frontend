@@ -4,7 +4,6 @@ import { useState } from "react"
 import "../UserCredentialsDesign/Register_page_design.css"
 import "../UserCredentialsDesign/toast-notification.css"
 import "../UserCredentialsDesign/loading-spinner.css"
-import { FaRupeeSign } from "react-icons/fa"
 import axios from "axios"
 import { Link, useNavigate } from "react-router-dom"
 import logo from "../assets/blogo.jpg"
@@ -28,6 +27,7 @@ const RegisterPage = () => {
   const [showGooglePopup, setShowGooglePopup] = useState(false)
   const [isStrongPassword, setIsStrongPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   // Toast state
   const [toast, setToast] = useState({
@@ -91,6 +91,11 @@ const RegisterPage = () => {
       isValid = false
     }
 
+    if (!termsAccepted) {
+      tempErrors.terms = "You must accept the terms and conditions"
+      isValid = false
+    }
+
     setErrors(tempErrors)
     return isValid
   }
@@ -112,6 +117,7 @@ const RegisterPage = () => {
           password: "",
           phoneNumber: "",
         })
+        setTermsAccepted(false)
 
         // Show loading for 3 seconds before showing toast
         setTimeout(() => {
@@ -143,6 +149,7 @@ const RegisterPage = () => {
             password: "",
             phoneNumber: "",
           })
+          setTermsAccepted(false)
 
           // Show error toast
           setToast({
@@ -190,14 +197,8 @@ const RegisterPage = () => {
           <div className="register-left">
             <div className="billing-software-content">
               <h1 className="main-heading">Welcome to Mech Billing Software</h1>
-               
 
-              <div className="feature-tables">
-                
-                 
-
-                 
-              </div>
+              <div className="feature-tables"></div>
 
               <div className="animated-circle"></div>
               <div className="animated-square"></div>
@@ -278,22 +279,6 @@ const RegisterPage = () => {
 
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label htmlFor="fullname">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </label>
                   <input
                     type="text"
                     id="fullname"
@@ -307,22 +292,6 @@ const RegisterPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="username">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </label>
                   <input
                     type="text"
                     id="username"
@@ -336,22 +305,6 @@ const RegisterPage = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="email">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                      <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
-                  </label>
                   <input
                     type="email"
                     id="email"
@@ -364,23 +317,7 @@ const RegisterPage = () => {
                   {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="password">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </label>
+                <div className="form-group password-group">
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
@@ -429,21 +366,6 @@ const RegisterPage = () => {
                 {isStrongPassword && user.password && <div className="strong-password-message">Strong password</div>}
 
                 <div className="form-group">
-                  <label htmlFor="phoneNumber">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                  </label>
                   <input
                     type="tel"
                     id="phoneNumber"
@@ -457,7 +379,29 @@ const RegisterPage = () => {
                   {errors.phoneNumber && <span className="error-message">{errors.phoneNumber}</span>}
                 </div>
 
-                <button type="submit" className="submit-btn">
+                <div className="terms-checkbox-container">
+                  <label className="terms-label">
+                    <input
+                      type="checkbox"
+                      checked={termsAccepted}
+                      onChange={() => setTermsAccepted(!termsAccepted)}
+                      className="terms-checkbox"
+                    />
+                    <span>
+                      I confirm my phone number, email, and password are correct and I accept the{" "}
+                      <a href="#" className="terms-link">
+                        Terms and Conditions
+                      </a>
+                    </span>
+                  </label>
+                  {errors.terms && <span className="error-message">{errors.terms}</span>}
+                </div>
+
+                <button
+                  type="submit"
+                  className={`submit-btn ${!termsAccepted ? "disabled" : ""}`}
+                  disabled={!termsAccepted}
+                >
                   Sign in with Bellary Infotech
                 </button>
               </form>
