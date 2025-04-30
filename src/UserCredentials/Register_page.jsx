@@ -172,6 +172,11 @@ const RegisterPage = () => {
     setToast({ ...toast, show: false })
   }
 
+  // Get first letter of username for avatar
+  const getInitial = () => {
+    return user.fullname ? user.fullname.charAt(0).toUpperCase() : ""
+  }
+
   return (
     <section className="bodyooo">
       {/* Loading Spinner */}
@@ -184,75 +189,14 @@ const RegisterPage = () => {
         <div className="register-container">
           <div className="register-left">
             <div className="billing-software-content">
-              <h1 className="main-heading">Advanced Billing Software</h1>
+              <h1 className="main-heading">Welcome to Mech Billing Software</h1>
               <p className="sub-heading">Streamline your invoicing process with our powerful tools</p>
 
               <div className="feature-tables">
-                <div className="feature-table floating">
-                  <div className="table-header">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                      <line x1="8" y1="21" x2="16" y2="21"></line>
-                      <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                    <h3>Invoice Management</h3>
-                  </div>
-                  <ul className="feature-list">
-                    <li>Create professional invoices</li>
-                    <li>Automated recurring billing</li>
-                    <li>Custom invoice templates</li>
-                    <li>Multi-currency support</li>
-                  </ul>
-                </div>
+                
+                 
 
-                <div className="feature-table floating delay-1">
-                  <div className="table-header">
-                    <FaRupeeSign />
-                    <h3>Payment Processing</h3>
-                  </div>
-                  <ul className="feature-list">
-                    <li>Multiple payment gateways</li>
-                    <li>Automatic payment reminders</li>
-                    <li>Secure transaction handling</li>
-                    <li>Payment tracking dashboard</li>
-                  </ul>
-                </div>
-
-                <div className="feature-table floating delay-2">
-                  <div className="table-header">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-                      <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-                    </svg>
-                    <h3>Financial Reports</h3>
-                  </div>
-                  <ul className="feature-list">
-                    <li>Real-time financial insights</li>
-                    <li>Customizable report templates</li>
-                    <li>Tax calculation & reporting</li>
-                    <li>Export to multiple formats</li>
-                  </ul>
-                </div>
+                 
               </div>
 
               <div className="animated-circle"></div>
@@ -264,13 +208,41 @@ const RegisterPage = () => {
           <div className="register-right">
             <div className="register-form-container">
               <div className="logo-container">
-                <img src={logo || "/placeholder.svg"} alt="logoofbellary" style={{ width: "50px", height: "50px" }} />
+                <img src={logo || "/placeholder.svg"} alt="logoofbellary" />
                 <h1>MECH BILLING APP</h1>
               </div>
 
               <div className="divider"></div>
 
               <h2>Register</h2>
+
+              {/* User Profile Container */}
+              <div className="user-profile-container">
+                <div className="user-avatar">
+                  {getInitial() || (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  )}
+                </div>
+                {(user.fullname || user.email) && (
+                  <div className="user-info">
+                    {user.fullname && <div className="user-name">{user.fullname}</div>}
+                    {user.email && <div className="user-email">{user.email}</div>}
+                  </div>
+                )}
+              </div>
 
               <button className="google-btn" onClick={handleGoogleSignIn}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
