@@ -1,20 +1,7 @@
 "use client"
-
-import { useState, useRef } from "react"
-import axios from "axios" // Import axios
-import {
-  Save,
-  Upload,
-  Edit,
-  Trash2,
-  Plus,
-  CheckCircle,
-  FileText,
-  AlertCircle,
-  Download,
-  RefreshCw,
-  Search,
-} from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import axios from "axios"
+import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Download, RefreshCw, Search } from 'lucide-react'
 
 import "../Fabrication Design/FabricationTable.css"
 import "../Fabrication Design/importfile.css"
@@ -23,10 +10,11 @@ import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
 
-// API base URL with port 8866
-const API_BASE_URL = "http://localhost:9988/api/V2.0"
+// Updated API base URLs for both controllers
+const API_BASE_URL_V2 = "http://localhost:9955/api/V2.0"
+const API_BASE_URL_V3 = "http://localhost:9955/api/V3.0"
 
-const FabricationTable = () => {
+const FabricationTable = ({ selectedOrder }) => {
   const [rows, setRows] = useState([])
   const [selectedRows, setSelectedRows] = useState([])
   const [editingRow, setEditingRow] = useState(null)
@@ -48,6 +36,8 @@ const FabricationTable = () => {
   const [refreshing, setRefreshing] = useState(false)
   const [totalItems, setTotalItems] = useState(0)
   const [importedData, setImportedData] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [orderNumber, setOrderNumber] = useState(selectedOrder?.orderNumber || "soheil_21")
 
   const fileInputRef = useRef(null)
 
@@ -87,20 +77,111 @@ const FabricationTable = () => {
     { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
   ]
 
+  // Fetch data from API when component mounts or when page/search changes
+  useEffect(() => {
+    fetchFabricationData()
+  }, [currentPage, pageSize, searchTerm])
 
+  // Update order number when selectedOrder prop changes
+  useEffect(() => {
+    if (selectedOrder?.orderNumber) {
+      setOrderNumber(selectedOrder.orderNumber)
+    }
+  }, [selectedOrder])
+
+  // Function to fetch data from the backend API using V3.0 endpoint
+  const fetchFabricationData = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get(`${API_BASE_URL_V3}/getfabrication`, {
+        params: {
+          page: currentPage,
+          size: pageSize,
+          search: searchTerm || undefined,
+        },
+      })
+
+      // Map the backend data to match our frontend structure
+      const mappedData = response.data.data.map(item => ({
+        id: item.id,
+        orderNumber: item.orderNumber || "",
+        origLineNo: item.origLineNumber || "",
+        lineNo: item.lineNumber || "",
+        drawingNo: item.drawingNo || "",
+        description: item.drawingDescription || "",
+        erectionMkd: item.erectionMkd || "",
+        itemNo: item.itemNo || "",
+        section: item.section || "",
+        length: item.length ? item.length.toString() : "",
+        qty: item.quantity ? item.quantity.toString() : "",
+        unit: item.unitPrice ? item.unitPrice.toString() : "",
+        totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
+        qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
+        erecMkdWt: "", // This field doesn't exist in the backend model
+        remarks: item.remark || "",
+        isNew: false,
+      }))
+
+      setRows(mappedData)
+      setTotalItems(response.data.totalItems || 0)
+      setTotalPages(response.data.totalPages || 1)
+      
+      // Mark all fetched rows as saved
+      setSavedRows(mappedData.map(row => row.id))
+      
+      // Update order number if available in the response
+      if (mappedData.length > 0 && mappedData[0].orderNumber) {
+        setOrderNumber(mappedData[0].orderNumber)
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error)
+      showToastNotification(
+        `Failed to fetch data: ${error.response?.data?.message || error.message}`,
+        "Error",
+        "error"
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Function to fetch imported data using V2.0 endpoint
+  const fetchImportedData = async () => {
+    try {
+      setIsLoading(true)
+      const response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
+      
+      // Process the imported data if needed
+      setImportedData(response.data.data)
+      
+      showToastNotification("Imported data fetched successfully!")
+    } catch (error) {
+      console.error("Error fetching imported data:", error)
+      showToastNotification(
+        `Failed to fetch imported data: ${error.response?.data?.message || error.message}`,
+        "Error",
+        "error"
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleRefresh = () => {
     setRefreshing(true)
-    // Just simulate a refresh without actually fetching data
-    setTimeout(() => {
-      setRefreshing(false)
-    }, 500)
+    fetchFabricationData()
+      .then(() => {
+        showToastNotification("Data refreshed successfully!")
+      })
+      .finally(() => {
+        setRefreshing(false)
+      })
   }
 
   const addNewRow = () => {
     const newRow = {
-      id: Date.now(),
-      orderNumber: "",
+      id: `temp-${Date.now()}`, // Temporary ID until saved to backend
+      orderNumber: orderNumber, // Use the current order number
       origLineNo: "",
       lineNo: "",
       drawingNo: "",
@@ -121,15 +202,99 @@ const FabricationTable = () => {
     setEditingRow(newRow.id)
   }
 
-  const handleSave = () => {
-    if (editingRow !== null) {
-      setRows(rows.map((row) => ({ ...row, isNew: false })))
-      setEditingRow(null)
-      // Add all rows to savedRows
-      setSavedRows([...savedRows, ...rows.map((row) => row.id)])
-      showToastNotification("Order saved successfully!")
-    } else {
-      showToastNotification("Changes saved successfully!")
+  // Convert frontend row to backend DTO format
+  const convertRowToBackendFormat = (row) => {
+    return {
+      id: row.id && !row.id.toString().startsWith('temp-') ? row.id : null,
+      orderNumber: row.orderNumber,
+      origLineNo: row.origLineNo,
+      lineNo: row.lineNo,
+      drawingNo: row.drawingNo,
+      description: row.description,
+      erectionMkd: row.erectionMkd,
+      itemNo: row.itemNo,
+      section: row.section,
+      length: row.length,
+      qty: row.qty,
+      unit: row.unit,
+      totalWt: row.totalWt,
+      remarks: row.remarks,
+    }
+  }
+
+  const handleSave = async () => {
+    try {
+      if (editingRow !== null) {
+        const rowToSave = rows.find(row => row.id === editingRow)
+        
+        if (rowToSave) {
+          const backendData = convertRowToBackendFormat(rowToSave)
+          
+          let response
+          if (rowToSave.isNew) {
+            // Create new record using V3.0 endpoint
+            response = await axios.post(`${API_BASE_URL_V3}/getfabrication`, backendData)
+            
+            // Update the row with the ID from the backend
+            setRows(rows.map(row => 
+              row.id === editingRow 
+                ? { 
+                    ...row, 
+                    id: response.data.data.id, 
+                    isNew: false 
+                  } 
+                : row
+            ))
+            
+            showToastNotification("Record created successfully!")
+          } else {
+            // Update existing record using V3.0 endpoint
+            response = await axios.put(`${API_BASE_URL_V3}/getfabrication/${rowToSave.id}`, backendData)
+            
+            // Update the row with data from the backend
+            setRows(rows.map(row => 
+              row.id === editingRow 
+                ? { ...row, isNew: false } 
+                : row
+            ))
+            
+            showToastNotification("Record updated successfully!")
+          }
+          
+          // Add to savedRows
+          setSavedRows(prev => [...prev, response.data.data.id])
+        }
+        
+        setEditingRow(null)
+      } else {
+        // If no specific row is being edited, save all unsaved rows
+        const unsavedRows = rows.filter(row => !savedRows.includes(row.id))
+        
+        if (unsavedRows.length > 0) {
+          // Create a batch save request for multiple rows using V3.0 endpoint
+          const batchData = unsavedRows.map(convertRowToBackendFormat)
+          
+          const response = await axios.post(`${API_BASE_URL_V3}/getfabrication/batch`, batchData)
+          
+          // Update rows with IDs from backend
+          const savedIds = response.data.data.map(item => item.id)
+          setSavedRows([...savedRows, ...savedIds])
+          
+          // Update the rows to mark them as not new
+          setRows(rows.map(row => ({ ...row, isNew: false })))
+          
+          showToastNotification(`${unsavedRows.length} records saved successfully!`)
+        } else {
+          showToastNotification("No changes to save!")
+        }
+      }
+    } catch (error) {
+      console.error("Error saving data:", error)
+      showToastNotification(
+        `Failed to save: ${error.response?.data?.message || error.message}`,
+        "Error",
+        "error"
+      )
     }
   }
 
@@ -137,10 +302,27 @@ const FabricationTable = () => {
     setEditingRow(id)
   }
 
-  const handleDelete = (id) => {
-    setRows(rows.filter((row) => row.id !== id))
-    setSavedRows(savedRows.filter((rowId) => rowId !== id))
-    showToastNotification("Row deleted successfully!")
+  const handleDelete = async (id) => {
+    try {
+      // Check if the row exists in the backend (has a non-temporary ID)
+      if (!id.toString().startsWith('temp-')) {
+        // Delete from backend using V3.0 endpoint
+        await axios.delete(`${API_BASE_URL_V3}/getfabrication/${id}`)
+      }
+      
+      // Remove from local state
+      setRows(rows.filter((row) => row.id !== id))
+      setSavedRows(savedRows.filter((rowId) => rowId !== id))
+      
+      showToastNotification("Row deleted successfully!")
+    } catch (error) {
+      console.error("Error deleting row:", error)
+      showToastNotification(
+        `Failed to delete: ${error.response?.data?.message || error.message}`,
+        "Error",
+        "error"
+      )
+    }
   }
 
   const handleInputChange = (id, field, value) => {
@@ -180,7 +362,7 @@ const FabricationTable = () => {
     }
   }
 
-  // Import functionality
+  // Import functionality using V2.0 endpoint
   const handleImportClick = () => {
     setShowImportPopup(true)
   }
@@ -232,8 +414,8 @@ const FabricationTable = () => {
       // Show loading for at least 3 seconds
       const loadingPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
-      // Send the file to the backend using axios
-      const importPromise = axios.post(`${API_BASE_URL}/imports`, formData)
+      // Send the file to the backend using axios with V2.0 endpoint
+      const importPromise = axios.post(`${API_BASE_URL_V2}/imports`, formData)
 
       // Wait for both the loading time and the API call to complete
       const [_, importResponse] = await Promise.all([loadingPromise, importPromise])
@@ -260,7 +442,8 @@ const FabricationTable = () => {
         3000,
       )
 
-      // Don't update the table with imported data
+      // Refresh the table to show the imported data
+      fetchFabricationData()
     } catch (error) {
       console.error("Import error:", error)
       showToastNotification(`Import failed: ${error.response?.data?.message || error.message}`, "Error", "error")
@@ -279,17 +462,36 @@ const FabricationTable = () => {
     fileInputRef.current.click()
   }
 
-  const handleDownloadTemplate = () => {
-    // In a real application, this would download a template Excel file
-    showToastNotification("Template download functionality would be implemented here")
+  const handleDownloadTemplate = async () => {
+    try {
+      // Get template information from V2.0 endpoint
+      const response = await axios.get(`${API_BASE_URL_V2}/template`)
+      showToastNotification("Template information retrieved successfully!")
+      
+      // In a real application, this would download a template Excel file
+      // For now, just show the template info in console
+      console.log("Template Info:", response.data)
+    } catch (error) {
+      console.error("Error getting template:", error)
+      showToastNotification(
+        `Failed to get template: ${error.response?.data?.message || error.message}`,
+        "Error",
+        "error"
+      )
+    }
   }
 
   const handlePrevPage = () => {
-    setCurrentPage(currentPage - 1)
+    setCurrentPage(Math.max(0, currentPage - 1))
   }
 
   const handleNextPage = () => {
-    setCurrentPage(currentPage + 1)
+    setCurrentPage(Math.min(totalPages - 1, currentPage + 1))
+  }
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value)
+    setCurrentPage(0) // Reset to first page when searching
   }
 
   return (
@@ -316,11 +518,33 @@ const FabricationTable = () => {
         </div>
       </div>
 
+      {/* Added Order Number section similar to LinesDatabaseSearch */}
+      <div className="order-number-section">
+        <div className="order-number-display">
+          <span>Order Number: {orderNumber}</span>
+          <span className="active-status">
+            <CheckCircle size={12} />
+            Active
+          </span>
+        </div>
+        <div className="table-actions-secondary">
+           
+        </div>
+      </div>
+
       <div className="table-controls">
-         
+        <div className="search-container">
+          <Search size={16} className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search..."
+            className="search-input"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
         <div className="table-info">
-          <span>Total: {rows.length} records</span>
-          
+          <span>Total: {totalItems} records</span>
         </div>
       </div>
 
