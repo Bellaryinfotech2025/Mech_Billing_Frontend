@@ -68,7 +68,7 @@ function App() {
 
 
 
-            <Route path="/dashboardbilling" element={<MainDashboard/>}/>
+            <Route path="/dashboardbilling/bellaryinfotech/meachnicalbilling/software" element={<MainDashboard/>}/>
           </Routes>
         </Router>
       

@@ -116,7 +116,7 @@ const LoginPage = () => {
 
         // Navigate after toast is shown
         setTimeout(() => {
-          navigate("/dashboardbilling")
+          navigate("/dashboardbilling/bellaryinfotech/meachnicalbilling/software")
         }, 3000)
       }, 3000)
     } catch (err) {
