@@ -5,7 +5,7 @@ import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
 
 import axios from "axios"
-import { CheckCircle, Download, Search, AlertCircle } from "lucide-react"
+import { CheckCircle, Download, Search, AlertCircle } from 'lucide-react'
 import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
 import OrderDetails from "../Main Mech Component/OrderDetails"
@@ -29,6 +29,12 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const highlightTimerRef = useRef(null)
   // Add this ref to track if we've already fetched lookup values
   const lookupValuesFetchedRef = useRef(false)
+  
+  // Customer data for displaying names instead of IDs
+  const [customers, setCustomers] = useState([])
+  const [customerSites, setCustomerSites] = useState([])
+  const [customerContacts, setCustomerContacts] = useState([])
+  const [loadingCustomerData, setLoadingCustomerData] = useState(false)
 
   // API base URL calling
   const API_URL = "http://195.35.45.56:5522/api/V2.0"
@@ -52,6 +58,26 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
     }
 
     fetchLookupValues()
+  }, [])
+  
+  // Fetch customer data for displaying names
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallcustomeraccount/details`)
+        
+        if (response.data) {
+          setCustomers(response.data)
+        }
+      } catch (error) {
+        console.error("Error fetching customer accounts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomers()
   }, [])
 
   // Update highlighted orders when search query changes
@@ -157,6 +183,30 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
 
     const lookup = lookupArray.find((item) => item.lookupCode === lookupCode)
     return lookup ? lookup.meaning : lookupCode
+  }
+  
+  // Function to get customer name from ID
+  const getCustomerName = (customerId) => {
+    if (!customerId || !customers.length) return "-"
+    
+    const customer = customers.find(c => c.custAccountId === customerId)
+    return customer ? customer.accountName : customerId.toString()
+  }
+  
+  // Function to get site name from ID
+  const getSiteName = (siteId) => {
+    if (!siteId || !customerSites.length) return "-"
+    
+    const site = customerSites.find(s => s.custAcctSiteId === siteId)
+    return site ? (site.siteName || `Site ${siteId}`) : siteId.toString()
+  }
+  
+  // Function to get contact name from ID
+  const getContactName = (contactId) => {
+    if (!contactId || !customerContacts.length) return "-"
+    
+    const contact = customerContacts.find(c => c.contactId === contactId)
+    return contact ? (contact.roleType || `Contact ${contactId}`) : contactId.toString()
   }
 
   // Updated formatDate function to display dates as "DD Month, YYYY"
@@ -386,7 +436,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                       <td>{order.businessUnit || "-"}</td>
                       <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
                       <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
-                        {order.billToCustomerId || "-"}
+                        {getCustomerName(order.billToCustomerId)}
                       </td>
                       <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
                         {formatDate(order.effectiveStartDate)}
@@ -394,8 +444,8 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                       <td>{formatDate(order.effectiveEndDate)}</td>
                       <td>{order.totalValue || "-"}</td>
                       <td>{order.status || "-"}</td>
-                      <td>{order.billToSiteId || "-"}</td>
-                      <td>{order.billToContactId || "-"}</td>
+                      <td>{getSiteName(order.billToSiteId)}</td>
+                      <td>{getContactName(order.billToContactId)}</td>
                       <td>{getLookupMeaning("BILLING_FREQUENCY", order.billingFrequency)}</td>
                       <td>{getLookupMeaning("BILLING_CYCLE", order.billingCycle)}</td>
                       <td>{order.ldApplicable === "Y" ? "Yes" : "No"}</td>

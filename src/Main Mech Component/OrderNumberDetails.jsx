@@ -31,11 +31,26 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
   const [showBillingFrequencyDropdown, setShowBillingFrequencyDropdown] = useState(false)
   const [showBillingCycleDropdown, setShowBillingCycleDropdown] = useState(false)
 
+  // Customer details dropdown states
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
+  const [showBillToSiteDropdown, setShowBillToSiteDropdown] = useState(false)
+  const [showBillToContactDropdown, setShowBillToContactDropdown] = useState(false)
+  const [selectedCustomerName, setSelectedCustomerName] = useState("")
+  const [selectedSiteName, setSelectedSiteName] = useState("")
+  const [selectedContactName, setSelectedContactName] = useState("")
+  const [customers, setCustomers] = useState([])
+  const [customerSites, setCustomerSites] = useState([])
+  const [customerContacts, setCustomerContacts] = useState([])
+  const [loadingCustomerData, setLoadingCustomerData] = useState(false)
+
   // Refs for dropdown click outside detection
   const orderTypeDropdownRef = useRef(null)
   const categoryDropdownRef = useRef(null)
   const billingFrequencyDropdownRef = useRef(null)
   const billingCycleDropdownRef = useRef(null)
+  const customerDropdownRef = useRef(null)
+  const billToSiteDropdownRef = useRef(null)
+  const billToContactDropdownRef = useRef(null)
 
   // API base URL - Using the correct base URL
   // const API_URL = "http://localhost:9955/api/V2.0"
@@ -73,6 +88,98 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
     fetchLookupValues()
   }, [])
 
+  // Fetch customer accounts data
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallcustomeraccount/details`)
+        
+        if (response.data) {
+          setCustomers(response.data)
+          
+          // If we have a billToCustomerId, find the customer name
+          if (order.billToCustomerId && response.data.length > 0) {
+            const customer = response.data.find(c => c.custAccountId === order.billToCustomerId)
+            if (customer) {
+              setSelectedCustomerName(customer.accountName)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching customer accounts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomers()
+  }, [order.billToCustomerId])
+
+  // Fetch customer sites when a customer is selected
+  useEffect(() => {
+    const fetchCustomerSites = async () => {
+      if (!order.billToCustomerId) return
+      
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallaccountsitesall/details`, {
+          params: { customerId: order.billToCustomerId }
+        })
+        
+        if (response.data) {
+          setCustomerSites(response.data)
+          
+          // If we have a billToSiteId, find the site name
+          if (order.billToSiteId && response.data.length > 0) {
+            const site = response.data.find(s => s.custAcctSiteId === order.billToSiteId)
+            if (site) {
+              setSelectedSiteName(site.siteName || `Site ${site.custAcctSiteId}`)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching customer sites:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerSites()
+  }, [order.billToCustomerId, order.billToSiteId])
+
+  // Fetch customer contacts when a customer is selected
+  useEffect(() => {
+    const fetchCustomerContacts = async () => {
+      if (!order.billToCustomerId) return
+      
+      try {
+        setLoadingCustomerData(true)
+        const response = await axios.get(`${API_URL}/getallcustomercontacts/details`, {
+          params: { customerId: order.billToCustomerId }
+        })
+        
+        if (response.data) {
+          setCustomerContacts(response.data)
+          
+          // If we have a billToContactId, find the contact name
+          if (order.billToContactId && response.data.length > 0) {
+            const contact = response.data.find(c => c.contactId === order.billToContactId)
+            if (contact) {
+              setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching customer contacts:", error)
+      } finally {
+        setLoadingCustomerData(false)
+      }
+    }
+
+    fetchCustomerContacts()
+  }, [order.billToCustomerId, order.billToContactId])
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -88,13 +195,22 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
       if (billingCycleDropdownRef.current && !billingCycleDropdownRef.current.contains(event.target)) {
         setShowBillingCycleDropdown(false)
       }
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(event.target)) {
+        setShowCustomerDropdown(false)
+      }
+      if (billToSiteDropdownRef.current && !billToSiteDropdownRef.current.contains(event.target)) {
+        setShowBillToSiteDropdown(false)
+      }
+      if (billToContactDropdownRef.current && !billToContactDropdownRef.current.contains(event.target)) {
+        setShowBillToContactDropdown(false)
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [orderTypeDropdownRef, categoryDropdownRef, billingFrequencyDropdownRef, billingCycleDropdownRef])
+  }, [])
 
   if (!order) return null
 
@@ -109,6 +225,29 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
     setSelectedCategory(getLookupMeaning("ORDER_CATEGORY", initialOrder.orderCategory) || "")
     setSelectedBillingFrequency(getLookupMeaning("BILLING_FREQUENCY", initialOrder.billingFrequency) || "")
     setSelectedBillingCycle(getLookupMeaning("BILLING_CYCLE", initialOrder.billingCycle) || "")
+    
+    // Reset customer selections
+    if (initialOrder.billToCustomerId) {
+      const customer = customers.find(c => c.custAccountId === initialOrder.billToCustomerId)
+      if (customer) {
+        setSelectedCustomerName(customer.accountName)
+      }
+    }
+    
+    if (initialOrder.billToSiteId) {
+      const site = customerSites.find(s => s.custAcctSiteId === initialOrder.billToSiteId)
+      if (site) {
+        setSelectedSiteName(site.siteName || `Site ${site.custAcctSiteId}`)
+      }
+    }
+    
+    if (initialOrder.billToContactId) {
+      const contact = customerContacts.find(c => c.contactId === initialOrder.billToContactId)
+      if (contact) {
+        setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+      }
+    }
+    
     setIsEditing(false)
     onCancel()
   }
@@ -147,6 +286,30 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
     setSelectedBillingCycle(option.meaning)
     setOrder({ ...order, billingCycle: option.lookupCode })
     setShowBillingCycleDropdown(false)
+  }
+
+  // Handle customer details dropdown selections
+  const handleCustomerSelect = (customer) => {
+    setSelectedCustomerName(customer.accountName)
+    setOrder({ ...order, billToCustomerId: customer.custAccountId })
+    setShowCustomerDropdown(false)
+    
+    // Reset site and contact selections when customer changes
+    setSelectedSiteName("")
+    setSelectedContactName("")
+    setOrder(prev => ({ ...prev, billToCustomerId: customer.custAccountId, billToSiteId: "", billToContactId: "" }))
+  }
+
+  const handleBillToSiteSelect = (site) => {
+    setSelectedSiteName(site.siteName || `Site ${site.custAcctSiteId}`)
+    setOrder({ ...order, billToSiteId: site.custAcctSiteId })
+    setShowBillToSiteDropdown(false)
+  }
+
+  const handleBillToContactSelect = (contact) => {
+    setSelectedContactName(contact.roleType || `Contact ${contact.contactId}`)
+    setOrder({ ...order, billToContactId: contact.contactId })
+    setShowBillToContactDropdown(false)
   }
 
   const handleSaveClick = async () => {
@@ -277,7 +440,7 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
           className={`order-details-tab ${activeTab === "customer" ? "active" : ""}`}
           onClick={() => setActiveTab("customer")}
         >
-          Customer and Contacts
+          Customer Details
         </div>
         <div
           className={`order-details-tab ${activeTab === "billing" ? "active" : ""}`}
@@ -540,72 +703,148 @@ const OrderNumberDetails = ({ order: initialOrder, onCancel, getLookupMeaning, f
             {/* Left Column */}
             <div className="form-column">
               <div className="form-row">
-                <label className="form-label">Bill To Customer</label>
+                <label className="form-label">Customer Name</label>
                 <div className="form-field">
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={order.billToCustomerId || ""}
-                    readOnly={!isEditing}
-                    onChange={(e) => handleInputChange("billToCustomerId", e.target.value)}
-                  />
+                  {isEditing ? (
+                    <div className="custom-dropdown-wrapper" ref={customerDropdownRef}>
+                      <div
+                        className="custom-dropdown-trigger form-select"
+                        onClick={() => setShowCustomerDropdown(!showCustomerDropdown)}
+                      >
+                        <span>{selectedCustomerName || "Select Customer"}</span>
+                        <ChevronDown size={16} className="dropdown-icon" />
+                      </div>
+                      {showCustomerDropdown && (
+                        <div className="custom-dropdown-menu">
+                          <div className="custom-dropdown-content">
+                            {loadingCustomerData ? (
+                              <div className="custom-dropdown-item">Loading...</div>
+                            ) : customers.length > 0 ? (
+                              customers.map((customer, index) => (
+                                <div
+                                  key={index}
+                                  className="custom-dropdown-item"
+                                  onClick={() => handleCustomerSelect(customer)}
+                                >
+                                  {customer.accountName}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="custom-dropdown-item">No customers found</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={selectedCustomerName || ""}
+                      readOnly
+                    />
+                  )}
                 </div>
               </div>
 
               <div className="form-row">
                 <label className="form-label">Bill To Site</label>
                 <div className="form-field">
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={order.billToSiteId || ""}
-                    readOnly={!isEditing}
-                    onChange={(e) => handleInputChange("billToSiteId", e.target.value)}
-                  />
+                  {isEditing ? (
+                    <div className="custom-dropdown-wrapper" ref={billToSiteDropdownRef}>
+                      <div
+                        className="custom-dropdown-trigger form-select"
+                        onClick={() => setShowBillToSiteDropdown(!showBillToSiteDropdown)}
+                      >
+                        <span>{selectedSiteName || "Select Site"}</span>
+                        <ChevronDown size={16} className="dropdown-icon" />
+                      </div>
+                      {showBillToSiteDropdown && (
+                        <div className="custom-dropdown-menu">
+                          <div className="custom-dropdown-content">
+                            {!order.billToCustomerId ? (
+                              <div className="custom-dropdown-item">Select a customer first</div>
+                            ) : loadingCustomerData ? (
+                              <div className="custom-dropdown-item">Loading...</div>
+                            ) : customerSites.length > 0 ? (
+                              customerSites.map((site, index) => (
+                                <div
+                                  key={index}
+                                  className="custom-dropdown-item"
+                                  onClick={() => handleBillToSiteSelect(site)}
+                                >
+                                  {site.siteName || `Site ${site.custAcctSiteId}`}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="custom-dropdown-item">No sites found</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={selectedSiteName || ""}
+                      readOnly
+                    />
+                  )}
                 </div>
               </div>
 
               <div className="form-row">
                 <label className="form-label">Bill To Contact</label>
                 <div className="form-field">
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={order.billToContactId || ""}
-                    readOnly={!isEditing}
-                    onChange={(e) => handleInputChange("billToContactId", e.target.value)}
-                  />
+                  {isEditing ? (
+                    <div className="custom-dropdown-wrapper" ref={billToContactDropdownRef}>
+                      <div
+                        className="custom-dropdown-trigger form-select"
+                        onClick={() => setShowBillToContactDropdown(!showBillToContactDropdown)}
+                      >
+                        <span>{selectedContactName || "Select Contact"}</span>
+                        <ChevronDown size={16} className="dropdown-icon" />
+                      </div>
+                      {showBillToContactDropdown && (
+                        <div className="custom-dropdown-menu">
+                          <div className="custom-dropdown-content">
+                            {!order.billToCustomerId ? (
+                              <div className="custom-dropdown-item">Select a customer first</div>
+                            ) : loadingCustomerData ? (
+                              <div className="custom-dropdown-item">Loading...</div>
+                            ) : customerContacts.length > 0 ? (
+                              customerContacts.map((contact, index) => (
+                                <div
+                                  key={index}
+                                  className="custom-dropdown-item"
+                                  onClick={() => handleBillToContactSelect(contact)}
+                                >
+                                  {contact.roleType || `Contact ${contact.contactId}`}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="custom-dropdown-item">No contacts found</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={selectedContactName || ""}
+                      readOnly
+                    />
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Right Column */}
             <div className="form-column">
-              <div className="form-row">
-                <label className="form-label">Deliver To Customer</label>
-                <div className="form-field">
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={order.deliverToCustomerId || ""}
-                    readOnly={!isEditing}
-                    onChange={(e) => handleInputChange("deliverToCustomerId", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <label className="form-label">Sales Representative</label>
-                <div className="form-field">
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={order.salesrep || ""}
-                    readOnly={!isEditing}
-                    onChange={(e) => handleInputChange("salesrep", e.target.value)}
-                  />
-                </div>
-              </div>
+              {/* Additional customer fields can be added here if needed */}
             </div>
           </div>
         )}

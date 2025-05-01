@@ -37,7 +37,7 @@ const FabricationTable = ({ selectedOrder }) => {
   const [totalItems, setTotalItems] = useState(0)
   const [importedData, setImportedData] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [orderNumber, setOrderNumber] = useState(selectedOrder?.orderNumber || "soheil_21")
+  const [orderNumber, setOrderNumber] = useState(selectedOrder?.orderNumber)
 
   const fileInputRef = useRef(null)
 
@@ -521,11 +521,11 @@ const FabricationTable = ({ selectedOrder }) => {
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          <span>Order Number: {orderNumber}</span>
-          <span className="active-status">
+          {/* <span>Order Number: {orderNumber}</span> */}
+          {/* <span className="active-status">
             <CheckCircle size={12} />
             Active
-          </span>
+          </span> */}
         </div>
         <div className="table-actions-secondary">
            
