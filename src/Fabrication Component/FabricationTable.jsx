@@ -11,8 +11,8 @@ import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
 
 // Updated API base URLs for both controllers
-const API_BASE_URL_V2 = "http://localhost:9955/api/V2.0"
-const API_BASE_URL_V3 = "http://localhost:9955/api/V3.0"
+const API_BASE_URL_V2 = "http://195.35.45.56:5522/api/V2.0"
+const API_BASE_URL_V3 = "http://195.35.45.56:5522/api/V3.0"
 
 const FabricationTable = ({ selectedOrder }) => {
   const [rows, setRows] = useState([])
