@@ -35,6 +35,9 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const [customerSites, setCustomerSites] = useState([])
   const [customerContacts, setCustomerContacts] = useState([])
   const [loadingCustomerData, setLoadingCustomerData] = useState(false)
+  
+  // Track which customer IDs we've already fetched sites and contacts for
+  const [fetchedCustomerIds, setFetchedCustomerIds] = useState([])
 
   // API base URL calling
   const API_URL = "http://195.35.45.56:5522/api/V2.0"
@@ -79,6 +82,71 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
 
     fetchCustomers()
   }, [])
+  
+  // Fetch sites and contacts for customers in orders
+  useEffect(() => {
+    const fetchSitesAndContacts = async () => {
+      if (!orders.length || loadingCustomerData) return;
+      
+      // Get unique customer IDs from orders that we haven't fetched yet
+      const customerIds = [...new Set(
+        orders
+          .filter(order => order.billToCustomerId)
+          .map(order => order.billToCustomerId)
+      )].filter(id => !fetchedCustomerIds.includes(id));
+      
+      if (!customerIds.length) return;
+      
+      try {
+        setLoadingCustomerData(true);
+        
+        // Track new sites and contacts
+        let newSites = [...customerSites];
+        let newContacts = [...customerContacts];
+        
+        // Fetch sites and contacts for each customer
+        for (const customerId of customerIds) {
+          // Fetch sites
+          try {
+            const sitesResponse = await axios.get(`${API_URL}/getallaccountsitesall/details`, {
+              params: { customerId }
+            });
+            
+            if (sitesResponse.data && sitesResponse.data.length > 0) {
+              newSites = [...newSites, ...sitesResponse.data];
+            }
+          } catch (error) {
+            console.error(`Error fetching sites for customer ${customerId}:`, error);
+          }
+          
+          // Fetch contacts
+          try {
+            const contactsResponse = await axios.get(`${API_URL}/getallcustomercontacts/details`, {
+              params: { customerId }
+            });
+            
+            if (contactsResponse.data && contactsResponse.data.length > 0) {
+              newContacts = [...newContacts, ...contactsResponse.data];
+            }
+          } catch (error) {
+            console.error(`Error fetching contacts for customer ${customerId}:`, error);
+          }
+        }
+        
+        // Update state with new data
+        setCustomerSites(newSites);
+        setCustomerContacts(newContacts);
+        setFetchedCustomerIds(prev => [...prev, ...customerIds]);
+        
+      } catch (error) {
+        console.error("Error fetching sites and contacts:", error);
+      } finally {
+        setLoadingCustomerData(false);
+      }
+    };
+    
+    fetchSitesAndContacts();
+  }, [orders, loadingCustomerData, fetchedCustomerIds, customerSites, customerContacts]);
 
   // Update highlighted orders when search query changes
   useEffect(() => {
@@ -187,26 +255,26 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   
   // Function to get customer name from ID
   const getCustomerName = (customerId) => {
-    if (!customerId || !customers.length) return "-"
+    if (!customerId) return "N/A"
     
     const customer = customers.find(c => c.custAccountId === customerId)
-    return customer ? customer.accountName : customerId.toString()
+    return customer ? customer.accountName : "N/A"
   }
   
   // Function to get site name from ID
   const getSiteName = (siteId) => {
-    if (!siteId || !customerSites.length) return "-"
+    if (!siteId) return "N/A"
     
     const site = customerSites.find(s => s.custAcctSiteId === siteId)
-    return site ? (site.siteName || `Site ${siteId}`) : siteId.toString()
+    return site ? (site.siteName || `Site ${siteId}`) : "N/A"
   }
   
   // Function to get contact name from ID
   const getContactName = (contactId) => {
-    if (!contactId || !customerContacts.length) return "-"
+    if (!contactId) return "N/A"
     
     const contact = customerContacts.find(c => c.contactId === contactId)
-    return contact ? (contact.roleType || `Contact ${contactId}`) : contactId.toString()
+    return contact ? (contact.roleType || `Contact ${contactId}`) : "N/A"
   }
 
   // Updated formatDate function to display dates as "DD Month, YYYY"
