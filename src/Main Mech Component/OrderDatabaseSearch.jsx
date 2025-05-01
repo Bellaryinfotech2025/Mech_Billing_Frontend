@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
+import { IoOpen } from "react-icons/io5";
+import { LuSearchCheck } from "react-icons/lu";
 
 import axios from "axios"
-import { CheckCircle, Download, Search, AlertCircle } from 'lucide-react'
+import { CheckCircle, Download, Search, AlertCircle, MoreHorizontal } from 'lucide-react'
 import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
 import OrderDetails from "../Main Mech Component/OrderDetails"
@@ -415,7 +417,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
           <button className="search-button" onClick={handleLoadOrders}>
-            <Search size={25} />
+           <LuSearchCheck size={50}/>  
           </button>
         </div>
 
@@ -431,7 +433,8 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
           <table className="orders-table">
             <thead>
               <tr>
-                {/* Removed the Actions column */}
+                {/* Added Actions column */}
+                <th className="column-actions">Actions</th>
                 <th>Order Number</th>
                 <th>Order Type</th>
                 <th>Business Unit</th>
@@ -452,19 +455,19 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={17} style={{ textAlign: "center", padding: "16px" }}>
+                  <td colSpan={16} style={{ textAlign: "center", padding: "16px" }}>
                     Loading orders...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={17} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
+                  <td colSpan={16} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
                     {error}
                   </td>
                 </tr>
               ) : !dataFetched ? (
                 <tr className="no-records-row">
-                  <td colSpan={17}>
+                  <td colSpan={16}>
                     <div className="load-orders-toast">
                       <AlertCircle size={16} />
                       <span>No Orders</span>
@@ -490,7 +493,22 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                           : {}
                       }
                     >
-                      {/* Removed the Actions cell */}
+                      {/* Added Actions cell with icon */}
+                      <td className="actions-column">
+                        <div className="action-buttons">
+                          {/* <img 
+                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/icon-YJndqC5YUwBNC7noLuiGg23AmlvcL6.png" 
+                            alt="Action" 
+                            style={{ 
+                              width: "20px", 
+                              height: "20px", 
+                              cursor: "pointer",
+                              opacity: isHighlighted ? "0.9" : "0.7"
+                            }} 
+                          /> */}
+                          <IoOpen size={20}/>
+                        </div>
+                      </td>
                       <td
                         className="order-number-cell"
                         onClick={(e) => {
@@ -522,7 +540,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 })
               ) : (
                 <tr className="no-records-row">
-                  <td colSpan={17}>
+                  <td colSpan={16}>
                     <div className="no-records-toast">
                       <CheckCircle size={16} />
                       <span>No records found.</span>
@@ -538,6 +556,65 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
       <div className="table-pagination">
         <div className="pagination-slider"></div>
       </div>
+
+      {/* Add custom styles to ensure proper column spacing and text display */}
+      <style jsx>{`
+        /* Ensure proper spacing between columns and full text display */
+        .orders-table th,
+        .orders-table td {
+          padding: 8px 16px;
+          white-space: nowrap;
+          overflow: visible;
+          text-overflow: clip;
+          min-width: 120px;
+        }
+
+        /* Actions column styling */
+        .orders-table th.column-actions,
+        .orders-table td.actions-column {
+          width: 80px;
+          min-width: 80px;
+          padding: 8px;
+          text-align: center;
+        }
+
+        /* Add gap between actions column and order number */
+        .orders-table th:nth-child(2),
+        .orders-table td:nth-child(2) {
+          padding-left: 20px;
+        }
+
+        /* Ensure Bill To Customer column has enough space */
+        .orders-table th:nth-child(6),
+        .orders-table td:nth-child(6) {
+          min-width: 180px;
+        }
+
+        /* Ensure Bill to Site column has enough space */
+        .orders-table th:nth-child(11),
+        .orders-table td:nth-child(11) {
+          min-width: 150px;
+        }
+
+        /* Ensure Bill to Contact column has enough space */
+        .orders-table th:nth-child(12),
+        .orders-table td:nth-child(12) {
+          min-width: 150px;
+        }
+
+        /* Ensure Billing Frequency column has enough space */
+        .orders-table th:nth-child(13),
+        .orders-table td:nth-child(13) {
+          min-width: 150px;
+        }
+
+        /* Action buttons container */
+        .action-buttons {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      `}</style>
     </div>
   )
 }
