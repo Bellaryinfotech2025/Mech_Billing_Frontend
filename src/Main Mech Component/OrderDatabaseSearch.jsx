@@ -476,22 +476,23 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 </tr>
               ) : sortedOrders.length > 0 ? (
                 sortedOrders.map((order, index) => {
-                  const isHighlighted = highlightedOrders.includes(order.orderNumber)
-                  return (
-                    <tr
-                      key={index}
-                      className={`${selectedOrder && selectedOrder.orderNumber === order.orderNumber ? "selected-row" : ""} clickable-row`}
-                      style={
-                        isHighlighted
-                          ? {
-                              background: "#808080",
-                              color: "white",
-                              transition: "all 0.3s ease",
-                              borderRadius: "6px",
-                              fontWeight: "bold",
-                            }
-                          : {}
-                      }
+    const isHighlighted = highlightedOrders.includes(order.orderNumber)
+    const isSelected = selectedOrder && selectedOrder.orderNumber === order.orderNumber
+    return (
+      <tr
+        key={index}
+        className={`${isSelected ? "selected-row" : ""} clickable-row`}
+        style={
+          isHighlighted
+            ? {
+                background: "#808080",
+                color: "white",
+                transition: "all 0.3s ease",
+                borderRadius: "6px",
+                fontWeight: "bold",
+              }
+            : {}
+        }
                     >
                       {/* Added Actions cell with icon */}
                       <td className="actions-column">
@@ -576,6 +577,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
           min-width: 80px;
           padding: 8px;
           text-align: center;
+            
         }
 
         /* Add gap between actions column and order number */

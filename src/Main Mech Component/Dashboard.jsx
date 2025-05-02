@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect } from "react"
 import {
   LayoutDashboard,
@@ -19,19 +21,21 @@ import {
   Package,
   Upload,
 } from "lucide-react"
+ 
 import "../Design Component/Dashboard.css"
 
 import SettingsPopup from "../Main Mech Component/Settings"
 import OrderDetails from "../Main Mech Component/OrderDetails"
 import OrderDatabaseSearch from "../Main Mech Component/OrderDatabaseSearch"
 import LinesDatabaseSearch from "../Mech Lines Component/LinesDatabaseSearch"
+import LinesChildDatabaseSearch from "../Mech Lines Component/LinesChildDatabaseSearch"
 import Alignment from "../Main Mech Component/Alingment"
 import Erection from "../Main Mech Component/Erection"
 import LookupTable from "../Main Mech Component/LookUpTable"
 import LinesAddParent from "../Mech Lines Component/LinesAddParent"
 import LinesAddChild from "../Mech Lines Component/LineAddChild"
 import OrderNumberDetails from "../Main Mech Component/OrderNumberDetails"
-import FabricationTable from "../Fabrication Component/FabricationTable" 
+import FabricationTable from "../Fabrication Component/FabricationTable"
 
 import logo from "../assets/blogo.jpg"
 import "../Design Component/logout-popup.css"
@@ -61,6 +65,26 @@ const MainDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showSecondSidebar, setShowSecondSidebar] = useState(false)
   const [showOrderNumberDetails, setShowOrderNumberDetails] = useState(false)
+
+  // Add state for showing child lines
+  const [showChildLines, setShowChildLines] = useState(false)
+
+  // Add refreshLinesData state to track when lines data should be refreshed
+  const [refreshLinesData, setRefreshLinesData] = useState(false)
+
+  // Add refreshChildLinesData state to track when child lines data should be refreshed
+  const [refreshChildLinesData, setRefreshChildLinesData] = useState(false)
+
+  // Make handleAddChildClick available globally for direct access from child components
+  useEffect(() => {
+    // Expose the function to the window object for access from other components
+    window.handleAddChildClick = handleAddChildClick
+
+    // Cleanup function to remove the global reference when component unmounts
+    return () => {
+      delete window.handleAddChildClick
+    }
+  }, [])
 
   // Submenu definitions for each main menu
   const submenus = {
@@ -121,6 +145,7 @@ const MainDashboard = () => {
       setSelectedOrder(null)
       setShowSecondSidebar(false)
       setShowOrderNumberDetails(false)
+      setShowChildLines(false)
     } else if (menu === "orders") {
       setActiveMenu(menu)
       // For orders, we want to show the OrderDatabaseSearch component directly
@@ -133,6 +158,7 @@ const MainDashboard = () => {
       setSelectedOrder(null)
       setShowSecondSidebar(false)
       setShowOrderNumberDetails(false)
+      setShowChildLines(false)
     } else {
       setActiveMenu(menu)
       setSidebarCollapsed(true)
@@ -145,6 +171,7 @@ const MainDashboard = () => {
       setSelectedOrder(null)
       setShowSecondSidebar(true)
       setShowOrderNumberDetails(false)
+      setShowChildLines(false)
     }
   }
 
@@ -159,6 +186,7 @@ const MainDashboard = () => {
     setShowLinesAddChild(false)
     setShowCoreLookup(false)
     setShowOrderNumberDetails(false)
+    setShowChildLines(false)
   }
 
   const toggleSidebar = () => {
@@ -230,20 +258,37 @@ const MainDashboard = () => {
     setShowLinesAddParent(true)
   }
 
+  // Updated handler for LinesAddParent cancel with refresh functionality
   const handleLinesAddParentCancel = () => {
     setShowLinesAddParent(false)
+    console.log("Setting refreshLinesData to true after adding parent")
+    setRefreshLinesData(true) // Set flag to refresh lines data
   }
 
   // Updated handler for showing LinesAddChild with parent line info
   const handleAddChildClick = (parentLine) => {
+    console.log("Parent line selected for child:", parentLine)
     setSelectedParentLine(parentLine)
     setShowLinesAddChild(true)
   }
 
-  // Handler for canceling from LinesAddChild
+  // Updated handler for canceling from LinesAddChild with refresh functionality
   const handleLinesAddChildCancel = () => {
     setShowLinesAddChild(false)
-    setSelectedParentLine(null)
+
+    // If we were viewing child lines before adding a new child, refresh the child lines data
+    if (showChildLines) {
+      console.log("Setting refreshChildLinesData to true after adding child")
+      setRefreshChildLinesData(true)
+    } else {
+      console.log("Setting refreshLinesData to true after adding child")
+      setRefreshLinesData(true) // Otherwise refresh the parent lines data
+    }
+
+    // Only reset the selected parent line if we're not viewing child lines
+    if (!showChildLines) {
+      setSelectedParentLine(null)
+    }
   }
 
   // Handler for order number click
@@ -254,6 +299,37 @@ const MainDashboard = () => {
     setSidebarCollapsed(true)
     setShowSecondSidebar(true)
     setShowOrderNumberDetails(true)
+  }
+
+  // Handler for line click to view child lines
+  const handleLineClick = (line) => {
+    console.log("Line clicked to view children:", line)
+    setSelectedParentLine(line)
+    setShowChildLines(true)
+    // Force refresh of child lines data when a line is clicked
+    setTimeout(() => {
+      setRefreshChildLinesData(true)
+    }, 100)
+  }
+
+  // Handler to go back from child lines to parent lines
+  const handleBackToParentLines = () => {
+    setShowChildLines(false)
+    setSelectedParentLine(null)
+    // Refresh parent lines data when going back
+    setRefreshLinesData(true)
+  }
+
+  // Handler for when data has been refreshed in LinesDatabaseSearch
+  const handleDataRefreshed = () => {
+    console.log("Parent lines data refreshed")
+    setRefreshLinesData(false)
+  }
+
+  // Handler for when data has been refreshed in LinesChildDatabaseSearch
+  const handleChildDataRefreshed = () => {
+    console.log("Child lines data refreshed")
+    setRefreshChildLinesData(false)
   }
 
   // Get the icon for a menu item
@@ -305,7 +381,7 @@ const MainDashboard = () => {
             order={selectedOrder}
             onCancel={() => {
               setShowOrderNumberDetails(false)
-              setSelectedOrder(null)
+              // Don't reset selectedOrder here to keep it for Lines menu
             }}
             getLookupMeaning={(lookupType, lookupCode) => {
               // Simple implementation to avoid errors
@@ -330,16 +406,31 @@ const MainDashboard = () => {
 
     if (activeSubmenu === "Lines") {
       if (showLinesAddParent) {
-        return <LinesAddParent onCancel={handleLinesAddParentCancel} />
+        return <LinesAddParent onCancel={handleLinesAddParentCancel} selectedOrder={selectedOrder} />
       }
       if (showLinesAddChild) {
         return <LinesAddChild onCancel={handleLinesAddChildCancel} parentLine={selectedParentLine} />
+      }
+      if (showChildLines && selectedParentLine) {
+        console.log("Rendering LinesChildDatabaseSearch with parent:", selectedParentLine)
+        return (
+          <LinesChildDatabaseSearch
+            parentLine={selectedParentLine}
+            onBack={handleBackToParentLines}
+            selectedOrder={selectedOrder}
+            refreshData={refreshChildLinesData}
+            onDataRefreshed={handleChildDataRefreshed}
+          />
+        )
       }
       return (
         <LinesDatabaseSearch
           onAddParentClick={handleAddParentClick}
           onAddChildClick={handleAddChildClick}
+          onLineClick={handleLineClick}
           selectedOrder={selectedOrder}
+          refreshData={refreshLinesData}
+          onDataRefreshed={handleDataRefreshed}
         />
       )
     }
@@ -559,11 +650,7 @@ const MainDashboard = () => {
             <h1 style={{ color: "white", fontWeight: "bold" }}>
               {activeMenu === "home" && (username ? `Hi ${username}` : "Welcome")}
               {activeSubmenu ? activeSubmenu : activeMenu !== "home" ? activeMenu : ""}
-              {/* {showOrderDetails && "Add Order"} */}
-              {/* {showLinesAddParent && "Add Parent Line"}
-              {showLinesAddChild && "Add Child Line"}
-              {showCoreLookup && "Core Lookup Values"} */}
-              {/* {selectedOrder && ` - Order ${selectedOrder.orderNumber}`} */}
+              {showChildLines && selectedParentLine && ` - Child Lines for ${selectedParentLine.lineNumber}`}
             </h1>
           </div>
           <div className="header-right">

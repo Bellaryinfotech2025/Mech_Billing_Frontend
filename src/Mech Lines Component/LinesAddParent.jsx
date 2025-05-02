@@ -5,7 +5,7 @@ import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle 
 import "../Mech Lines Design/linesaddparent.css"
 import axios from "axios"
 
-const LinesAddParent = ({ onCancel }) => {
+const LinesAddParent = ({ onCancel, selectedOrder }) => {
   const [activeTab, setActiveTab] = useState("product-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
   const [dates, setDates] = useState({
@@ -55,7 +55,12 @@ const LinesAddParent = ({ onCancel }) => {
       { lookupCode: "ONE_TIME", meaning: "One Time" },
     ],
     billingChannels: [],
-    uomList: [],
+    uomList: [
+      { lookupCode: "EA", meaning: "Each" },
+      { lookupCode: "HR", meaning: "Hour" },
+      { lookupCode: "DAY", meaning: "Day" },
+      { lookupCode: "MTH", meaning: "Month" },
+    ],
   })
   const [loadingLookupValues, setLoadingLookupValues] = useState(false)
 
@@ -70,7 +75,7 @@ const LinesAddParent = ({ onCancel }) => {
 
   // Initial line state
   const [line, setLine] = useState({
-    orderId: null, // Changed from hardcoded 1 to null to let the backend assign it
+    orderId: selectedOrder ? selectedOrder.orderId : null,
     lineNumber: "",
     serviceName: "",
     effectiveStartDate: null,
@@ -79,7 +84,6 @@ const LinesAddParent = ({ onCancel }) => {
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
-
     orderedQuantity: "",
     unitPrice: "",
     uom: "",
@@ -87,6 +91,16 @@ const LinesAddParent = ({ onCancel }) => {
     billingFrequency: "",
     status: "ACTIVE",
   })
+
+  // Update orderId when selectedOrder changes
+  useEffect(() => {
+    if (selectedOrder && selectedOrder.orderId) {
+      setLine((prev) => ({
+        ...prev,
+        orderId: selectedOrder.orderId,
+      }))
+    }
+  }, [selectedOrder])
 
   // Fetch billing frequencies from the backend
   useEffect(() => {
@@ -248,6 +262,12 @@ const LinesAddParent = ({ onCancel }) => {
 
   // Add a function to fetch the next sequential order ID when the component mounts
   useEffect(() => {
+    // If we already have an order ID from the selected order, use that
+    if (selectedOrder && selectedOrder.orderId) {
+      setLine((prev) => ({ ...prev, orderId: selectedOrder.orderId }))
+      return
+    }
+
     // Try to get the orderId from URL parameters or context if available
     const urlParams = new URLSearchParams(window.location.search)
     const orderIdFromUrl = urlParams.get("orderId")
@@ -297,7 +317,7 @@ const LinesAddParent = ({ onCancel }) => {
 
       fetchNextOrderId()
     }
-  }, [API_URL])
+  }, [selectedOrder])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -532,6 +552,12 @@ const LinesAddParent = ({ onCancel }) => {
         setToastMessage("Parent line created successfully")
         setIsError(false)
         setShowToast(true)
+
+        // Notify the parent component that data has changed
+        if (onCancel) {
+          // We'll use setTimeout to ensure the toast is visible before navigating back
+          setTimeout(() => onCancel(), 2000)
+        }
       } else {
         throw new Error(response.data.message || "Unknown error occurred")
       }

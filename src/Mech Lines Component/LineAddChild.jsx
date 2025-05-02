@@ -5,8 +5,8 @@ import { Calendar, Save, X, ChevronDown, ChevronLeft, ChevronRight, CheckCircle 
 import "../Mech Lines Design/linesaddchild.css"
 import axios from "axios"
 
-const LinesAddChild = ({ onCancel, selectedParentLine }) => {
-  console.log("LinesAddChild component rendering with selectedParentLine:", selectedParentLine)
+const LinesAddChild = ({ onCancel, parentLine }) => {
+  console.log("LinesAddChild component rendering with parentLine:", parentLine)
 
   const [activeTab, setActiveTab] = useState("product-details")
   const [showDatePicker, setShowDatePicker] = useState(null)
@@ -60,7 +60,12 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
       { lookupCode: "ONE_TIME", meaning: "One Time" },
     ],
     billingChannels: [],
-    uomList: [],
+    uomList: [
+      { lookupCode: "EA", meaning: "Each" },
+      { lookupCode: "HR", meaning: "Hour" },
+      { lookupCode: "DAY", meaning: "Day" },
+      { lookupCode: "MTH", meaning: "Month" },
+    ],
   })
   const [loadingLookupValues, setLoadingLookupValues] = useState(false)
 
@@ -75,14 +80,14 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
 
   // Initial line state
   const [line, setLine] = useState({
-    orderId: null,
+    orderId: parentLine ? parentLine.orderId : null,
     lineNumber: "",
     serviceName: "",
     effectiveStartDate: null,
     effectiveEndDate: null,
     isParent: false, // This is a child line
-    parentLineId: selectedParentLine ? selectedParentLine.lineId : null,
-    parentLineNumber: selectedParentLine ? selectedParentLine.lineNumber : null,
+    parentLineId: parentLine ? parentLine.lineId : null,
+    parentLineNumber: parentLine ? parentLine.lineNumber : null,
     billToCustomerId: "",
     billToSiteId: "",
     billToContactId: "",
@@ -103,19 +108,19 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
     return () => clearInterval(blinkInterval)
   }, [])
 
-  // Log selectedParentLine when it changes
+  // Log parentLine when it changes
   useEffect(() => {
-    console.log("Selected parent line:", selectedParentLine)
-    if (selectedParentLine) {
+    console.log("Selected parent line:", parentLine)
+    if (parentLine) {
       // Make sure we're setting the parentLineNumber in state
       setLine((prev) => ({
         ...prev,
-        parentLineId: selectedParentLine.lineId,
-        parentLineNumber: selectedParentLine.lineNumber,
-        orderId: selectedParentLine.orderId || prev.orderId,
+        parentLineId: parentLine.lineId,
+        parentLineNumber: parentLine.lineNumber,
+        orderId: parentLine.orderId || prev.orderId,
       }))
     }
-  }, [selectedParentLine])
+  }, [parentLine])
 
   // Fetch billing frequencies from the backend
   useEffect(() => {
@@ -277,15 +282,18 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
 
   // Add a function to fetch the current order ID when the component mounts
   useEffect(() => {
+    // If we already have an order ID from the parent line, use that
+    if (parentLine && parentLine.orderId) {
+      setLine((prev) => ({ ...prev, orderId: parentLine.orderId }))
+      return
+    }
+
     // Try to get the orderId from URL parameters or context if available
     const urlParams = new URLSearchParams(window.location.search)
     const orderIdFromUrl = urlParams.get("orderId")
 
     if (orderIdFromUrl) {
       setLine((prev) => ({ ...prev, orderId: Number.parseInt(orderIdFromUrl) }))
-    } else if (selectedParentLine && selectedParentLine.orderId) {
-      // Use the parent line's order ID if available
-      setLine((prev) => ({ ...prev, orderId: selectedParentLine.orderId }))
     } else {
       // If no orderId is provided, fetch the latest order ID from the backend
       const fetchLatestOrderId = async () => {
@@ -306,7 +314,7 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
 
       fetchLatestOrderId()
     }
-  }, [selectedParentLine])
+  }, [parentLine])
 
   const handleTabClick = (tab) => {
     setActiveTab(tab)
@@ -520,6 +528,14 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
         return
       }
 
+      // Validate parent line is selected
+      if (!line.parentLineId) {
+        setToastMessage("Parent line is required")
+        setIsError(true)
+        setShowToast(true)
+        return
+      }
+
       // Prepare the data for submission
       const lineData = {
         ...line,
@@ -541,6 +557,12 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
         setToastMessage("Child line created successfully")
         setIsError(false)
         setShowToast(true)
+
+        // Notify the parent component that data has changed
+        if (onCancel) {
+          // We'll use setTimeout to ensure the toast is visible before navigating back
+          setTimeout(() => onCancel(), 2000)
+        }
       } else {
         throw new Error(response.data.message || "Unknown error occurred")
       }
@@ -657,7 +679,7 @@ const LinesAddChild = ({ onCancel, selectedParentLine }) => {
                   <div className="input-wrapper-kh-addchild">
                     <input
                       type="text"
-                      value={selectedParentLine ? selectedParentLine.lineNumber : ""}
+                      value={parentLine ? parentLine.lineNumber : ""}
                       readOnly
                       style={{
                         color: isBlinking ? "navy" : "transparent",
