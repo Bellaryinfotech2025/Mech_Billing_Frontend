@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, Download, Edit, ArrowLeft, Plus, RefreshCw } from "lucide-react"
+import { CheckCircle, Download, Edit, ArrowLeft, RefreshCw } from "lucide-react"
 import "../Mech Lines Design/linesdatabasedesign.css"
 import axios from "axios"
 
@@ -180,12 +180,27 @@ const LinesChildDatabaseSearch = ({
     return date.toLocaleDateString()
   }
 
-  // Function to handle adding a child line directly from this view
-  const handleAddChildFromView = () => {
-    logDebugInfo("Add child button clicked from child view", parentLine)
-    // If window.handleAddChildClick is available (set in MainDashboard), use it
-    if (window.handleAddChildClick) {
-      window.handleAddChildClick(parentLine)
+  // Function to navigate to fabrication table with the selected order number
+  const navigateToFabrication = (lineNumber) => {
+    logDebugInfo("Navigating to fabrication table", {
+      lineNumber,
+      orderNumber: selectedOrder?.orderNumber,
+    })
+
+    // Store the order number in localStorage to access it in the fabrication page
+    if (selectedOrder?.orderNumber) {
+      localStorage.setItem("fabricationOrderNumber", selectedOrder.orderNumber)
+    }
+
+    // Use the global navigation function if available
+    if (window.navigateToFabrication) {
+      window.navigateToFabrication(selectedOrder)
+    } else {
+      // Fallback: Dispatch a custom event for navigation
+      const event = new CustomEvent("navigateToFabrication", {
+        detail: { selectedOrder },
+      })
+      window.dispatchEvent(event)
     }
   }
 
@@ -204,10 +219,8 @@ const LinesChildDatabaseSearch = ({
             <span>Back to Parent Lines</span>
           </button>
         </div>
-         
+        <h1 className="header-titlelineskh">Child Lines for Parent: {parentLine?.lineNumber}</h1>
         <div className="header-actionslineskh">
-          {/* Add a button to add child lines directly from this view */}
-          
           {/* Add a refresh button */}
           <button
             className="refresh-btnlineskh"
@@ -290,7 +303,19 @@ const LinesChildDatabaseSearch = ({
                         </button>
                       </div>
                     </td>
-                    <td>{line.lineNumber}</td>
+                    <td>
+                      <a
+                        href="#"
+                        className="line-number-linklineskh"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          navigateToFabrication(line.lineNumber)
+                        }}
+                        title="Click to view fabrication details"
+                      >
+                        {line.lineNumber}
+                      </a>
+                    </td>
                     <td className="service-description-celllineskh">
                       {line.serviceName || "No description available"}
                     </td>
