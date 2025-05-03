@@ -1,7 +1,19 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Download, RefreshCw, Search } from 'lucide-react'
+import {
+  Save,
+  Upload,
+  Edit,
+  Trash2,
+  Plus,
+  CheckCircle,
+  FileText,
+  AlertCircle,
+  Download,
+  RefreshCw,
+  Search,
+} from "lucide-react"
 
 import "../Fabrication Design/FabricationTable.css"
 import "../Fabrication Design/importfile.css"
@@ -37,7 +49,7 @@ const FabricationTable = ({ selectedOrder }) => {
   const [totalItems, setTotalItems] = useState(0)
   const [importedData, setImportedData] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [orderNumber, setOrderNumber] = useState(selectedOrder?.orderNumber)
+  const [orderNumber, setOrderNumber] = useState("")
 
   const fileInputRef = useRef(null)
 
@@ -82,10 +94,18 @@ const FabricationTable = ({ selectedOrder }) => {
     fetchFabricationData()
   }, [currentPage, pageSize, searchTerm])
 
-  // Update order number when selectedOrder prop changes
+  // Check for order number in sessionStorage when component mounts
   useEffect(() => {
+    // First check if we have an order number from props
     if (selectedOrder?.orderNumber) {
       setOrderNumber(selectedOrder.orderNumber)
+    }
+    // Then check sessionStorage as fallback
+    else {
+      const storedOrderNumber = sessionStorage.getItem("selectedOrderNumber")
+      if (storedOrderNumber) {
+        setOrderNumber(storedOrderNumber)
+      }
     }
   }, [selectedOrder])
 
@@ -102,7 +122,7 @@ const FabricationTable = ({ selectedOrder }) => {
       })
 
       // Map the backend data to match our frontend structure
-      const mappedData = response.data.data.map(item => ({
+      const mappedData = response.data.data.map((item) => ({
         id: item.id,
         orderNumber: item.orderNumber || "",
         origLineNo: item.origLineNumber || "",
@@ -125,21 +145,17 @@ const FabricationTable = ({ selectedOrder }) => {
       setRows(mappedData)
       setTotalItems(response.data.totalItems || 0)
       setTotalPages(response.data.totalPages || 1)
-      
+
       // Mark all fetched rows as saved
-      setSavedRows(mappedData.map(row => row.id))
-      
-      // Update order number if available in the response
-      if (mappedData.length > 0 && mappedData[0].orderNumber) {
+      setSavedRows(mappedData.map((row) => row.id))
+
+      // Update order number if available in the response and not already set
+      if (mappedData.length > 0 && mappedData[0].orderNumber && !orderNumber) {
         setOrderNumber(mappedData[0].orderNumber)
       }
     } catch (error) {
       console.error("Error fetching data:", error)
-      showToastNotification(
-        `Failed to fetch data: ${error.response?.data?.message || error.message}`,
-        "Error",
-        "error"
-      )
+      showToastNotification(`Failed to fetch data: ${error.response?.data?.message || error.message}`, "Error", "error")
     } finally {
       setIsLoading(false)
     }
@@ -150,17 +166,17 @@ const FabricationTable = ({ selectedOrder }) => {
     try {
       setIsLoading(true)
       const response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
-      
+
       // Process the imported data if needed
       setImportedData(response.data.data)
-      
+
       showToastNotification("Imported data fetched successfully!")
     } catch (error) {
       console.error("Error fetching imported data:", error)
       showToastNotification(
         `Failed to fetch imported data: ${error.response?.data?.message || error.message}`,
         "Error",
-        "error"
+        "error",
       )
     } finally {
       setIsLoading(false)
@@ -205,7 +221,7 @@ const FabricationTable = ({ selectedOrder }) => {
   // Convert frontend row to backend DTO format
   const convertRowToBackendFormat = (row) => {
     return {
-      id: row.id && !row.id.toString().startsWith('temp-') ? row.id : null,
+      id: row.id && !row.id.toString().startsWith("temp-") ? row.id : null,
       orderNumber: row.orderNumber,
       origLineNo: row.origLineNo,
       lineNo: row.lineNo,
@@ -225,64 +241,62 @@ const FabricationTable = ({ selectedOrder }) => {
   const handleSave = async () => {
     try {
       if (editingRow !== null) {
-        const rowToSave = rows.find(row => row.id === editingRow)
-        
+        const rowToSave = rows.find((row) => row.id === editingRow)
+
         if (rowToSave) {
           const backendData = convertRowToBackendFormat(rowToSave)
-          
+
           let response
           if (rowToSave.isNew) {
             // Create new record using V3.0 endpoint
             response = await axios.post(`${API_BASE_URL_V3}/getfabrication`, backendData)
-            
+
             // Update the row with the ID from the backend
-            setRows(rows.map(row => 
-              row.id === editingRow 
-                ? { 
-                    ...row, 
-                    id: response.data.data.id, 
-                    isNew: false 
-                  } 
-                : row
-            ))
-            
+            setRows(
+              rows.map((row) =>
+                row.id === editingRow
+                  ? {
+                      ...row,
+                      id: response.data.data.id,
+                      isNew: false,
+                    }
+                  : row,
+              ),
+            )
+
             showToastNotification("Record created successfully!")
           } else {
             // Update existing record using V3.0 endpoint
             response = await axios.put(`${API_BASE_URL_V3}/getfabrication/${rowToSave.id}`, backendData)
-            
+
             // Update the row with data from the backend
-            setRows(rows.map(row => 
-              row.id === editingRow 
-                ? { ...row, isNew: false } 
-                : row
-            ))
-            
+            setRows(rows.map((row) => (row.id === editingRow ? { ...row, isNew: false } : row)))
+
             showToastNotification("Record updated successfully!")
           }
-          
+
           // Add to savedRows
-          setSavedRows(prev => [...prev, response.data.data.id])
+          setSavedRows((prev) => [...prev, response.data.data.id])
         }
-        
+
         setEditingRow(null)
       } else {
         // If no specific row is being edited, save all unsaved rows
-        const unsavedRows = rows.filter(row => !savedRows.includes(row.id))
-        
+        const unsavedRows = rows.filter((row) => !savedRows.includes(row.id))
+
         if (unsavedRows.length > 0) {
           // Create a batch save request for multiple rows using V3.0 endpoint
           const batchData = unsavedRows.map(convertRowToBackendFormat)
-          
+
           const response = await axios.post(`${API_BASE_URL_V3}/getfabrication/batch`, batchData)
-          
+
           // Update rows with IDs from backend
-          const savedIds = response.data.data.map(item => item.id)
+          const savedIds = response.data.data.map((item) => item.id)
           setSavedRows([...savedRows, ...savedIds])
-          
+
           // Update the rows to mark them as not new
-          setRows(rows.map(row => ({ ...row, isNew: false })))
-          
+          setRows(rows.map((row) => ({ ...row, isNew: false })))
+
           showToastNotification(`${unsavedRows.length} records saved successfully!`)
         } else {
           showToastNotification("No changes to save!")
@@ -290,11 +304,7 @@ const FabricationTable = ({ selectedOrder }) => {
       }
     } catch (error) {
       console.error("Error saving data:", error)
-      showToastNotification(
-        `Failed to save: ${error.response?.data?.message || error.message}`,
-        "Error",
-        "error"
-      )
+      showToastNotification(`Failed to save: ${error.response?.data?.message || error.message}`, "Error", "error")
     }
   }
 
@@ -305,23 +315,19 @@ const FabricationTable = ({ selectedOrder }) => {
   const handleDelete = async (id) => {
     try {
       // Check if the row exists in the backend (has a non-temporary ID)
-      if (!id.toString().startsWith('temp-')) {
+      if (!id.toString().startsWith("temp-")) {
         // Delete from backend using V3.0 endpoint
         await axios.delete(`${API_BASE_URL_V3}/getfabrication/${id}`)
       }
-      
+
       // Remove from local state
       setRows(rows.filter((row) => row.id !== id))
       setSavedRows(savedRows.filter((rowId) => rowId !== id))
-      
+
       showToastNotification("Row deleted successfully!")
     } catch (error) {
       console.error("Error deleting row:", error)
-      showToastNotification(
-        `Failed to delete: ${error.response?.data?.message || error.message}`,
-        "Error",
-        "error"
-      )
+      showToastNotification(`Failed to delete: ${error.response?.data?.message || error.message}`, "Error", "error")
     }
   }
 
@@ -467,7 +473,7 @@ const FabricationTable = ({ selectedOrder }) => {
       // Get template information from V2.0 endpoint
       const response = await axios.get(`${API_BASE_URL_V2}/template`)
       showToastNotification("Template information retrieved successfully!")
-      
+
       // In a real application, this would download a template Excel file
       // For now, just show the template info in console
       console.log("Template Info:", response.data)
@@ -476,7 +482,7 @@ const FabricationTable = ({ selectedOrder }) => {
       showToastNotification(
         `Failed to get template: ${error.response?.data?.message || error.message}`,
         "Error",
-        "error"
+        "error",
       )
     }
   }
@@ -521,11 +527,11 @@ const FabricationTable = ({ selectedOrder }) => {
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          {/* <span>Order Number: {orderNumber}</span> */}
-          {/* <span className="active-status">
+          <span>Order Number: {orderNumber || "No order selected"}</span>
+          <span className="active-status">
             <CheckCircle size={12} />
             Active
-          </span> */}
+          </span>
         </div>
         <div className="table-actions-secondary">
            
