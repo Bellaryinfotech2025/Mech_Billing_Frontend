@@ -527,11 +527,11 @@ const FabricationTable = ({ selectedOrder }) => {
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          <span>Order Number: {orderNumber || "No order selected"}</span>
-          <span className="active-status">
+          {/* <span>Order Number: {orderNumber || "No order selected"}</span> */}
+          {/* <span className="active-status">
             <CheckCircle size={12} />
             Active
-          </span>
+          </span> */}
         </div>
         <div className="table-actions-secondary">
            
