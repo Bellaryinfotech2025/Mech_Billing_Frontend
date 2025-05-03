@@ -1,19 +1,8 @@
 "use client"
+
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import {
-  Save,
-  Upload,
-  Edit,
-  Trash2,
-  Plus,
-  CheckCircle,
-  FileText,
-  AlertCircle,
-  Download,
-  RefreshCw,
-  Search,
-} from "lucide-react"
+import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Download, Search } from "lucide-react"
 
 import "../Fabrication Design/FabricationTable.css"
 import "../Fabrication Design/importfile.css"
@@ -22,11 +11,11 @@ import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
 
-// Updated API base URLs for both controllers
-const API_BASE_URL_V2 = "http://localhost:8855/api/V2.0"
-const API_BASE_URL_V3 = "http://localhost:8855/api/V3.0"
+// Updated API base URLs to match the controller
+const API_BASE_URL = "http://195.35.45.56:5522/api/V3.0"
+const API_BASE_URL_V2 = "http://195.35.45.56:5522/api/V2.0"
 
-const FabricationTable = ({ selectedOrder }) => {
+const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [rows, setRows] = useState([])
   const [selectedRows, setSelectedRows] = useState([])
   const [editingRow, setEditingRow] = useState(null)
@@ -94,7 +83,7 @@ const FabricationTable = ({ selectedOrder }) => {
     fetchFabricationData()
   }, [currentPage, pageSize, searchTerm])
 
-  // Check for order number in sessionStorage when component mounts
+  // Check for order number in props or sessionStorage when component mounts
   useEffect(() => {
     // First check if we have an order number from props
     if (selectedOrder?.orderNumber) {
@@ -109,17 +98,31 @@ const FabricationTable = ({ selectedOrder }) => {
     }
   }, [selectedOrder])
 
-  // Function to fetch data from the backend API using V3.0 endpoint
+  // Function to fetch data from the backend API using the correct endpoint
   const fetchFabricationData = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${API_BASE_URL_V3}/getfabrication`, {
-        params: {
-          page: currentPage,
-          size: pageSize,
-          search: searchTerm || undefined,
-        },
-      })
+
+      // Build query parameters based on available filters
+      const params = {
+        page: currentPage,
+        size: pageSize,
+        search: searchTerm || undefined,
+      }
+
+      // Add order number filter if available
+      if (selectedOrder && selectedOrder.orderNumber) {
+        params.orderNumber = selectedOrder.orderNumber
+      }
+
+      // Add line number filter if available
+      if (selectedChildLine && selectedChildLine.lineNumber) {
+        params.lineNumber = selectedChildLine.lineNumber
+      }
+
+      console.log("Fetching fabrication data with params:", params)
+      // Use the correct API endpoint from the controller
+      const response = await axios.get(`${API_BASE_URL}/getfabrication`, { params })
 
       // Map the backend data to match our frontend structure
       const mappedData = response.data.data.map((item) => ({
@@ -165,7 +168,7 @@ const FabricationTable = ({ selectedOrder }) => {
   const fetchImportedData = async () => {
     try {
       setIsLoading(true)
-      const response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
+      const response = await axios.get(`${API_BASE_URL}/getfabrication/latest`)
 
       // Process the imported data if needed
       setImportedData(response.data.data)
@@ -199,7 +202,7 @@ const FabricationTable = ({ selectedOrder }) => {
       id: `temp-${Date.now()}`, // Temporary ID until saved to backend
       orderNumber: orderNumber, // Use the current order number
       origLineNo: "",
-      lineNo: "",
+      lineNo: selectedChildLine ? selectedChildLine.lineNumber : "", // Use the selected child line number if available
       drawingNo: "",
       description: "",
       erectionMkd: "",
@@ -223,18 +226,19 @@ const FabricationTable = ({ selectedOrder }) => {
     return {
       id: row.id && !row.id.toString().startsWith("temp-") ? row.id : null,
       orderNumber: row.orderNumber,
-      origLineNo: row.origLineNo,
-      lineNo: row.lineNo,
+      origLineNumber: row.origLineNo,
+      lineNumber: row.lineNo,
       drawingNo: row.drawingNo,
-      description: row.description,
+      drawingDescription: row.description,
       erectionMkd: row.erectionMkd,
       itemNo: row.itemNo,
       section: row.section,
-      length: row.length,
-      qty: row.qty,
-      unit: row.unit,
-      totalWt: row.totalWt,
-      remarks: row.remarks,
+      length: Number.parseFloat(row.length) || 0,
+      quantity: Number.parseInt(row.qty) || 0,
+      unitPrice: Number.parseFloat(row.unit) || 0,
+      totalQuantity: Number.parseFloat(row.totalWt) || 0,
+      originalQuantity: Number.parseInt(row.qtyReqd) || 0,
+      remark: row.remarks,
     }
   }
 
@@ -248,8 +252,8 @@ const FabricationTable = ({ selectedOrder }) => {
 
           let response
           if (rowToSave.isNew) {
-            // Create new record using V3.0 endpoint
-            response = await axios.post(`${API_BASE_URL_V3}/getfabrication`, backendData)
+            // Create new record using the correct endpoint from the controller
+            response = await axios.post(`${API_BASE_URL}/getfabrication`, backendData)
 
             // Update the row with the ID from the backend
             setRows(
@@ -257,7 +261,7 @@ const FabricationTable = ({ selectedOrder }) => {
                 row.id === editingRow
                   ? {
                       ...row,
-                      id: response.data.data.id,
+                      id: response.data.id,
                       isNew: false,
                     }
                   : row,
@@ -266,8 +270,8 @@ const FabricationTable = ({ selectedOrder }) => {
 
             showToastNotification("Record created successfully!")
           } else {
-            // Update existing record using V3.0 endpoint
-            response = await axios.put(`${API_BASE_URL_V3}/getfabrication/${rowToSave.id}`, backendData)
+            // Update existing record using the correct endpoint from the controller
+            response = await axios.put(`${API_BASE_URL}/getfabrication/${rowToSave.id}`, backendData)
 
             // Update the row with data from the backend
             setRows(rows.map((row) => (row.id === editingRow ? { ...row, isNew: false } : row)))
@@ -276,7 +280,7 @@ const FabricationTable = ({ selectedOrder }) => {
           }
 
           // Add to savedRows
-          setSavedRows((prev) => [...prev, response.data.data.id])
+          setSavedRows((prev) => [...prev, response.data.id])
         }
 
         setEditingRow(null)
@@ -285,13 +289,13 @@ const FabricationTable = ({ selectedOrder }) => {
         const unsavedRows = rows.filter((row) => !savedRows.includes(row.id))
 
         if (unsavedRows.length > 0) {
-          // Create a batch save request for multiple rows using V3.0 endpoint
+          // Create a batch save request for multiple rows using the correct endpoint from the controller
           const batchData = unsavedRows.map(convertRowToBackendFormat)
 
-          const response = await axios.post(`${API_BASE_URL_V3}/getfabrication/batch`, batchData)
+          const response = await axios.post(`${API_BASE_URL}/getfabrication/batch`, batchData)
 
           // Update rows with IDs from backend
-          const savedIds = response.data.data.map((item) => item.id)
+          const savedIds = response.data.map((item) => item.id)
           setSavedRows([...savedRows, ...savedIds])
 
           // Update the rows to mark them as not new
@@ -316,8 +320,8 @@ const FabricationTable = ({ selectedOrder }) => {
     try {
       // Check if the row exists in the backend (has a non-temporary ID)
       if (!id.toString().startsWith("temp-")) {
-        // Delete from backend using V3.0 endpoint
-        await axios.delete(`${API_BASE_URL_V3}/getfabrication/${id}`)
+        // Delete from backend using the correct endpoint from the controller
+        await axios.delete(`${API_BASE_URL}/getfabrication/${id}`)
       }
 
       // Remove from local state
@@ -420,7 +424,7 @@ const FabricationTable = ({ selectedOrder }) => {
       // Show loading for at least 3 seconds
       const loadingPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
-      // Send the file to the backend using axios with V2.0 endpoint
+      // Send the file to the backend using axios with the correct endpoint
       const importPromise = axios.post(`${API_BASE_URL_V2}/imports`, formData)
 
       // Wait for both the loading time and the API call to complete
@@ -470,7 +474,7 @@ const FabricationTable = ({ selectedOrder }) => {
 
   const handleDownloadTemplate = async () => {
     try {
-      // Get template information from V2.0 endpoint
+      // Get template information from the correct endpoint
       const response = await axios.get(`${API_BASE_URL_V2}/template`)
       showToastNotification("Template information retrieved successfully!")
 
@@ -503,7 +507,7 @@ const FabricationTable = ({ selectedOrder }) => {
   return (
     <div className="table-container">
       <div className="table-header">
-        <div className="table-title">Fabrication Table</div>
+        <div className="table-title">Fabrication</div>
         <div className="table-actions">
           <button className="btn btn-add-service" onClick={addNewRow}>
             <Plus size={16} />
@@ -527,15 +531,10 @@ const FabricationTable = ({ selectedOrder }) => {
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          {/* <span>Order Number: {orderNumber || "No order selected"}</span> */}
-          {/* <span className="active-status">
-            <CheckCircle size={12} />
-            Active
-          </span> */}
+          <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : "No order selected"}</span>
+          {selectedChildLine && <span className="child-line-info">Line Number: {selectedChildLine.lineNumber}</span>}
         </div>
-        <div className="table-actions-secondary">
-           
-        </div>
+        <div className="table-actions-secondary"></div>
       </div>
 
       <div className="table-controls">
@@ -579,7 +578,9 @@ const FabricationTable = ({ selectedOrder }) => {
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 1} className="empty-table">
-                  No records found. Click "Add Service" to create a new row.
+                  {selectedOrder || selectedChildLine
+                    ? 'No data exists in your fabrication table as per your order number or child line number. Click "Add Service" to create a new row.'
+                    : 'No records found. Click "Add Service" to create a new row.'}
                 </td>
               </tr>
             ) : (

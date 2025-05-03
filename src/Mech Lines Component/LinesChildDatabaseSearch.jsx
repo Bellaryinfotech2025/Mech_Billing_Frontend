@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, Download, Edit, ArrowLeft, RefreshCw } from "lucide-react"
+import { CheckCircle, Download, ArrowLeft, RefreshCw } from "lucide-react"
 import "../Mech Lines Design/linesdatabasedesign.css"
 import axios from "axios"
+import FabricationTable from "../Fabrication Component/FabricationTable"
+import { IoOpen } from "react-icons/io5"
 
 const LinesChildDatabaseSearch = ({
   parentLine,
@@ -18,6 +20,10 @@ const LinesChildDatabaseSearch = ({
   const [error, setError] = useState(null)
   const [dataFetched, setDataFetched] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Add state for fabrication table
+  const [showFabricationTable, setShowFabricationTable] = useState(false)
+  const [selectedChildLine, setSelectedChildLine] = useState(null)
 
   // API base URL
   const API_URL = "http://195.35.45.56:5522/api"
@@ -180,37 +186,34 @@ const LinesChildDatabaseSearch = ({
     return date.toLocaleDateString()
   }
 
-  // Update the navigateToFabrication function to use sessionStorage instead of localStorage
-  // and use the correct key that FabricationTable expects
+  // Handle child line click to view fabrication
+  const handleChildLineClick = (childLine) => {
+    logDebugInfo("Child line clicked to view fabrication", childLine)
+    setSelectedChildLine(childLine)
+    setShowFabricationTable(true)
+  }
 
-  // Function to navigate to fabrication table with the selected order number
-  const navigateToFabrication = (lineNumber) => {
-    logDebugInfo("Navigating to fabrication table", {
-      lineNumber,
-      orderNumber: selectedOrder?.orderNumber,
-    })
-
-    // Store the order number in sessionStorage to access it in the fabrication page
-    if (selectedOrder?.orderNumber) {
-      sessionStorage.setItem("selectedOrderNumber", selectedOrder.orderNumber)
-    }
-
-    // Use the global navigation function if available
-    if (window.navigateToFabrication) {
-      window.navigateToFabrication(selectedOrder)
-    } else {
-      // Fallback: Dispatch a custom event for navigation
-      const event = new CustomEvent("navigateToFabrication", {
-        detail: { selectedOrder },
-      })
-      window.dispatchEvent(event)
-    }
+  // Handle back button from fabrication table
+  const handleBackFromFabrication = () => {
+    setShowFabricationTable(false)
+    setSelectedChildLine(null)
   }
 
   // Force refresh data
   const handleForceRefresh = () => {
     logDebugInfo("Force refresh requested", null)
     fetchChildLines()
+  }
+
+  // If showing fabrication table, render it instead of child lines
+  if (showFabricationTable && selectedChildLine) {
+    return (
+      <FabricationTable
+        selectedOrder={selectedOrder}
+        selectedChildLine={selectedChildLine}
+        onBack={handleBackFromFabrication}
+      />
+    )
   }
 
   return (
@@ -222,7 +225,7 @@ const LinesChildDatabaseSearch = ({
             <span>Back to Parent Lines</span>
           </button>
         </div>
-        {/* <h1 className="header-titlelineskh">Child Lines for Parent: {parentLine?.lineNumber}</h1> */}
+        <h1 className="header-titlelineskh">Child Lines for Parent: {parentLine?.lineNumber}</h1>
         <div className="header-actionslineskh">
           {/* Add a refresh button */}
           <button
@@ -301,8 +304,8 @@ const LinesChildDatabaseSearch = ({
                   <tr key={line.lineId || index} className={index % 2 === 0 ? "table-row-evenlineskh" : ""}>
                     <td>
                       <div className="action-buttonslineskh">
-                        <button className="action-btnlineskh">
-                          <Edit size={12} className="edit-iconlineskh" />
+                        <button className="action-btnlineskh" onClick={() => handleChildLineClick(line)}>
+                          <IoOpen size={15} className="edit-iconlineskh" />
                         </button>
                       </div>
                     </td>
@@ -312,7 +315,7 @@ const LinesChildDatabaseSearch = ({
                         className="line-number-linklineskh"
                         onClick={(e) => {
                           e.preventDefault()
-                          navigateToFabrication(line.lineNumber)
+                          handleChildLineClick(line)
                         }}
                         title="Click to view fabrication details"
                       >

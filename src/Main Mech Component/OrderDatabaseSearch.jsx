@@ -3,11 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import "../Design Component/order-database-search.css"
 import "../Design Component/ordernumberdetails.css"
-import { IoOpen } from "react-icons/io5";
-import { LuSearchCheck } from "react-icons/lu";
+import { IoOpen } from "react-icons/io5"
+import { LuSearchCheck } from "react-icons/lu"
 
 import axios from "axios"
-import { CheckCircle, Download, Search, AlertCircle, MoreHorizontal } from 'lucide-react'
+import { CheckCircle, Download, AlertCircle } from "lucide-react"
 import { CgImport } from "react-icons/cg"
 import { IoIosAddCircle } from "react-icons/io"
 import OrderDetails from "../Main Mech Component/OrderDetails"
@@ -31,13 +31,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const highlightTimerRef = useRef(null)
   // Add this ref to track if we've already fetched lookup values
   const lookupValuesFetchedRef = useRef(false)
-  
+
   // Customer data for displaying names instead of IDs
   const [customers, setCustomers] = useState([])
   const [customerSites, setCustomerSites] = useState([])
   const [customerContacts, setCustomerContacts] = useState([])
   const [loadingCustomerData, setLoadingCustomerData] = useState(false)
-  
+
   // Track which customer IDs we've already fetched sites and contacts for
   const [fetchedCustomerIds, setFetchedCustomerIds] = useState([])
 
@@ -64,14 +64,14 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
 
     fetchLookupValues()
   }, [])
-  
+
   // Fetch customer data for displaying names
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
         setLoadingCustomerData(true)
         const response = await axios.get(`${API_URL}/getallcustomeraccount/details`)
-        
+
         if (response.data) {
           setCustomers(response.data)
         }
@@ -84,71 +84,68 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
 
     fetchCustomers()
   }, [])
-  
+
   // Fetch sites and contacts for customers in orders
   useEffect(() => {
     const fetchSitesAndContacts = async () => {
-      if (!orders.length || loadingCustomerData) return;
-      
+      if (!orders.length || loadingCustomerData) return
+
       // Get unique customer IDs from orders that we haven't fetched yet
-      const customerIds = [...new Set(
-        orders
-          .filter(order => order.billToCustomerId)
-          .map(order => order.billToCustomerId)
-      )].filter(id => !fetchedCustomerIds.includes(id));
-      
-      if (!customerIds.length) return;
-      
+      const customerIds = [
+        ...new Set(orders.filter((order) => order.billToCustomerId).map((order) => order.billToCustomerId)),
+      ].filter((id) => !fetchedCustomerIds.includes(id))
+
+      if (!customerIds.length) return
+
       try {
-        setLoadingCustomerData(true);
-        
+        setLoadingCustomerData(true)
+
         // Track new sites and contacts
-        let newSites = [...customerSites];
-        let newContacts = [...customerContacts];
-        
+        let newSites = [...customerSites]
+        let newContacts = [...customerContacts]
+
         // Fetch sites and contacts for each customer
         for (const customerId of customerIds) {
           // Fetch sites
           try {
             const sitesResponse = await axios.get(`${API_URL}/getallaccountsitesall/details`, {
-              params: { customerId }
-            });
-            
+              params: { customerId },
+            })
+
             if (sitesResponse.data && sitesResponse.data.length > 0) {
-              newSites = [...newSites, ...sitesResponse.data];
+              newSites = [...newSites, ...sitesResponse.data]
             }
           } catch (error) {
-            console.error(`Error fetching sites for customer ${customerId}:`, error);
+            console.error(`Error fetching sites for customer ${customerId}:`, error)
           }
-          
+
           // Fetch contacts
           try {
             const contactsResponse = await axios.get(`${API_URL}/getallcustomercontacts/details`, {
-              params: { customerId }
-            });
-            
+              params: { customerId },
+            })
+
             if (contactsResponse.data && contactsResponse.data.length > 0) {
-              newContacts = [...newContacts, ...contactsResponse.data];
+              newContacts = [...newContacts, ...contactsResponse.data]
             }
           } catch (error) {
-            console.error(`Error fetching contacts for customer ${customerId}:`, error);
+            console.error(`Error fetching contacts for customer ${customerId}:`, error)
           }
         }
-        
+
         // Update state with new data
-        setCustomerSites(newSites);
-        setCustomerContacts(newContacts);
-        setFetchedCustomerIds(prev => [...prev, ...customerIds]);
-        
+        setCustomerSites(newSites)
+        setCustomerContacts(newContacts)
+        setFetchedCustomerIds((prev) => [...prev, ...customerIds])
       } catch (error) {
-        console.error("Error fetching sites and contacts:", error);
+        console.error("Error fetching sites and contacts:", error)
       } finally {
-        setLoadingCustomerData(false);
+        setLoadingCustomerData(false)
       }
-    };
-    
-    fetchSitesAndContacts();
-  }, [orders, loadingCustomerData, fetchedCustomerIds, customerSites, customerContacts]);
+    }
+
+    fetchSitesAndContacts()
+  }, [orders, loadingCustomerData, fetchedCustomerIds, customerSites, customerContacts])
 
   // Update highlighted orders when search query changes
   useEffect(() => {
@@ -254,29 +251,29 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
     const lookup = lookupArray.find((item) => item.lookupCode === lookupCode)
     return lookup ? lookup.meaning : lookupCode
   }
-  
+
   // Function to get customer name from ID
   const getCustomerName = (customerId) => {
     if (!customerId) return "N/A"
-    
-    const customer = customers.find(c => c.custAccountId === customerId)
+
+    const customer = customers.find((c) => c.custAccountId === customerId)
     return customer ? customer.accountName : "N/A"
   }
-  
+
   // Function to get site name from ID
   const getSiteName = (siteId) => {
     if (!siteId) return "N/A"
-    
-    const site = customerSites.find(s => s.custAcctSiteId === siteId)
-    return site ? (site.siteName || `Site ${siteId}`) : "N/A"
+
+    const site = customerSites.find((s) => s.custAcctSiteId === siteId)
+    return site ? site.siteName || `Site ${siteId}` : "N/A"
   }
-  
+
   // Function to get contact name from ID
   const getContactName = (contactId) => {
     if (!contactId) return "N/A"
-    
-    const contact = customerContacts.find(c => c.contactId === contactId)
-    return contact ? (contact.roleType || `Contact ${contactId}`) : "N/A"
+
+    const contact = customerContacts.find((c) => c.contactId === contactId)
+    return contact ? contact.roleType || `Contact ${contactId}` : "N/A"
   }
 
   // Updated formatDate function to display dates as "DD Month, YYYY"
@@ -417,7 +414,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
           <button className="search-button" onClick={handleLoadOrders}>
-           <LuSearchCheck size={50}/>  
+            <LuSearchCheck size={50} />
           </button>
         </div>
 
@@ -476,23 +473,23 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                 </tr>
               ) : sortedOrders.length > 0 ? (
                 sortedOrders.map((order, index) => {
-    const isHighlighted = highlightedOrders.includes(order.orderNumber)
-    const isSelected = selectedOrder && selectedOrder.orderNumber === order.orderNumber
-    return (
-      <tr
-        key={index}
-        className={`${isSelected ? "selected-row" : ""} clickable-row`}
-        style={
-          isHighlighted
-            ? {
-                background: "#808080",
-                color: "white",
-                transition: "all 0.3s ease",
-                borderRadius: "6px",
-                fontWeight: "bold",
-              }
-            : {}
-        }
+                  const isHighlighted = highlightedOrders.includes(order.orderNumber)
+                  const isSelected = selectedOrder && selectedOrder.orderNumber === order.orderNumber
+                  return (
+                    <tr
+                      key={index}
+                      className={`${isSelected ? "selected-row" : ""} clickable-row`}
+                      style={
+                        isHighlighted
+                          ? {
+                              background: "#808080",
+                              color: "white",
+                              transition: "all 0.3s ease",
+                              borderRadius: "6px",
+                              fontWeight: "bold",
+                            }
+                          : {}
+                      }
                     >
                       {/* Added Actions cell with icon */}
                       <td className="actions-column">
@@ -507,7 +504,7 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                               opacity: isHighlighted ? "0.9" : "0.7"
                             }} 
                           /> */}
-                          <IoOpen size={20}/>
+                          <IoOpen size={20} />
                         </div>
                       </td>
                       <td
