@@ -180,6 +180,9 @@ const LinesChildDatabaseSearch = ({
     return date.toLocaleDateString()
   }
 
+  // Update the navigateToFabrication function to use sessionStorage instead of localStorage
+  // and use the correct key that FabricationTable expects
+
   // Function to navigate to fabrication table with the selected order number
   const navigateToFabrication = (lineNumber) => {
     logDebugInfo("Navigating to fabrication table", {
@@ -187,9 +190,9 @@ const LinesChildDatabaseSearch = ({
       orderNumber: selectedOrder?.orderNumber,
     })
 
-    // Store the order number in localStorage to access it in the fabrication page
+    // Store the order number in sessionStorage to access it in the fabrication page
     if (selectedOrder?.orderNumber) {
-      localStorage.setItem("fabricationOrderNumber", selectedOrder.orderNumber)
+      sessionStorage.setItem("selectedOrderNumber", selectedOrder.orderNumber)
     }
 
     // Use the global navigation function if available
@@ -219,7 +222,7 @@ const LinesChildDatabaseSearch = ({
             <span>Back to Parent Lines</span>
           </button>
         </div>
-        <h1 className="header-titlelineskh">Child Lines for Parent: {parentLine?.lineNumber}</h1>
+        {/* <h1 className="header-titlelineskh">Child Lines for Parent: {parentLine?.lineNumber}</h1> */}
         <div className="header-actionslineskh">
           {/* Add a refresh button */}
           <button
