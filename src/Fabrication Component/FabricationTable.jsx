@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Search } from "lucide-react"
+import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Search, RefreshCw, FileCheck } from 'lucide-react'
 import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
@@ -36,54 +36,42 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [totalItems, setTotalItems] = useState(0)
-  const [importedData, setImportedData] = useState([])
+  const [importedData, setImportedData] = useState([]) // This will store only the newly imported data
   const [searchTerm, setSearchTerm] = useState("")
   const [orderNumber, setOrderNumber] = useState("")
   const [localDataCache, setLocalDataCache] = useState({}) // Cache for preserving local data
+  const [importStats, setImportStats] = useState({
+    successCount: 0,
+    failureCount: 0,
+    pendingCount: 0,
+    totalCount: 0
+  })
+  const [showImportStats, setShowImportStats] = useState(false)
+  const [columns, setColumns] = useState([]) // State for dynamic columns
+  const [columnsLoading, setColumnsLoading] = useState(true) // Loading state for columns
+  const [showOnlyImported, setShowOnlyImported] = useState(true) // Flag to show only imported rows
 
   const fileInputRef = useRef(null)
   const toastTimeoutRef = useRef(null)
 
-  const columns = [
-    {
-      id: "orderNumber",
-      label: "Order Number",
-      width: "150px",
-      placeholder: "Enter order ",
-      icon: <FaJediOrder size={16} className="column-icon" />,
-    },
-    {
-      id: "origLineNo",
-      label: "Original Line No",
-      width: "120px",
-      placeholder: "Enter original line ",
-      icon: <CgBmw size={16} className="column-icon" />,
-    },
-    { id: "lineNo", label: "Line No", width: "100px", placeholder: "Enter line " },
-    {
-      id: "drawingNo",
-      label: "Drawing No",
-      width: "180px",
-      placeholder: "Enter drawing No ",
-      icon: <AiFillBank size={16} className="column-icon" />,
-    },
-    { id: "description", label: "Description", width: "250px", placeholder: "Enter description" },
-    { id: "erectionMkd", label: "Erection Mkd", width: "150px", placeholder: "Enter marked " },
-    { id: "itemNo", label: "Item No", width: "100px", placeholder: "Enter item " },
-    { id: "section", label: "Section", width: "150px", placeholder: "Enter section" },
-    { id: "length", label: "Length", width: "100px", placeholder: "Enter length" },
-    { id: "qty", label: "Qty", width: "80px", placeholder: "Enter qty" },
-    { id: "unit", label: "Unit", width: "80px", placeholder: "Enter unit" },
-    { id: "totalWt", label: "Total Wt", width: "120px", placeholder: "Enter weight" },
-    { id: "qtyReqd", label: "Qty Reqd", width: "120px", placeholder: "Enter qty req." },
-    { id: "erecMkdWt", label: "Erec Mkd Wt", width: "150px", placeholder: "Enter weight" },
-    { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
-  ]
-
-  // Fetch data from API when component mounts or when page/search changes
+  // Fetch columns from API when component mounts
   useEffect(() => {
-    fetchFabricationData()
-  }, [currentPage, pageSize, searchTerm])
+    fetchColumns()
+  }, [])
+
+  // Fetch import statistics when component mounts
+  useEffect(() => {
+    fetchImportStats()
+  }, [])
+
+  // Cleanup toast timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Check for order number in props or sessionStorage when component mounts
   useEffect(() => {
@@ -100,96 +88,160 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }, [selectedOrder])
 
-  // Cleanup toast timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current)
-      }
+  // Function to fetch columns from the backend
+  const fetchColumns = async () => {
+    try {
+      setColumnsLoading(true)
+      const response = await axios.get(`${API_BASE_URL_V2}/fabrication-columns`)
+      
+      // Process the columns data to add icons and render functions
+      const processedColumns = response.data.map(column => {
+        const processedColumn = { ...column }
+        
+        // Add icons based on column ID
+        if (column.hasIcon) {
+          if (column.id === "orderNumber") {
+            processedColumn.icon = <FaJediOrder size={16} className="column-icon" />
+          } else if (column.id === "origLineNo") {
+            processedColumn.icon = <CgBmw size={16} className="column-icon" />
+          } else if (column.id === "drawingNo") {
+            processedColumn.icon = <AiFillBank size={16} className="column-icon" />
+          }
+        }
+        
+        // Add render function for status column
+        if (column.isStatus) {
+          processedColumn.renderCell = (row) => (
+            <div className={`status-cell ${row.ifaceStatus === 'SUCCESS' ? 'status-completed' : 'status-not-completed'}`}>
+              {row.ifaceStatus === 'SUCCESS' ? 'Completed' : 'Not Completed'}
+            </div>
+          )
+        }
+        
+        return processedColumn
+      })
+      
+      setColumns(processedColumns)
+      console.log("Columns fetched successfully:", processedColumns)
+    } catch (error) {
+      console.error("Error fetching columns:", error)
+      showToastNotification(`Failed to fetch columns: ${error.response?.data?.message || error.message}`, "Error", "error")
+      
+      // Set default columns in case of error
+      setColumns([
+        {
+          id: "orderNumber",
+          label: "Order Number",
+          width: "150px",
+          placeholder: "Enter order ",
+          icon: <FaJediOrder size={16} className="column-icon" />,
+        },
+        {
+          id: "origLineNo",
+          label: "Original Line No",
+          width: "120px",
+          placeholder: "Enter original line ",
+          icon: <CgBmw size={16} className="column-icon" />,
+        },
+        { id: "lineNo", label: "Line No", width: "100px", placeholder: "Enter line " },
+        {
+          id: "drawingNo",
+          label: "Drawing No",
+          width: "180px",
+          placeholder: "Enter drawing No ",
+          icon: <AiFillBank size={16} className="column-icon" />,
+        },
+        { id: "description", label: "Description", width: "250px", placeholder: "Enter description" },
+        { id: "erectionMkd", label: "Erection Mkd", width: "150px", placeholder: "Enter marked " },
+        { id: "itemNo", label: "Item No", width: "100px", placeholder: "Enter item " },
+        { id: "section", label: "Section", width: "150px", placeholder: "Enter section" },
+        { id: "length", label: "Length", width: "100px", placeholder: "Enter length" },
+        { id: "qty", label: "Qty", width: "80px", placeholder: "Enter qty" },
+        { id: "unit", label: "Unit", width: "80px", placeholder: "Enter unit" },
+        { id: "totalWt", label: "Total Wt", width: "120px", placeholder: "Enter weight" },
+        { id: "qtyReqd", label: "Qty Reqd", width: "120px", placeholder: "Enter qty req." },
+        { id: "erecMkdWt", label: "Erec Mkd Wt", width: "150px", placeholder: "Enter weight" },
+        { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
+        { 
+          id: "status", 
+          label: "Status", 
+          width: "120px", 
+          placeholder: "Status",
+          renderCell: (row) => (
+            <div className={`status-cell ${row.ifaceStatus === 'SUCCESS' ? 'status-completed' : 'status-not-completed'}`}>
+              {row.ifaceStatus === 'SUCCESS' ? 'Completed' : 'Not Completed'}
+            </div>
+          )
+        },
+      ])
+    } finally {
+      setColumnsLoading(false)
     }
-  }, [])
+  }
 
-  // Function to fetch data from the backend API using the correct endpoint
-  const fetchFabricationData = async () => {
+  // Function to fetch import statistics
+  const fetchImportStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL_V2}/import-status`)
+      setImportStats({
+        successCount: response.data.successCount || 0,
+        failureCount: response.data.failureCount || 0,
+        pendingCount: response.data.pendingCount || 0,
+        totalCount: response.data.totalCount || 0
+      })
+    } catch (error) {
+      console.error("Error fetching import statistics:", error)
+    }
+  }
+
+  // Function to fetch the latest imported data
+  const fetchLatestImportedData = async () => {
     try {
       setIsLoading(true)
-
-      // Build query parameters based on available filters
-      const params = {
-        page: currentPage,
-        size: pageSize,
-        search: searchTerm || undefined,
-      }
-
-      // Add order number filter if available
-      if (selectedOrder && selectedOrder.orderNumber) {
-        params.orderNumber = selectedOrder.orderNumber
-      } else if (orderNumber) {
-        params.orderNumber = orderNumber
-      }
-
-      // Add line number filter if available
-      if (selectedChildLine && selectedChildLine.lineNumber) {
-        params.lineNumber = selectedChildLine.lineNumber
-      }
-
-      console.log("Fetching fabrication data with params:", params)
-      // Use the correct API endpoint from the controller
-      const response = await axios.get(`${API_BASE_URL}/getfabrication`, { params })
+      const response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
 
       // Map the backend data to match our frontend structure
       const mappedData = response.data.data.map((item) => {
-        // Check if we have local cached data for this item
-        const cachedData = localDataCache[item.id] || {}
-
         return {
           id: item.id,
-          orderNumber: item.orderNumber || cachedData.orderNumber || "",
-          origLineNo: item.origLineNumber || cachedData.origLineNo || "",
-          lineNo: item.lineNumber || cachedData.lineNo || "",
-          drawingNo: item.drawingNo || cachedData.drawingNo || "",
-          description: item.drawingDescription || cachedData.description || "",
-          erectionMkd: item.erectionMkd || cachedData.erectionMkd || "",
-          itemNo: item.itemNo || cachedData.itemNo || "",
-          section: item.section || cachedData.section || "",
-          length: item.length ? item.length.toString() : cachedData.length || "",
-          qty: item.quantity ? item.quantity.toString() : cachedData.qty || "",
-          unit: item.unitPrice ? item.unitPrice.toString() : cachedData.unit || "",
-          totalWt: item.totalQuantity ? item.totalQuantity.toString() : cachedData.totalWt || "",
-          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : cachedData.qtyReqd || "",
-          erecMkdWt: cachedData.erecMkdWt || "", // This field doesn't exist in the backend model
-          remarks: item.remark || cachedData.remarks || "",
+          orderNumber: item.orderNumber || "",
+          origLineNo: item.origLineNumber || "",
+          lineNo: item.lineNumber || "",
+          drawingNo: item.drawingNo || "",
+          description: item.drawingDescription || "",
+          erectionMkd: item.erectionMkd || "",
+          itemNo: item.itemNo || "",
+          section: item.section || "",
+          length: item.length ? item.length.toString() : "",
+          qty: item.quantity ? item.quantity.toString() : "",
+          unit: item.unitPrice ? item.unitPrice.toString() : "",
+          totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
+          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
+          erecMkdWt: "", // This field doesn't exist in the backend model
+          remarks: item.remark || "",
+          ifaceStatus: item.ifaceStatus || "PENDING",
           isNew: false,
         }
       })
 
-      setRows(mappedData)
-      setTotalItems(response.data.totalItems || 0)
-      setTotalPages(response.data.totalPages || 1)
-
+      // Set the imported data
+      setImportedData(mappedData)
+      setRows(mappedData) // Use imported data as rows
+      
+      // Update total items and pages for pagination
+      setTotalItems(mappedData.length)
+      setTotalPages(Math.ceil(mappedData.length / pageSize))
+      
       // Mark all fetched rows as saved
       setSavedRows(mappedData.map((row) => row.id))
-
-      // Update order number if available in the response and not already set
-      if (mappedData.length > 0 && mappedData[0].orderNumber && !orderNumber) {
-        setOrderNumber(mappedData[0].orderNumber)
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      showToastNotification(`Failed to fetch data: ${error.response?.data?.message || error.message}`, "Error", "error")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Function to fetch imported data using V2.0 endpoint
-  const fetchImportedData = async () => {
-    try {
-      setIsLoading(true)
-      const response = await axios.get(`${API_BASE_URL}/getfabrication/latest`)
-
-      // Process the imported data if needed
-      setImportedData(response.data.data)
+      
+      // Update import statistics
+      setImportStats({
+        successCount: response.data.successCount || 0,
+        failureCount: response.data.failureCount || 0,
+        pendingCount: response.data.pendingCount || 0,
+        totalCount: response.data.totalItems || 0
+      })
 
       showToastNotification("Imported data fetched successfully!")
     } catch (error) {
@@ -206,8 +258,9 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
   const handleRefresh = () => {
     setRefreshing(true)
-    fetchFabricationData()
+    fetchLatestImportedData()
       .then(() => {
+        fetchImportStats()
         showToastNotification("Data refreshed successfully!")
       })
       .finally(() => {
@@ -233,6 +286,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       qtyReqd: "",
       erecMkdWt: "",
       remarks: "",
+      ifaceStatus: "PENDING", // Default status for new rows
       isNew: true,
     }
     setRows([...rows, newRow])
@@ -263,6 +317,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       totalQuantity: Number.parseFloat(row.totalWt) || 0,
       originalQuantity: Number.parseInt(row.qtyReqd) || 0,
       remark: row.remarks,
+      ifaceStatus: row.ifaceStatus || "PENDING", // Include status in backend format
       // Add any additional fields that might be needed by the backend
     }
   }
@@ -374,7 +429,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       // Refresh data after saving to ensure we have the latest from the server
       // Add a small delay to allow the backend to process the save
       setTimeout(() => {
-        fetchFabricationData()
+        fetchLatestImportedData()
       }, 500)
     } catch (error) {
       console.error("Error saving data:", error)
@@ -529,7 +584,54 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
       // Get the number of records imported from the response
       const recordsImported = importResponse.data.recordsImported || 0
+      const successCount = importResponse.data.successCount || 0
+      const failureCount = importResponse.data.failureCount || 0
+      
+      // Set the newly imported data directly from the response
+      const newlyImportedData = importResponse.data.data || []
+      
+      // Map the newly imported data to match our frontend structure
+      const mappedData = newlyImportedData.map((item) => {
+        return {
+          id: item.id,
+          orderNumber: item.orderNumber || "",
+          origLineNo: item.origLineNumber || "",
+          lineNo: item.lineNumber || "",
+          drawingNo: item.drawingNo || "",
+          description: item.drawingDescription || "",
+          erectionMkd: item.erectionMkd || "",
+          itemNo: item.itemNo || "",
+          section: item.section || "",
+          length: item.length ? item.length.toString() : "",
+          qty: item.quantity ? item.quantity.toString() : "",
+          unit: item.unitPrice ? item.unitPrice.toString() : "",
+          totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
+          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
+          erecMkdWt: "", // This field doesn't exist in the backend model
+          remarks: item.remark || "",
+          ifaceStatus: item.ifaceStatus || "PENDING",
+          isNew: false,
+        }
+      })
+      
+      // Update the imported data and rows
+      setImportedData(mappedData)
+      setRows(mappedData)
+      
+      // Update pagination info
+      setTotalItems(mappedData.length)
+      setTotalPages(Math.ceil(mappedData.length / pageSize))
+      
+      // Mark all imported rows as saved
+      setSavedRows(mappedData.map((row) => row.id))
+      
       setImportedRecords(recordsImported)
+      setImportStats({
+        ...importStats,
+        successCount: successCount,
+        failureCount: failureCount,
+        totalCount: recordsImported
+      })
 
       // Show success message for at least 3 seconds
       setShowSuccessMessage(true)
@@ -541,15 +643,15 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       setSelectedFile(null)
       setShowSuccessMessage(false)
 
-      // Show toast notification
+      // Show toast notification with success/failure counts
       showToastNotification(
-        `${recordsImported} records were added to the database.`,
+        `${recordsImported} records were added to the database. (${successCount} success / ${failureCount} failure)`,
         "Excel data imported successfully!",
         "success",
       )
-
-      // Refresh the table to show the imported data
-      fetchFabricationData()
+      
+      // Update import statistics
+      fetchImportStats()
     } catch (error) {
       console.error("Import error:", error)
       showToastNotification(`${error.response?.data?.message || error.message}`, "Import failed", "error")
@@ -598,6 +700,46 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value)
     setCurrentPage(0) // Reset to first page when searching
+    
+    // Filter the imported data based on search term
+    if (e.target.value) {
+      const filteredRows = importedData.filter(row => 
+        Object.values(row).some(value => 
+          value && value.toString().toLowerCase().includes(e.target.value.toLowerCase())
+        )
+      )
+      setRows(filteredRows)
+      setTotalItems(filteredRows.length)
+      setTotalPages(Math.ceil(filteredRows.length / pageSize))
+    } else {
+      // If search is cleared, show all imported data
+      setRows(importedData)
+      setTotalItems(importedData.length)
+      setTotalPages(Math.ceil(importedData.length / pageSize))
+    }
+  }
+
+  const toggleImportStats = () => {
+    setShowImportStats(!showImportStats)
+  }
+
+  // Get the current page of rows for pagination
+  const getCurrentPageRows = () => {
+    const startIndex = currentPage * pageSize
+    const endIndex = startIndex + pageSize
+    return rows.slice(startIndex, endIndex)
+  }
+
+  // Render loading state while columns are being fetched
+  if (columnsLoading) {
+    return (
+      <div className="table-container">
+        <div className="table-loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading table structure...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -605,6 +747,11 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       <div className="table-header">
         <div className="table-title" style={{color:'white'}}>Fabrication</div>
         <div className="table-actions">
+          <button className="btn btn-stats" onClick={toggleImportStats}>
+            <FileCheck size={16} />
+            {importStats.successCount} success / {importStats.failureCount} failure
+          </button>
+          
           <button className="btn btn-add-service" onClick={addNewRow}>
             <Plus size={16} />
             Add Service
@@ -614,6 +761,12 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             <Upload size={16} />
             Import
           </button>
+          
+          <button className="btn btn-refresh" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw size={16} className={refreshing ? "spin" : ""} />
+            Refresh
+          </button>
+          
           <button className="btn btn-save" onClick={handleSave}>
             <Save size={16} />
             Save
@@ -621,13 +774,45 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         </div>
       </div>
 
+      {/* Import Statistics Popup */}
+      {showImportStats && (
+        <div className="import-stats-popup">
+          <div className="import-stats-header">
+            <h3>Import Statistics</h3>
+            <button className="close-btn" onClick={toggleImportStats}>×</button>
+          </div>
+          <div className="import-stats-content">
+            <div className="stats-item">
+              <div className="stats-label">Success:</div>
+              <div className="stats-value success">{importStats.successCount}</div>
+            </div>
+            <div className="stats-item">
+              <div className="stats-label">Failure:</div>
+              <div className="stats-value failure">{importStats.failureCount}</div>
+            </div>
+            <div className="stats-item">
+              <div className="stats-label">Pending:</div>
+              <div className="stats-value pending">{importStats.pendingCount}</div>
+            </div>
+            <div className="stats-item total">
+              <div className="stats-label">Total:</div>
+              <div className="stats-value">{importStats.totalCount}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
           <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : orderNumber || "No order selected"}</span>
           {selectedChildLine && <span className="child-line-info">Line Number: {selectedChildLine.lineNumber}</span>}
         </div>
-        <div className="table-actions-secondary"></div>
+        <div className="table-actions-secondary">
+          <div className="import-status">
+            <span>Showing {rows.length} imported records</span>
+          </div>
+        </div>
       </div>
 
       <div className="table-controls">
@@ -635,7 +820,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           <Search size={16} className="search-icon" />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search imported records..."
             className="search-input"
             value={searchTerm}
             onChange={handleSearch}
@@ -672,31 +857,41 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
               <tr>
                 <td colSpan={columns.length + 1} className="empty-table">
                   {selectedOrder || selectedChildLine
-                    ? 'No data exists in your fabrication table as per your order number or child line number. Click "Add Service" to create a new row.'
-                    : 'No records found. Click "Add Service" to create a new row.'}
+                    ? 'No imported data exists for your order number or child line number. Click "Import" to import data.'
+                    : 'No imported records found. Click "Import" to import data from Excel.'}
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
+              getCurrentPageRows().map((row) => (
                 <tr key={row.id} className={row.isNew ? "editing-row" : ""}>
                   {columns.map((column) => (
                     <td key={`${row.id}-${column.id}`} style={{ width: column.width }}>
                       {editingRow === row.id ? (
                         <div className="input-field-container">
-                          <input
-                            type="text"
-                            value={row[column.id] || ""}
-                            onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
-                            className="edit-input"
-                            placeholder={column.placeholder}
-                          />
+                          {column.id === "status" ? (
+                            <div className={`status-cell ${row.ifaceStatus === 'SUCCESS' ? 'status-completed' : 'status-not-completed'}`}>
+                              {row.ifaceStatus === 'SUCCESS' ? 'Completed' : 'Not Completed'}
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={row[column.id] || ""}
+                              onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
+                              className="edit-input"
+                              placeholder={column.placeholder}
+                            />
+                          )}
                         </div>
                       ) : (
                         <div className="cell-content">
                           {column.icon && savedRows.includes(row.id) && (
                             <span className="cell-icon">{column.icon}</span>
                           )}
-                          <span className="cell-text">{row[column.id] || ""}</span>
+                          {column.renderCell ? (
+                            column.renderCell(row)
+                          ) : (
+                            <span className="cell-text">{row[column.id] || ""}</span>
+                          )}
                         </div>
                       )}
                     </td>
@@ -837,6 +1032,10 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                   <p className="success-text">All done!</p>
                   <p className="success-subtext">
                     Excel data imported successfully! {importedRecords} records were added to the database.
+                    <br />
+                    <span className="import-stats">
+                      {importStats.successCount} success / {importStats.failureCount} failure
+                    </span>
                   </p>
                 </div>
               ) : (
