@@ -2,18 +2,18 @@
 
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Download, Search } from "lucide-react"
-
-import "../Fabrication Design/FabricationTable.css"
-import "../Fabrication Design/importfile.css"
-import "../Fabrication Design/confirmation.css"
+import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Search } from "lucide-react"
 import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
 
+import "../Fabrication Design/FabricationTable.css"
+import "../Fabrication Design/importfile.css"
+import "../Fabrication Design/confirmation.css"
+
 // Updated API base URLs to match the controller
-const API_BASE_URL = "http://195.35.45.56:5522/api/V3.0"
-const API_BASE_URL_V2 = "http://195.35.45.56:5522/api/V2.0"
+const API_BASE_URL = "http://localhost:8855/api/V3.0"
+const API_BASE_URL_V2 = "http://localhost:8855/api/V2.0"
 
 const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [rows, setRows] = useState([])
@@ -39,8 +39,10 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [importedData, setImportedData] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [orderNumber, setOrderNumber] = useState("")
+  const [localDataCache, setLocalDataCache] = useState({}) // Cache for preserving local data
 
   const fileInputRef = useRef(null)
+  const toastTimeoutRef = useRef(null)
 
   const columns = [
     {
@@ -62,7 +64,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       id: "drawingNo",
       label: "Drawing No",
       width: "180px",
-      placeholder: "Enter drawing ",
+      placeholder: "Enter drawing No ",
       icon: <AiFillBank size={16} className="column-icon" />,
     },
     { id: "description", label: "Description", width: "250px", placeholder: "Enter description" },
@@ -98,6 +100,15 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }, [selectedOrder])
 
+  // Cleanup toast timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Function to fetch data from the backend API using the correct endpoint
   const fetchFabricationData = async () => {
     try {
@@ -113,6 +124,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       // Add order number filter if available
       if (selectedOrder && selectedOrder.orderNumber) {
         params.orderNumber = selectedOrder.orderNumber
+      } else if (orderNumber) {
+        params.orderNumber = orderNumber
       }
 
       // Add line number filter if available
@@ -125,25 +138,30 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       const response = await axios.get(`${API_BASE_URL}/getfabrication`, { params })
 
       // Map the backend data to match our frontend structure
-      const mappedData = response.data.data.map((item) => ({
-        id: item.id,
-        orderNumber: item.orderNumber || "",
-        origLineNo: item.origLineNumber || "",
-        lineNo: item.lineNumber || "",
-        drawingNo: item.drawingNo || "",
-        description: item.drawingDescription || "",
-        erectionMkd: item.erectionMkd || "",
-        itemNo: item.itemNo || "",
-        section: item.section || "",
-        length: item.length ? item.length.toString() : "",
-        qty: item.quantity ? item.quantity.toString() : "",
-        unit: item.unitPrice ? item.unitPrice.toString() : "",
-        totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
-        qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
-        erecMkdWt: "", // This field doesn't exist in the backend model
-        remarks: item.remark || "",
-        isNew: false,
-      }))
+      const mappedData = response.data.data.map((item) => {
+        // Check if we have local cached data for this item
+        const cachedData = localDataCache[item.id] || {}
+
+        return {
+          id: item.id,
+          orderNumber: item.orderNumber || cachedData.orderNumber || "",
+          origLineNo: item.origLineNumber || cachedData.origLineNo || "",
+          lineNo: item.lineNumber || cachedData.lineNo || "",
+          drawingNo: item.drawingNo || cachedData.drawingNo || "",
+          description: item.drawingDescription || cachedData.description || "",
+          erectionMkd: item.erectionMkd || cachedData.erectionMkd || "",
+          itemNo: item.itemNo || cachedData.itemNo || "",
+          section: item.section || cachedData.section || "",
+          length: item.length ? item.length.toString() : cachedData.length || "",
+          qty: item.quantity ? item.quantity.toString() : cachedData.qty || "",
+          unit: item.unitPrice ? item.unitPrice.toString() : cachedData.unit || "",
+          totalWt: item.totalQuantity ? item.totalQuantity.toString() : cachedData.totalWt || "",
+          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : cachedData.qtyReqd || "",
+          erecMkdWt: cachedData.erecMkdWt || "", // This field doesn't exist in the backend model
+          remarks: item.remark || cachedData.remarks || "",
+          isNew: false,
+        }
+      })
 
       setRows(mappedData)
       setTotalItems(response.data.totalItems || 0)
@@ -223,6 +241,12 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
   // Convert frontend row to backend DTO format
   const convertRowToBackendFormat = (row) => {
+    // Cache the row data locally to preserve fields that might not be in the backend model
+    setLocalDataCache((prev) => ({
+      ...prev,
+      [row.id]: { ...row },
+    }))
+
     return {
       id: row.id && !row.id.toString().startsWith("temp-") ? row.id : null,
       orderNumber: row.orderNumber,
@@ -239,6 +263,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       totalQuantity: Number.parseFloat(row.totalWt) || 0,
       originalQuantity: Number.parseInt(row.qtyReqd) || 0,
       remark: row.remarks,
+      // Add any additional fields that might be needed by the backend
     }
   }
 
@@ -248,6 +273,12 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         const rowToSave = rows.find((row) => row.id === editingRow)
 
         if (rowToSave) {
+          // Cache the current row data before sending to backend
+          setLocalDataCache((prev) => ({
+            ...prev,
+            [rowToSave.id]: { ...rowToSave },
+          }))
+
           const backendData = convertRowToBackendFormat(rowToSave)
 
           let response
@@ -256,17 +287,30 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             response = await axios.post(`${API_BASE_URL}/getfabrication`, backendData)
 
             // Update the row with the ID from the backend
+            const newId = response.data.id
+
+            // Update local cache with the new ID
+            const cachedData = { ...localDataCache[rowToSave.id] }
+            delete localDataCache[rowToSave.id]
+            setLocalDataCache((prev) => ({
+              ...prev,
+              [newId]: cachedData,
+            }))
+
             setRows(
               rows.map((row) =>
                 row.id === editingRow
                   ? {
                       ...row,
-                      id: response.data.id,
+                      id: newId,
                       isNew: false,
                     }
                   : row,
               ),
             )
+
+            // Add to savedRows
+            setSavedRows((prev) => [...prev, newId])
 
             showToastNotification("Record created successfully!")
           } else {
@@ -276,11 +320,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             // Update the row with data from the backend
             setRows(rows.map((row) => (row.id === editingRow ? { ...row, isNew: false } : row)))
 
+            // Make sure this row is marked as saved
+            if (!savedRows.includes(rowToSave.id)) {
+              setSavedRows((prev) => [...prev, rowToSave.id])
+            }
+
             showToastNotification("Record updated successfully!")
           }
-
-          // Add to savedRows
-          setSavedRows((prev) => [...prev, response.data.id])
         }
 
         setEditingRow(null)
@@ -289,6 +335,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         const unsavedRows = rows.filter((row) => !savedRows.includes(row.id))
 
         if (unsavedRows.length > 0) {
+          // Cache all unsaved rows
+          const newCache = { ...localDataCache }
+          unsavedRows.forEach((row) => {
+            newCache[row.id] = { ...row }
+          })
+          setLocalDataCache(newCache)
+
           // Create a batch save request for multiple rows using the correct endpoint from the controller
           const batchData = unsavedRows.map(convertRowToBackendFormat)
 
@@ -296,6 +349,17 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
           // Update rows with IDs from backend
           const savedIds = response.data.map((item) => item.id)
+
+          // Update the local cache with new IDs
+          const updatedCache = { ...localDataCache }
+          unsavedRows.forEach((row, index) => {
+            if (row.id.toString().startsWith("temp-") && savedIds[index]) {
+              updatedCache[savedIds[index]] = { ...updatedCache[row.id] }
+              delete updatedCache[row.id]
+            }
+          })
+          setLocalDataCache(updatedCache)
+
           setSavedRows([...savedRows, ...savedIds])
 
           // Update the rows to mark them as not new
@@ -306,6 +370,12 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           showToastNotification("No changes to save!")
         }
       }
+
+      // Refresh data after saving to ensure we have the latest from the server
+      // Add a small delay to allow the backend to process the save
+      setTimeout(() => {
+        fetchFabricationData()
+      }, 500)
     } catch (error) {
       console.error("Error saving data:", error)
       showToastNotification(`Failed to save: ${error.response?.data?.message || error.message}`, "Error", "error")
@@ -314,6 +384,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
   const handleEdit = (id) => {
     setEditingRow(id)
+    showToastNotification("Editing row", "Edit Mode", "info")
   }
 
   const handleDelete = async (id) => {
@@ -322,6 +393,11 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       if (!id.toString().startsWith("temp-")) {
         // Delete from backend using the correct endpoint from the controller
         await axios.delete(`${API_BASE_URL}/getfabrication/${id}`)
+
+        // Remove from local cache
+        const updatedCache = { ...localDataCache }
+        delete updatedCache[id]
+        setLocalDataCache(updatedCache)
       }
 
       // Remove from local state
@@ -336,6 +412,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   }
 
   const handleInputChange = (id, field, value) => {
+    // Update the rows state
     setRows(
       rows.map((row) => {
         if (row.id === id) {
@@ -344,16 +421,36 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         return row
       }),
     )
+
+    // Also update the local cache to preserve the data
+    setLocalDataCache((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {}),
+        [field]: value,
+      },
+    }))
   }
 
-  const showToastNotification = (message, title = "Success", type = "success", duration = 3000) => {
-    setToastMessage(message)
-    setToastTitle(title)
-    setToastType(type)
-    setShowToast(true)
-    setTimeout(() => {
+  const showToastNotification = (message, title = "Success", type = "success") => {
+    // Clear any existing timeout to prevent duplicate toasts
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current)
       setShowToast(false)
-    }, duration)
+    }
+
+    // Set a small delay before showing the new toast to ensure state is updated
+    setTimeout(() => {
+      setToastMessage(message)
+      setToastTitle(title)
+      setToastType(type)
+      setShowToast(true)
+
+      // Set timeout to hide toast after exactly 3 seconds
+      toastTimeoutRef.current = setTimeout(() => {
+        setShowToast(false)
+      }, 3000)
+    }, 10)
   }
 
   const toggleSelectRow = (id) => {
@@ -446,17 +543,16 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
       // Show toast notification
       showToastNotification(
-        `Excel data imported successfully! ${recordsImported} records were added to the database.`,
-        "Success",
+        `${recordsImported} records were added to the database.`,
+        "Excel data imported successfully!",
         "success",
-        3000,
       )
 
       // Refresh the table to show the imported data
       fetchFabricationData()
     } catch (error) {
       console.error("Import error:", error)
-      showToastNotification(`Import failed: ${error.response?.data?.message || error.message}`, "Error", "error")
+      showToastNotification(`${error.response?.data?.message || error.message}`, "Import failed", "error")
       setIsImporting(false)
     } finally {
       setIsImporting(false)
@@ -507,16 +603,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   return (
     <div className="table-container">
       <div className="table-header">
-        <div className="table-title">Fabrication</div>
+        <div className="table-title" style={{color:'white'}}>Fabrication</div>
         <div className="table-actions">
           <button className="btn btn-add-service" onClick={addNewRow}>
             <Plus size={16} />
             Add Service
           </button>
-          <button className="btn btn-template" onClick={handleDownloadTemplate}>
-            <Download size={16} />
-            Template
-          </button>
+
           <button className="btn btn-import" onClick={handleImportClick}>
             <Upload size={16} />
             Import
@@ -531,7 +624,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : "No order selected"}</span>
+          <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : orderNumber || "No order selected"}</span>
           {selectedChildLine && <span className="child-line-info">Line Number: {selectedChildLine.lineNumber}</span>}
         </div>
         <div className="table-actions-secondary"></div>
@@ -589,17 +682,21 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                   {columns.map((column) => (
                     <td key={`${row.id}-${column.id}`} style={{ width: column.width }}>
                       {editingRow === row.id ? (
-                        <input
-                          type="text"
-                          value={row[column.id] || ""}
-                          onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
-                          className="edit-input"
-                          placeholder={column.placeholder}
-                        />
+                        <div className="input-field-container">
+                          <input
+                            type="text"
+                            value={row[column.id] || ""}
+                            onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
+                            className="edit-input"
+                            placeholder={column.placeholder}
+                          />
+                        </div>
                       ) : (
                         <div className="cell-content">
-                          {column.icon && savedRows.includes(row.id) && column.icon}
-                          <span>{row[column.id] || ""}</span>
+                          {column.icon && savedRows.includes(row.id) && (
+                            <span className="cell-icon">{column.icon}</span>
+                          )}
+                          <span className="cell-text">{row[column.id] || ""}</span>
                         </div>
                       )}
                     </td>
@@ -659,6 +756,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
               ×
             </button>
           </div>
+          <div className="toast-progress"></div>
         </div>
       )}
 
@@ -734,9 +832,10 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
               ) : showSuccessMessage ? (
                 <div className="success-container">
                   <div className="success-icon">
-                    <CheckCircle size={40} color="#4caf50" />
+                    <CheckCircle size={32} />
                   </div>
-                  <p className="success-text">
+                  <p className="success-text">All done!</p>
+                  <p className="success-subtext">
                     Excel data imported successfully! {importedRecords} records were added to the database.
                   </p>
                 </div>

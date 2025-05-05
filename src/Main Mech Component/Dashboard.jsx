@@ -650,7 +650,7 @@ const MainDashboard = () => {
             <h1 style={{ color: "white", fontWeight: "bold" }}>
               {activeMenu === "home" && (username ? `Hi ${username}` : "Welcome")}
               {activeSubmenu ? activeSubmenu : activeMenu !== "home" ? activeMenu : ""}
-              {showChildLines && selectedParentLine && ` - Child Lines for ${selectedParentLine.lineNumber}`}
+              {showChildLines && selectedParentLine && ` - Fabrication ${selectedParentLine.lineNumber}`}
             </h1>
           </div>
           <div className="header-right">

@@ -1,5 +1,154 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+/* Modern Toast Notification System - 2025 Design */
+.toast-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.toast {
+  width: 100%;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: toast-in 0.3s forwards, toast-out 0.3s forwards 2.7s;
+  pointer-events: auto;
+  font-family: "Poppins", sans-serif;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.toast-icon {
+  width: 60px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+  background-color: #10b981;
+}
+
+.toast-error .toast-icon {
+  background-color: #ef4444;
+}
+
+.toast-warning .toast-icon {
+  background-color: #f59e0b;
+}
+
+.toast-info .toast-icon {
+  background-color: #3b82f6;
+}
+
+.toast-icon svg {
+  color: white;
+  width: 24px;
+  height: 24px;
+}
+
+.toast-content {
+  padding: 16px;
+  flex-grow: 1;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 16px;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.toast-message {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 8px 16px;
+  font-size: 18px;
+  align-self: flex-start;
+  margin-top: 8px;
+  transition: color 0.2s;
+}
+
+.toast-close:hover {
+  color: #4b5563;
+}
+
+.toast-progress {
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.3);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.toast-progress::after {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  background-color: white;
+  transform-origin: left;
+  animation: progress 3s linear forwards;
+}
+
+@keyframes progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Confirmation popup styles - updated for 2025 design */
 .confirmation-popup-overlay {
   position: fixed;
   top: 0;
@@ -7,6 +156,7 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,54 +166,53 @@
 
 .confirmation-popup {
   background-color: white;
-  border-radius: 16px;
+  border-radius: 20px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  animation: popup-appear 0.3s ease-out;
+  animation: popup-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .confirmation-popup-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #eee;
+  padding: 24px 24px 16px;
 }
 
 .confirmation-popup-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #333;
+  color: #111827;
 }
 
 .confirmation-popup-content {
-  padding: 24px;
+  padding: 0 24px 24px;
 }
 
 .confirmation-popup-content p {
   margin: 0 0 16px;
   font-size: 15px;
-  color: #444;
+  color: #4b5563;
   line-height: 1.5;
 }
 
 .confirmation-file-info {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 12px;
   margin-top: 16px;
 }
 
 .confirmation-file-icon {
-  color: #4e5a6a;
+  color: #6b7280;
 }
 
 .confirmation-file-info span {
   font-size: 14px;
-  color: #555;
+  color: #374151;
   font-weight: 500;
   word-break: break-all;
 }
@@ -72,14 +221,14 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 24px 24px;
-  border-top: 1px solid #eee;
+  padding: 24px;
+  border-top: 1px solid #f3f4f6;
 }
 
 .confirmation-no-btn,
 .confirmation-yes-btn {
   padding: 10px 24px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -88,25 +237,25 @@
 }
 
 .confirmation-no-btn {
-  background-color: transparent;
-  color: #666;
-  border: 1px solid #ddd;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  border: none;
 }
 
 .confirmation-no-btn:hover {
-  background-color: #f0f0f0;
+  background-color: #e5e7eb;
 }
 
 .confirmation-yes-btn {
-  background-color: #4caf50;
+  background-color: #10b981;
   color: white;
   border: none;
 }
 
 .confirmation-yes-btn:hover {
-  background-color: #43a047;
+  background-color: #059669;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
 .confirmation-yes-btn:disabled,
@@ -117,58 +266,36 @@
   box-shadow: none;
 }
 
-/* Success toast styling */
-.toast-notification.success .toast-icon-container {
-  background-color: #4caf50;
-}
-
-.toast-notification.error .toast-icon-container {
-  background-color: #f44336;
-}
-
-/* Import success message styling */
-.import-success-message {
-  font-weight: 500;
-  color: #333;
-}
-
-.import-success-message span {
-  display: block;
-  margin-top: 4px;
-  font-size: 13px;
-  color: #666;
-  font-style: italic;
-}
-
-/* Loading spinner styles */
+/* Loading spinner styles - updated for 2025 design */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 32px 20px;
 }
 
 .loading-text {
-  margin-top: 15px;
-  font-size: 16px;
-  color: #333;
-  font-weight: 500;
-  margin-bottom: 5px;
+  margin-top: 20px;
+  font-size: 18px;
+  color: #111827;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .loading-subtext {
   font-size: 14px;
-  color: #666;
+  color: #6b7280;
   text-align: center;
   margin-top: 0;
+  max-width: 280px;
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #4e5a6a;
+  width: 48px;
+  height: 48px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -182,25 +309,48 @@
   }
 }
 
-/* Success message styles */
+/* Success message styles - updated for 2025 design */
 .success-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
 }
 
 .success-icon {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  width: 72px;
+  height: 72px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+}
+
+.success-icon svg {
+  color: white;
+  width: 36px;
+  height: 36px;
 }
 
 .success-text {
-  font-size: 15px;
-  color: #333;
+  font-size: 22px;
+  color: #111827;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.success-subtext {
+  font-size: 15px;
+  color: #6b7280;
+  text-align: center;
   margin: 0;
+  max-width: 320px;
+  line-height: 1.5;
 }
 
 @keyframes popup-appear {
