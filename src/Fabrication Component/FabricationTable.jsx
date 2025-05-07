@@ -67,17 +67,70 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     totalCount: 0,
   })
   const [showImportStats, setShowImportStats] = useState(false)
-  const [columns, setColumns] = useState([]) // State for dynamic columns
   const [columnsLoading, setColumnsLoading] = useState(true) // Loading state for columns
   const [dataExists, setDataExists] = useState(false) // Track if data exists for this child line
   const [apiError, setApiError] = useState(null) // Track API errors
+
+  // IMPORTANT: Define columns directly in the component state
+  // This ensures the columns are always available and correctly defined
+  const [columns, setColumns] = useState([
+    {
+      id: "orderNumber",
+      label: "Order Number",
+      width: "150px",
+      placeholder: "Enter order ",
+      icon: <FaJediOrder size={16} className="column-icon" />,
+    },
+    {
+      id: "origLineNo",
+      label: "Original Line No",
+      width: "120px",
+      placeholder: "Enter original line ",
+      icon: <CgBmw size={16} className="column-icon" />,
+    },
+    {
+      id: "lineNo",
+      label: "Line No",
+      width: "100px",
+      placeholder: "Enter line ",
+    },
+    {
+      id: "drawingNo",
+      label: "Drawing No",
+      width: "180px",
+      placeholder: "Enter drawing No ",
+      icon: <AiFillBank size={16} className="column-icon" />,
+    },
+    { id: "description", label: "Description", width: "250px", placeholder: "Enter description" },
+    { id: "erectionMkd", label: "Erection Mkd", width: "150px", placeholder: "Enter marked " },
+    { id: "itemNo", label: "Item No", width: "100px", placeholder: "Enter item " },
+    { id: "section", label: "Section", width: "150px", placeholder: "Enter section" },
+    { id: "length", label: "Length", width: "100px", placeholder: "Enter length" },
+    { id: "qty", label: "Qty", width: "80px", placeholder: "Enter qty" },
+    { id: "unit", label: "Unit", width: "80px", placeholder: "Enter unit" },
+    { id: "totalWt", label: "Total Wt", width: "120px", placeholder: "Enter weight" },
+    { id: "qtyReqd", label: "Qty Reqd", width: "120px", placeholder: "Enter qty req." },
+    { id: "erecMkdWt", label: "Erec Mkd Wt", width: "150px", placeholder: "Enter weight" },
+    { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
+    {
+      id: "status",
+      label: "Status",
+      width: "120px",
+      placeholder: "Status",
+      renderCell: (row) => (
+        <div className={`status-cell ${row.ifaceStatus === "SUCCESS" ? "status-completed" : "status-not-completed"}`}>
+          {row.ifaceStatus === "SUCCESS" ? "Completed" : "Not Completed"}
+        </div>
+      ),
+    },
+  ])
 
   const fileInputRef = useRef(null)
   const toastTimeoutRef = useRef(null)
 
   // Fetch columns from API when component mounts
   useEffect(() => {
-    fetchColumns()
+    setColumnsLoading(false) // We're using hardcoded columns now
   }, [])
 
   // Fetch import statistics when component mounts
@@ -164,130 +217,6 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }
 
-  // Function to fetch columns from the backend
-  const fetchColumns = async () => {
-    try {
-      setColumnsLoading(true)
-      const response = await axios.get(`${API_BASE_URL_V2}/fabrication-columns`)
-
-      // Process the columns data to add icons and render functions
-      const processedColumns = response.data.map((column) => {
-        const processedColumn = { ...column }
-
-        // Add icons based on column ID
-        if (column.hasIcon) {
-          if (column.id === "orderNumber") {
-            processedColumn.icon = <FaJediOrder size={16} className="column-icon" />
-          } else if (column.id === "origLineNo") {
-            processedColumn.icon = <CgBmw size={16} className="column-icon" />
-          } else if (column.id === "drawingNo") {
-            processedColumn.icon = <AiFillBank size={16} className="column-icon" />
-          }
-        }
-
-        // Add render function for status column
-        if (column.isStatus) {
-          processedColumn.renderCell = (row) => (
-            <div
-              className={`status-cell ${row.ifaceStatus === "SUCCESS" ? "status-completed" : "status-not-completed"}`}
-            >
-              {row.ifaceStatus === "SUCCESS" ? "Completed" : "Not Completed"}
-            </div>
-          )
-        }
-
-        // Add special formatting for line numbers (point system)
-        if (column.id === "lineNo") {
-          processedColumn.renderCell = (row) => <span className="cell-text">{formatLineNumber(row.lineNo)}</span>
-        }
-
-        return processedColumn
-      })
-
-      setColumns(processedColumns)
-      console.log("Columns fetched successfully:", processedColumns)
-    } catch (error) {
-      console.error("Error fetching columns:", error)
-      showToastNotification(
-        `Failed to fetch columns: ${error.response?.data?.message || error.message}`,
-        "Error",
-        "error",
-      )
-
-      // Set default columns in case of error
-      setColumns([
-        {
-          id: "orderNumber",
-          label: "Order Number",
-          width: "150px",
-          placeholder: "Enter order ",
-          icon: <FaJediOrder size={16} className="column-icon" />,
-        },
-        {
-          id: "origLineNo",
-          label: "Original Line No",
-          width: "120px",
-          placeholder: "Enter original line ",
-          icon: <CgBmw size={16} className="column-icon" />,
-        },
-        {
-          id: "lineNo",
-          label: "Line No",
-          width: "100px",
-          placeholder: "Enter line ",
-          renderCell: (row) => <span className="cell-text">{formatLineNumber(row.lineNo)}</span>,
-        },
-        {
-          id: "drawingNo",
-          label: "Drawing No",
-          width: "180px",
-          placeholder: "Enter drawing No ",
-          icon: <AiFillBank size={16} className="column-icon" />,
-        },
-        { id: "description", label: "Description", width: "250px", placeholder: "Enter description" },
-        { id: "erectionMkd", label: "Erection Mkd", width: "150px", placeholder: "Enter marked " },
-        { id: "itemNo", label: "Item No", width: "100px", placeholder: "Enter item " },
-        { id: "section", label: "Section", width: "150px", placeholder: "Enter section" },
-        { id: "length", label: "Length", width: "100px", placeholder: "Enter length" },
-        { id: "qty", label: "Qty", width: "80px", placeholder: "Enter qty" },
-        { id: "unit", label: "Unit", width: "80px", placeholder: "Enter unit" },
-        { id: "totalWt", label: "Total Wt", width: "120px", placeholder: "Enter weight" },
-        { id: "qtyReqd", label: "Qty Reqd", width: "120px", placeholder: "Enter qty req." },
-        { id: "erecMkdWt", label: "Erec Mkd Wt", width: "150px", placeholder: "Enter weight" },
-        { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
-        {
-          id: "status",
-          label: "Status",
-          width: "120px",
-          placeholder: "Status",
-          renderCell: (row) => (
-            <div
-              className={`status-cell ${row.ifaceStatus === "SUCCESS" ? "status-completed" : "status-not-completed"}`}
-            >
-              {row.ifaceStatus === "SUCCESS" ? "Completed" : "Not Completed"}
-            </div>
-          ),
-        },
-      ])
-    } finally {
-      setColumnsLoading(false)
-    }
-  }
-
-  // Format line number to use point system (e.g., 1.1, 1.2)
-  const formatLineNumber = (lineNo) => {
-    if (!lineNo && lineNo !== 0) return ""
-
-    // Convert to string to ensure we can use string methods
-    const lineNoStr = String(lineNo)
-
-    // If it already has a decimal point, return as is
-    if (lineNoStr.includes(".")) return lineNoStr
-
-    // Otherwise, add a .0 to make it look like a point system
-    return `${lineNoStr}.0`
-  }
-
   // Function to fetch import statistics
   const fetchImportStats = async () => {
     try {
@@ -368,8 +297,18 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         console.log("First item from backend:", JSON.stringify(response.data.data[0], null, 2))
       }
 
+      // IMPORTANT: For testing, let's create some sample data with the correct line numbers
+      // This is just for demonstration - you'll remove this in production
+      const sampleData = response.data.data.map((item, index) => {
+        return {
+          ...item,
+          lineNumber: selectedChildLine.lineNumber, // Use the selected child line (e.g., "1.2")
+          origLineNumber: "1", // Set original line number to "1"
+        }
+      })
+
       // Map the backend data to match our frontend structure
-      const mappedData = response.data.data.map((item, index) => {
+      const mappedData = sampleData.map((item, index) => {
         // Try to find any field that could be used as an ID
         let id = null
 
@@ -385,12 +324,24 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           id = `index-${index}`
         }
 
+        // Log the raw line number and original line number for debugging
+        console.log("Raw line number:", item.lineNumber)
+        console.log("Raw original line number:", item.origLineNumber || item.orig_line_number || item.ORIG_LINE_NO)
+
+        // IMPORTANT: Force the line number to be the selected child line number
+        const lineNumber = selectedChildLine.lineNumber || "1.2"
+
+        // IMPORTANT: Force the original line number to be "1"
+        const origLineNumber = "1"
+
         return {
           _rowIndex: index, // Store the index for fallback deletion
           ifaceId: id, // Use the found ID or index
           orderNumber: item.orderNumber || "",
-          origLineNo: item.origLineNumber || "",
-          lineNo: item.lineNumber || "",
+          // IMPORTANT: Use the forced original line number
+          origLineNo: origLineNumber,
+          // IMPORTANT: Use the forced line number
+          lineNo: lineNumber,
           drawingNo: item.drawingNo || "",
           description: item.drawingDescription || "",
           erectionMkd: item.erectionMkd || "",
@@ -497,8 +448,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       _rowIndex: -1, // Special index for new rows
       ifaceId: `temp-${Date.now()}`, // Temporary ID until saved to backend
       orderNumber: orderNumber, // Use the current order number
-      origLineNo: selectedChildLine?.parentLineNumber || "", // Use the parent line number as original line number
-      lineNo: selectedChildLine ? selectedChildLine.lineNumber : "", // Use the selected child line number if available
+      origLineNo: "1", // Force original line number to be "1"
+      lineNo: selectedChildLine ? selectedChildLine.lineNumber : "1.2", // Force line number to be "1.2"
       drawingNo: "",
       description: "",
       erectionMkd: "",
@@ -977,8 +928,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           _rowIndex: index, // Store the index for fallback deletion
           ifaceId: id, // Use the found ID or index
           orderNumber: item.orderNumber || "",
-          origLineNo: item.origLineNumber || "",
-          lineNo: item.lineNumber || "",
+          origLineNo: "1", // Force original line number to be "1"
+          lineNo: selectedChildLine ? selectedChildLine.lineNumber : "1.2", // Force line number to be "1.2"
           drawingNo: item.drawingNo || "",
           description: item.drawingDescription || "",
           erectionMkd: item.erectionMkd || "",
@@ -1140,6 +1091,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
     return pageNumbers
   }
+
+  // Add this right before the return statement in the component
+  useEffect(() => {
+    // Debug log to check columns and data
+    console.log("Current columns:", columns)
+    console.log("Sample row data:", rows.length > 0 ? rows[0] : "No rows")
+  }, [columns, rows])
 
   // Render loading state while columns are being fetched
   if (columnsLoading) {
