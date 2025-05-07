@@ -102,6 +102,12 @@
   color: #6366f1;
 }
 
+.parent-line-info {
+  color: #10b981;
+  margin-left: 15px;
+  font-weight: 500;
+}
+
 .table-actions-secondary {
   display: flex;
   align-items: center;
@@ -867,4 +873,31 @@
 /* Ensure the pagination is at the bottom */
 .pagination-container {
   margin-top: auto;
+}
+
+/* Add this to your existing CSS file */
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.no-data-icon {
+  color: #f59e0b;
+  margin-bottom: 16px;
+}
+
+.no-data-message p {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+.no-data-message p:first-of-type {
+  font-weight: 500;
+  font-size: 18px;
+  color: #334155;
 }

@@ -19,7 +19,6 @@ import {
 } from "lucide-react"
 import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
-import { MdBookmarkBorder } from "react-icons/md";
 import { CgBmw } from "react-icons/cg"
 
 import "../Fabrication Design/FabricationTable.css"
@@ -27,8 +26,11 @@ import "../Fabrication Design/importfile.css"
 import "../Fabrication Design/confirmation.css"
 
 // Updated API base URLs to match the controller
-const API_BASE_URL = "http://195.35.45.56:5522/api/V3.0"
-const API_BASE_URL_V2 = "http://195.35.45.56:5522/api/V2.0"
+const API_BASE_URL = "http://localhost:8855/api/V3.0"
+const API_BASE_URL_V2 = "http://localhost:8855/api/V2.0"
+
+// Key for storing data in localStorage
+const STORAGE_KEY = "fabricationTableData"
 
 const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [rows, setRows] = useState([])
@@ -41,6 +43,9 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [savedRows, setSavedRows] = useState([])
   const [showImportPopup, setShowImportPopup] = useState(false)
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const [rowToDelete, setRowToDelete] = useState(null)
+  const [rowIndexToDelete, setRowIndexToDelete] = useState(null) // Store the index of the row to delete
   const [selectedFile, setSelectedFile] = useState(null)
   const [isImporting, setIsImporting] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -64,6 +69,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const [showImportStats, setShowImportStats] = useState(false)
   const [columns, setColumns] = useState([]) // State for dynamic columns
   const [columnsLoading, setColumnsLoading] = useState(true) // Loading state for columns
+  const [dataExists, setDataExists] = useState(false) // Track if data exists for this child line
+  const [apiError, setApiError] = useState(null) // Track API errors
 
   const fileInputRef = useRef(null)
   const toastTimeoutRef = useRef(null)
@@ -78,17 +85,6 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     fetchImportStats()
   }, [])
 
-  // Add a useEffect to fetch data when the component mounts
-  // Add this right after the other useEffect hooks (around line 60)
-
-  // Fetch data when component mounts
-  useEffect(() => {
-    // Only fetch if we're not already loading and we don't have data
-    if (!isLoading && rows.length === 0) {
-      fetchLatestImportedData()
-    }
-  }, []) // Empty dependency array means this runs once when component mounts
-
   // Cleanup toast timeout on unmount
   useEffect(() => {
     return () => {
@@ -98,20 +94,75 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }, [])
 
-  // Check for order number in props or sessionStorage when component mounts
+  // Check for order number in props or localStorage when component mounts
   useEffect(() => {
     // First check if we have an order number from props
     if (selectedOrder?.orderNumber) {
       setOrderNumber(selectedOrder.orderNumber)
     }
-    // Then check sessionStorage as fallback
+    // Then check localStorage as fallback
     else {
-      const storedOrderNumber = sessionStorage.getItem("selectedOrderNumber")
+      const storedOrderNumber = localStorage.getItem("selectedOrderNumber")
       if (storedOrderNumber) {
         setOrderNumber(storedOrderNumber)
       }
     }
   }, [selectedOrder])
+
+  // Load data when selectedChildLine changes
+  useEffect(() => {
+    if (selectedChildLine) {
+      loadFabricationData()
+    }
+  }, [selectedChildLine])
+
+  // Store data in localStorage whenever rows change
+  useEffect(() => {
+    if (rows.length > 0 && selectedChildLine) {
+      const dataToStore = {
+        rows: rows,
+        lineNumber: selectedChildLine.lineNumber,
+        timestamp: Date.now(),
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore))
+    }
+  }, [rows, selectedChildLine])
+
+  // Function to load fabrication data - first from localStorage, then from API if needed
+  const loadFabricationData = () => {
+    if (!selectedChildLine) return
+
+    try {
+      // Try to get data from localStorage first
+      const storedDataString = localStorage.getItem(STORAGE_KEY)
+
+      if (storedDataString) {
+        const storedData = JSON.parse(storedDataString)
+
+        // Check if the stored data is for the current line number and is less than 30 minutes old
+        const isCurrentLine = storedData.lineNumber === selectedChildLine.lineNumber
+        const isFresh = Date.now() - storedData.timestamp < 30 * 60 * 1000 // 30 minutes
+
+        if (isCurrentLine && isFresh && storedData.rows && storedData.rows.length > 0) {
+          console.log("Using cached data from localStorage")
+          setRows(storedData.rows)
+          setImportedData(storedData.rows)
+          setDataExists(true)
+          setTotalItems(storedData.rows.length)
+          setTotalPages(Math.ceil(storedData.rows.length / pageSize))
+          setSavedRows(storedData.rows.map((row, index) => index)) // Use index as fallback ID
+          return // Skip API call if we have valid cached data
+        }
+      }
+
+      // If we don't have valid cached data, fetch from API
+      fetchFabricationDataForChildLine()
+    } catch (error) {
+      console.error("Error loading fabrication data:", error)
+      // If there's an error with localStorage, fetch from API
+      fetchFabricationDataForChildLine()
+    }
+  }
 
   // Function to fetch columns from the backend
   const fetchColumns = async () => {
@@ -126,7 +177,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         // Add icons based on column ID
         if (column.hasIcon) {
           if (column.id === "orderNumber") {
-            processedColumn.icon = <MdBookmarkBorder size={16} className="column-icon" />
+            processedColumn.icon = <FaJediOrder size={16} className="column-icon" />
           } else if (column.id === "origLineNo") {
             processedColumn.icon = <CgBmw size={16} className="column-icon" />
           } else if (column.id === "drawingNo") {
@@ -170,7 +221,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           label: "Order Number",
           width: "150px",
           placeholder: "Enter order ",
-          icon: <MdBookmarkBorder size={16} className="column-icon" />,
+          icon: <FaJediOrder size={16} className="column-icon" />,
         },
         {
           id: "origLineNo",
@@ -252,33 +303,91 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }
 
-  // Modify the fetchLatestImportedData function to handle errors better
-  // Replace the existing fetchLatestImportedData function with this improved version:
+  // Function to fetch fabrication data specifically for the selected child line
+  const fetchFabricationDataForChildLine = async () => {
+    if (!selectedChildLine || !selectedChildLine.lineNumber) {
+      setRows([])
+      setImportedData([])
+      setDataExists(false)
+      setApiError(null)
+      // Clear localStorage when there's no child line
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
 
-  // Function to fetch the latest imported data
-  const fetchLatestImportedData = async () => {
     try {
       setIsLoading(true)
-      console.log("Fetching latest imported data...")
+      setApiError(null)
+      console.log("Fetching fabrication data for child line:", selectedChildLine.lineNumber)
 
-      const response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
-      console.log("Data fetched successfully:", response.data)
+      // First try to get data from the latest-imported endpoint as a fallback
+      let response
+      try {
+        // Try the specific endpoint first
+        response = await axios.get(`${API_BASE_URL_V2}/fabrication-by-line`, {
+          params: { lineNumber: selectedChildLine.lineNumber },
+        })
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          // If 404, try the latest-imported endpoint as fallback
+          console.log("Specific endpoint not found, trying latest-imported as fallback")
+          response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
+
+          // Filter the results to only include records for this line number
+          if (response.data && response.data.data) {
+            response.data.data = response.data.data.filter(
+              (item) => String(item.lineNumber) === String(selectedChildLine.lineNumber),
+            )
+          }
+        } else {
+          throw error // Re-throw if it's not a 404
+        }
+      }
+
+      console.log("Fabrication data response:", response.data)
 
       // Check if we have data
-      if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
-        console.warn("No data returned from API or invalid format")
+      if (
+        !response.data ||
+        !response.data.data ||
+        !Array.isArray(response.data.data) ||
+        response.data.data.length === 0
+      ) {
+        console.log("No fabrication data found for this child line")
         setRows([])
         setImportedData([])
         setTotalItems(0)
         setTotalPages(0)
+        setDataExists(false)
         setIsLoading(false)
         return
       }
 
+      // Log the first item to see its structure
+      if (response.data.data.length > 0) {
+        console.log("First item from backend:", JSON.stringify(response.data.data[0], null, 2))
+      }
+
       // Map the backend data to match our frontend structure
-      const mappedData = response.data.data.map((item) => {
+      const mappedData = response.data.data.map((item, index) => {
+        // Try to find any field that could be used as an ID
+        let id = null
+
+        // Check all possible ID field names
+        if (item.ifaceId !== undefined) id = item.ifaceId
+        else if (item.iface_id !== undefined) id = item.iface_id
+        else if (item.id !== undefined) id = item.id
+        else if (item._id !== undefined) id = item._id
+
+        // If no ID found, use index as fallback
+        if (id === null) {
+          console.warn("No ID field found in item, using index as fallback:", index)
+          id = `index-${index}`
+        }
+
         return {
-          id: item.id,
+          _rowIndex: index, // Store the index for fallback deletion
+          ifaceId: id, // Use the found ID or index
           orderNumber: item.orderNumber || "",
           origLineNo: item.origLineNumber || "",
           lineNo: item.lineNumber || "",
@@ -296,47 +405,75 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           remarks: item.remark || "",
           ifaceStatus: item.ifaceStatus || "PENDING",
           isNew: false,
+          _originalData: item, // Store the original data for debugging
         }
       })
 
-      console.log("Mapped data:", mappedData.length, "rows")
+      console.log("Mapped fabrication data:", mappedData.length, "rows")
 
-      // Set the imported data
+      // Set the data
       setImportedData(mappedData)
-      setRows(mappedData) // Use imported data as rows
+      setRows(mappedData)
+      setDataExists(mappedData.length > 0)
 
       // Update total items and pages for pagination
       setTotalItems(mappedData.length)
       setTotalPages(Math.ceil(mappedData.length / pageSize))
 
-      // Mark all fetched rows as saved
-      setSavedRows(mappedData.map((row) => row.id))
-
-      // Update import statistics
-      setImportStats({
-        successCount: response.data.successCount || 0,
-        failureCount: response.data.failureCount || 0,
-        pendingCount: response.data.pendingCount || 0,
-        totalCount: response.data.totalItems || 0,
-      })
+      // Mark all fetched rows as saved - use index if no ID
+      setSavedRows(mappedData.map((row, index) => row.ifaceId || `index-${index}`))
 
       if (mappedData.length > 0) {
-        showToastNotification(`Loaded ${mappedData.length} records successfully!`)
-      } else {
-        showToastNotification("No imported records found.", "Info", "info")
+        showToastNotification(`Loaded ${mappedData.length} records for line ${selectedChildLine.lineNumber}`)
       }
     } catch (error) {
-      console.error("Error fetching imported data:", error)
+      console.error("Error fetching fabrication data for child line:", error)
+      setApiError(error.message || "Failed to fetch data")
       showToastNotification(
-        `Failed to fetch imported data: ${error.response?.data?.message || error.message}`,
+        `Failed to fetch fabrication data: ${error.response?.data?.message || error.message}`,
         "Error",
         "error",
       )
-      // Set empty data on error
-      setRows([])
-      setImportedData([])
-      setTotalItems(0)
-      setTotalPages(0)
+
+      // Try to load from localStorage as a last resort
+      const storedDataString = localStorage.getItem(STORAGE_KEY)
+      if (storedDataString) {
+        try {
+          const storedData = JSON.parse(storedDataString)
+          if (storedData.lineNumber === selectedChildLine.lineNumber && storedData.rows) {
+            console.log("API failed, using cached data from localStorage")
+            setRows(storedData.rows)
+            setImportedData(storedData.rows)
+            setDataExists(storedData.rows.length > 0)
+            setTotalItems(storedData.rows.length)
+            setTotalPages(Math.ceil(storedData.rows.length / pageSize))
+            setSavedRows(storedData.rows.map((row, index) => row.ifaceId || `index-${index}`))
+            showToastNotification("Using cached data due to API error", "Warning", "warning")
+          } else {
+            // Set empty data if cached data is for a different line
+            setRows([])
+            setImportedData([])
+            setTotalItems(0)
+            setTotalPages(0)
+            setDataExists(false)
+          }
+        } catch (e) {
+          console.error("Error parsing stored data:", e)
+          // Set empty data on error
+          setRows([])
+          setImportedData([])
+          setTotalItems(0)
+          setTotalPages(0)
+          setDataExists(false)
+        }
+      } else {
+        // Set empty data if no cached data
+        setRows([])
+        setImportedData([])
+        setTotalItems(0)
+        setTotalPages(0)
+        setDataExists(false)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -344,7 +481,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
   const handleRefresh = () => {
     setRefreshing(true)
-    fetchLatestImportedData()
+    fetchFabricationDataForChildLine()
       .then(() => {
         fetchImportStats()
         showToastNotification("Data refreshed successfully!")
@@ -357,7 +494,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   // Modified addNewRow function to add the new row at the beginning and show on first page
   const addNewRow = () => {
     const newRow = {
-      id: `temp-${Date.now()}`, // Temporary ID until saved to backend
+      _rowIndex: -1, // Special index for new rows
+      ifaceId: `temp-${Date.now()}`, // Temporary ID until saved to backend
       orderNumber: orderNumber, // Use the current order number
       origLineNo: selectedChildLine?.parentLineNumber || "", // Use the parent line number as original line number
       lineNo: selectedChildLine ? selectedChildLine.lineNumber : "", // Use the selected child line number if available
@@ -379,7 +517,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
     // Add the new row at the beginning of the array instead of the end
     setRows([newRow, ...rows])
-    setEditingRow(newRow.id)
+    setEditingRow(newRow.ifaceId)
+    setDataExists(true) // We now have data
 
     // Set to first page to ensure the new row is visible
     setCurrentPage(0)
@@ -390,11 +529,14 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     // Cache the row data locally to preserve fields that might not be in the backend model
     setLocalDataCache((prev) => ({
       ...prev,
-      [row.id]: { ...row },
+      [row.ifaceId]: { ...row },
     }))
 
     return {
-      id: row.id && !row.id.toString().startsWith("temp-") ? row.id : null,
+      ifaceId:
+        row.ifaceId && !row.ifaceId.toString().startsWith("temp-") && !row.ifaceId.toString().startsWith("index-")
+          ? row.ifaceId
+          : null,
       orderNumber: row.orderNumber,
       origLineNumber: row.origLineNo,
       lineNumber: row.lineNo,
@@ -417,13 +559,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
   const handleSave = async () => {
     try {
       if (editingRow !== null) {
-        const rowToSave = rows.find((row) => row.id === editingRow)
+        const rowToSave = rows.find((row) => row.ifaceId === editingRow)
 
         if (rowToSave) {
           // Cache the current row data before sending to backend
           setLocalDataCache((prev) => ({
             ...prev,
-            [rowToSave.id]: { ...rowToSave },
+            [rowToSave.ifaceId]: { ...rowToSave },
           }))
 
           const backendData = convertRowToBackendFormat(rowToSave)
@@ -434,11 +576,11 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             response = await axios.post(`${API_BASE_URL}/getfabrication`, backendData)
 
             // Update the row with the ID from the backend
-            const newId = response.data.id
+            const newId = response.data.ifaceId
 
             // Update local cache with the new ID
-            const cachedData = { ...localDataCache[rowToSave.id] }
-            delete localDataCache[rowToSave.id]
+            const cachedData = { ...localDataCache[rowToSave.ifaceId] }
+            delete localDataCache[rowToSave.ifaceId]
             setLocalDataCache((prev) => ({
               ...prev,
               [newId]: cachedData,
@@ -446,10 +588,10 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
             setRows(
               rows.map((row) =>
-                row.id === editingRow
+                row.ifaceId === editingRow
                   ? {
                       ...row,
-                      id: newId,
+                      ifaceId: newId,
                       isNew: false,
                     }
                   : row,
@@ -462,14 +604,14 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             showToastNotification("Record created successfully!")
           } else {
             // Update existing record using the correct endpoint from the controller
-            response = await axios.put(`${API_BASE_URL}/getfabrication/${rowToSave.id}`, backendData)
+            response = await axios.put(`${API_BASE_URL}/getfabrication/${rowToSave.ifaceId}`, backendData)
 
             // Update the row with data from the backend
-            setRows(rows.map((row) => (row.id === editingRow ? { ...row, isNew: false } : row)))
+            setRows(rows.map((row) => (row.ifaceId === editingRow ? { ...row, isNew: false } : row)))
 
             // Make sure this row is marked as saved
-            if (!savedRows.includes(rowToSave.id)) {
-              setSavedRows((prev) => [...prev, rowToSave.id])
+            if (!savedRows.includes(rowToSave.ifaceId)) {
+              setSavedRows((prev) => [...prev, rowToSave.ifaceId])
             }
 
             showToastNotification("Record updated successfully!")
@@ -479,13 +621,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         setEditingRow(null)
       } else {
         // If no specific row is being edited, save all unsaved rows
-        const unsavedRows = rows.filter((row) => !savedRows.includes(row.id))
+        const unsavedRows = rows.filter((row) => !savedRows.includes(row.ifaceId))
 
         if (unsavedRows.length > 0) {
           // Cache all unsaved rows
           const newCache = { ...localDataCache }
           unsavedRows.forEach((row) => {
-            newCache[row.id] = { ...row }
+            newCache[row.ifaceId] = { ...row }
           })
           setLocalDataCache(newCache)
 
@@ -495,14 +637,14 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           const response = await axios.post(`${API_BASE_URL}/getfabrication/batch`, batchData)
 
           // Update rows with IDs from backend
-          const savedIds = response.data.map((item) => item.id)
+          const savedIds = response.data.map((item) => item.ifaceId)
 
           // Update the local cache with new IDs
           const updatedCache = { ...localDataCache }
           unsavedRows.forEach((row, index) => {
-            if (row.id.toString().startsWith("temp-") && savedIds[index]) {
-              updatedCache[savedIds[index]] = { ...updatedCache[row.id] }
-              delete updatedCache[row.id]
+            if (row.ifaceId.toString().startsWith("temp-") && savedIds[index]) {
+              updatedCache[savedIds[index]] = { ...updatedCache[row.ifaceId] }
+              delete updatedCache[row.ifaceId]
             }
           })
           setLocalDataCache(updatedCache)
@@ -521,7 +663,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       // Refresh data after saving to ensure we have the latest from the server
       // Add a small delay to allow the backend to process the save
       setTimeout(() => {
-        fetchLatestImportedData()
+        fetchFabricationDataForChildLine()
       }, 500)
     } catch (error) {
       console.error("Error saving data:", error)
@@ -529,40 +671,159 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }
   }
 
-  const handleEdit = (id) => {
-    setEditingRow(id)
+  const handleEdit = (ifaceId) => {
+    setEditingRow(ifaceId)
     showToastNotification("Editing row", "Edit Mode", "info")
   }
 
-  const handleDelete = async (id) => {
-    try {
-      // Check if the row exists in the backend (has a non-temporary ID)
-      if (!id.toString().startsWith("temp-")) {
-        // Delete from backend using the correct endpoint from the controller
-        await axios.delete(`${API_BASE_URL}/getfabrication/${id}`)
+  // Show delete confirmation dialog
+  const confirmDelete = (row, rowIndex) => {
+    console.log("Confirming delete for row:", row, "at index:", rowIndex)
 
-        // Remove from local cache
-        const updatedCache = { ...localDataCache }
-        delete updatedCache[id]
-        setLocalDataCache(updatedCache)
+    if (!row) {
+      showToastNotification("Cannot delete: Row is undefined", "Error", "error")
+      return
+    }
+
+    // Store both the row and its index
+    setRowToDelete(row)
+    setRowIndexToDelete(rowIndex)
+    setShowDeleteConfirmation(true)
+  }
+
+  // Handle actual deletion after confirmation
+  const handleDelete = async () => {
+    if (!rowToDelete) {
+      showToastNotification("Cannot delete: Row is undefined", "Error", "error")
+      setShowDeleteConfirmation(false)
+      return
+    }
+
+    console.log("Deleting row:", rowToDelete, "at index:", rowIndexToDelete)
+
+    try {
+      setIsLoading(true)
+
+      // Try to delete from backend if we have an ID
+      if (
+        rowToDelete.ifaceId &&
+        !rowToDelete.ifaceId.toString().startsWith("temp-") &&
+        !rowToDelete.ifaceId.toString().startsWith("index-")
+      ) {
+        try {
+          console.log(`Attempting to delete record with ID ${rowToDelete.ifaceId} from database`)
+          await axios.delete(`${API_BASE_URL_V2}/fabrication/${rowToDelete.ifaceId}`)
+          console.log(`Successfully deleted record with ID ${rowToDelete.ifaceId} from database`)
+        } catch (deleteError) {
+          console.error(`Error deleting from backend:`, deleteError)
+          // Continue with local deletion even if backend delete fails
+          console.log("Continuing with local deletion despite backend error")
+        }
+      } else {
+        console.log("Skipping backend delete - using local deletion only")
       }
 
-      // Remove from local state
-      setRows(rows.filter((row) => row.id !== id))
-      setSavedRows(savedRows.filter((rowId) => rowId !== id))
+      // Remove from local state using index if available, otherwise filter by ID
+      let updatedRows
+      if (rowIndexToDelete !== null && rowIndexToDelete >= 0 && rowIndexToDelete < rows.length) {
+        // Delete by index
+        updatedRows = [...rows]
+        updatedRows.splice(rowIndexToDelete, 1)
+        console.log(`Deleted row at index ${rowIndexToDelete}`)
+      } else {
+        // Fallback to filtering by ID or any other property
+        updatedRows = rows.filter((row, index) => {
+          // Try to match by ifaceId first
+          if (row.ifaceId && rowToDelete.ifaceId) {
+            return row.ifaceId !== rowToDelete.ifaceId
+          }
+
+          // If no ifaceId, try to match by _rowIndex
+          if (row._rowIndex !== undefined && rowToDelete._rowIndex !== undefined) {
+            return row._rowIndex !== rowToDelete._rowIndex
+          }
+
+          // Last resort: match by multiple properties to ensure we get the right row
+          return !(
+            row.orderNumber === rowToDelete.orderNumber &&
+            row.drawingNo === rowToDelete.drawingNo &&
+            row.lineNo === rowToDelete.lineNo
+          )
+        })
+        console.log(`Deleted row by matching properties`)
+      }
+
+      // Update imported data to keep it in sync
+      let updatedImportedData
+      if (rowIndexToDelete !== null && rowIndexToDelete >= 0 && rowIndexToDelete < importedData.length) {
+        updatedImportedData = [...importedData]
+        updatedImportedData.splice(rowIndexToDelete, 1)
+      } else {
+        updatedImportedData = importedData.filter((row) => {
+          if (row.ifaceId && rowToDelete.ifaceId) {
+            return row.ifaceId !== rowToDelete.ifaceId
+          }
+          if (row._rowIndex !== undefined && rowToDelete._rowIndex !== undefined) {
+            return row._rowIndex !== rowToDelete._rowIndex
+          }
+          return !(
+            row.orderNumber === rowToDelete.orderNumber &&
+            row.drawingNo === rowToDelete.drawingNo &&
+            row.lineNo === rowToDelete.lineNo
+          )
+        })
+      }
+      setImportedData(updatedImportedData)
+
+      // Update rows state
+      setRows(updatedRows)
+
+      // Remove from savedRows if applicable
+      if (rowToDelete.ifaceId) {
+        setSavedRows((prevSavedRows) => prevSavedRows.filter((savedId) => savedId !== rowToDelete.ifaceId))
+      }
+
+      // Remove from local cache if applicable
+      if (rowToDelete.ifaceId) {
+        setLocalDataCache((prev) => {
+          const updated = { ...prev }
+          delete updated[rowToDelete.ifaceId]
+          return updated
+        })
+      }
+
+      // Update dataExists flag if we've deleted all rows
+      if (updatedRows.length === 0) {
+        setDataExists(false)
+      }
+
+      // Update localStorage with the new data
+      if (selectedChildLine) {
+        const dataToStore = {
+          rows: updatedRows,
+          lineNumber: selectedChildLine.lineNumber,
+          timestamp: Date.now(),
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToStore))
+      }
 
       showToastNotification("Row deleted successfully!")
     } catch (error) {
       console.error("Error deleting row:", error)
-      showToastNotification(`Failed to delete: ${error.response?.data?.message || error.message}`, "Error", "error")
+      showToastNotification(`Failed to delete: ${error.message}`, "Error", "error")
+    } finally {
+      setIsLoading(false)
+      setShowDeleteConfirmation(false)
+      setRowToDelete(null)
+      setRowIndexToDelete(null)
     }
   }
 
-  const handleInputChange = (id, field, value) => {
+  const handleInputChange = (ifaceId, field, value) => {
     // Update the rows state
     setRows(
       rows.map((row) => {
-        if (row.id === id) {
+        if (row.ifaceId === ifaceId) {
           return { ...row, [field]: value }
         }
         return row
@@ -572,8 +833,8 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     // Also update the local cache to preserve the data
     setLocalDataCache((prev) => ({
       ...prev,
-      [id]: {
-        ...(prev[id] || {}),
+      [ifaceId]: {
+        ...(prev[ifaceId] || {}),
         [field]: value,
       },
     }))
@@ -601,11 +862,11 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     }, 10)
   }
 
-  const toggleSelectRow = (id) => {
-    if (selectedRows.includes(id)) {
-      setSelectedRows(selectedRows.filter((rowId) => rowId !== id))
+  const toggleSelectRow = (ifaceId) => {
+    if (selectedRows.includes(ifaceId)) {
+      setSelectedRows(selectedRows.filter((rowId) => rowId !== ifaceId))
     } else {
-      setSelectedRows([...selectedRows, id])
+      setSelectedRows([...selectedRows, ifaceId])
     }
   }
 
@@ -613,7 +874,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     if (selectedRows.length === rows.length) {
       setSelectedRows([])
     } else {
-      setSelectedRows(rows.map((row) => row.id))
+      setSelectedRows(rows.map((row) => row.ifaceId))
     }
   }
 
@@ -666,6 +927,18 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       const formData = new FormData()
       formData.append("file", selectedFile)
 
+      // Add child line information to the form data
+      if (selectedChildLine) {
+        formData.append("lineNumber", selectedChildLine.lineNumber)
+        if (selectedChildLine.parentLineNumber) {
+          formData.append("parentLineNumber", selectedChildLine.parentLineNumber)
+        }
+      }
+
+      if (selectedOrder && selectedOrder.orderNumber) {
+        formData.append("orderNumber", selectedOrder.orderNumber)
+      }
+
       // Show loading for at least 3 seconds
       const loadingPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
@@ -684,9 +957,25 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       const newlyImportedData = importResponse.data.data || []
 
       // Map the newly imported data to match our frontend structure
-      const mappedData = newlyImportedData.map((item) => {
+      const mappedData = newlyImportedData.map((item, index) => {
+        // Try to find any field that could be used as an ID
+        let id = null
+
+        // Check all possible ID field names
+        if (item.ifaceId !== undefined) id = item.ifaceId
+        else if (item.iface_id !== undefined) id = item.iface_id
+        else if (item.id !== undefined) id = item.id
+        else if (item._id !== undefined) id = item._id
+
+        // If no ID found, use index as fallback
+        if (id === null) {
+          console.warn("No ID field found in item, using index as fallback:", index)
+          id = `index-${index}`
+        }
+
         return {
-          id: item.id,
+          _rowIndex: index, // Store the index for fallback deletion
+          ifaceId: id, // Use the found ID or index
           orderNumber: item.orderNumber || "",
           origLineNo: item.origLineNumber || "",
           lineNo: item.lineNumber || "",
@@ -704,12 +993,14 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           remarks: item.remark || "",
           ifaceStatus: item.ifaceStatus || "PENDING",
           isNew: false,
+          _originalData: item, // Store the original data for debugging
         }
       })
 
       // Update the imported data and rows
       setImportedData(mappedData)
       setRows(mappedData)
+      setDataExists(mappedData.length > 0)
 
       // Update pagination info
       setTotalItems(mappedData.length)
@@ -717,7 +1008,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       setCurrentPage(0) // Reset to first page
 
       // Mark all imported rows as saved
-      setSavedRows(mappedData.map((row) => row.id))
+      setSavedRows(mappedData.map((row, index) => row.ifaceId || `index-${index}`))
 
       setImportedRecords(recordsImported)
       setImportStats({
@@ -739,7 +1030,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
       // Show toast notification with success/failure counts
       showToastNotification(
-        `${recordsImported} records were added to the database. (${successCount} success / ${failureCount} failure)`,
+        `${recordsImported} records were added to the database for line ${selectedChildLine?.lineNumber}. (${successCount} success / ${failureCount} failure)`,
         "Excel data imported successfully!",
         "success",
       )
@@ -866,7 +1157,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     <div className="table-container">
       <div className="table-header">
         <div className="table-title" style={{ color: "white" }}>
-          Fabrication
+          Fabrication for Line {selectedChildLine?.lineNumber}
         </div>
         <div className="table-actions">
           <button className="btn btn-stats" onClick={toggleImportStats}>
@@ -926,15 +1217,25 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         </div>
       )}
 
+      {/* API Error Message */}
+      {apiError && (
+        <div className="api-error-message">
+          <AlertCircle size={20} className="error-icon" />
+          <span>API Error: {apiError}</span>
+          <button className="retry-button" onClick={handleRefresh}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Added Order Number section similar to LinesDatabaseSearch */}
       <div className="order-number-section">
         <div className="order-number-display">
-          <span style={{color:'maroon'}}>Order Number: {selectedOrder ? selectedOrder.orderNumber : orderNumber || "No order selected"}</span>
+          <span>Order Number: {selectedOrder ? selectedOrder.orderNumber : orderNumber || "No order selected"}</span>
+          {selectedChildLine && <span className="child-line-info">Line Number: {selectedChildLine.lineNumber}</span>}
           {selectedChildLine?.parentLineNumber && (
             <span className="parent-line-info">Original Line Number: {selectedChildLine.parentLineNumber}</span>
           )}
-          {selectedChildLine && <span>Line Number: {selectedChildLine.lineNumber}</span>}
-          
         </div>
         <div className="table-actions-secondary">
           <div className="import-status">
@@ -948,7 +1249,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           <Search size={16} className="search-icon" />
           <input
             type="text"
-            placeholder="Search your records here..."
+            placeholder="Search imported records..."
             className="search-input"
             value={searchTerm}
             onChange={handleSearch}
@@ -981,6 +1282,16 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                   </div>
                 </td>
               </tr>
+            ) : !dataExists ? (
+              <tr>
+                <td colSpan={columns.length + 1} className="empty-table">
+                  <div className="no-data-message">
+                    <AlertCircle size={24} className="no-data-icon" />
+                    <p>No fabrication data exists for line {selectedChildLine?.lineNumber}.</p>
+                    <p>Please import data or add a new service to get started.</p>
+                  </div>
+                </td>
+              </tr>
             ) : rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + 1} className="empty-table">
@@ -990,11 +1301,14 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                 </td>
               </tr>
             ) : (
-              getCurrentPageRows().map((row) => (
-                <tr key={row.id} className={row.isNew ? "editing-row" : ""}>
+              getCurrentPageRows().map((row, rowIndex) => (
+                <tr
+                  key={`row-${rowIndex}-${row.ifaceId || row._rowIndex || "unknown"}`}
+                  className={row.isNew ? "editing-row" : ""}
+                >
                   {columns.map((column) => (
-                    <td key={`${row.id}-${column.id}`} style={{ width: column.width }}>
-                      {editingRow === row.id ? (
+                    <td key={`${rowIndex}-${column.id}`} style={{ width: column.width }}>
+                      {editingRow === row.ifaceId ? (
                         <div className="input-field-container">
                           {column.id === "status" ? (
                             <div
@@ -1006,7 +1320,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                             <input
                               type="text"
                               value={row[column.id] || ""}
-                              onChange={(e) => handleInputChange(row.id, column.id, e.target.value)}
+                              onChange={(e) => handleInputChange(row.ifaceId, column.id, e.target.value)}
                               className="edit-input"
                               placeholder={column.placeholder}
                             />
@@ -1014,7 +1328,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                         </div>
                       ) : (
                         <div className="cell-content">
-                          {column.icon && savedRows.includes(row.id) && (
+                          {column.icon && savedRows.includes(row.ifaceId) && (
                             <span className="cell-icon">{column.icon}</span>
                           )}
                           {column.renderCell ? (
@@ -1028,10 +1342,19 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                   ))}
                   <td className="actions-column">
                     <div className="action-buttons">
-                      <button className="action-btn edit-btn" onClick={() => handleEdit(row.id)}>
+                      <button className="action-btn edit-btn" onClick={() => handleEdit(row.ifaceId)}>
                         <Edit size={16} />
                       </button>
-                      <button className="action-btn delete-btn" onClick={() => handleDelete(row.id)}>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          console.log("Delete button clicked for row:", row, "at index:", rowIndex)
+                          confirmDelete(row, rowIndex)
+                        }}
+                        disabled={isLoading}
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -1069,6 +1392,50 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
             >
               <ChevronRight size={18} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirmation && (
+        <div className="confirmation-popup-overlay">
+          <div className="confirmation-popup">
+            <div className="confirmation-popup-header">
+              <h3>Confirm Delete</h3>
+            </div>
+            <div className="confirmation-popup-content">
+              <p>Are you sure you want to delete this record?</p>
+              {rowToDelete && (
+                <div className="delete-record-info">
+                  <p>
+                    <strong>Order Number:</strong> {rowToDelete.orderNumber}
+                  </p>
+                  <p>
+                    <strong>Drawing No:</strong> {rowToDelete.drawingNo}
+                  </p>
+                  <p>
+                    <strong>Line Number:</strong> {rowToDelete.lineNo}
+                  </p>
+                </div>
+              )}
+              <p className="delete-warning">This action cannot be undone.</p>
+            </div>
+            <div className="confirmation-popup-actions">
+              <button
+                className="confirmation-no-btn"
+                onClick={() => {
+                  setShowDeleteConfirmation(false)
+                  setRowToDelete(null)
+                  setRowIndexToDelete(null)
+                }}
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button className="confirmation-yes-btn delete-confirm-btn" onClick={handleDelete} disabled={isLoading}>
+                {isLoading ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1183,7 +1550,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                 </div>
               ) : (
                 <>
-                  <p>Do you want to import your data in fabrication?</p>
+                  <p>Do you want to import your data in fabrication for line {selectedChildLine?.lineNumber}?</p>
                   {selectedFile && (
                     <div className="confirmation-file-info">
                       <FileText size={20} className="confirmation-file-icon" />
