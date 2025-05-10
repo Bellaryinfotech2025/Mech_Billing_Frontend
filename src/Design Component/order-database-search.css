@@ -2,7 +2,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 /* Base container styles */
-.order-search-container {
+.order-search-container-ary-bell {
   width: 100%;
   background-color: #fff;
   border-radius: 8px;
@@ -12,10 +12,11 @@
   display: flex;
   flex-direction: column;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
 }
 
 /* Header styles */
-.order-search-header {
+.order-search-header-ary-bell {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -24,20 +25,20 @@
   background-color: #fff;
 }
 
-.order-search-header h1 {
+.order-search-header-ary-bell h1 {
   font-size: 18px;
   font-weight: 600;
   color: #111827;
   margin: 0;
 }
 
-.header-actions {
+.header-actions-ary-bell {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.add-order-btn {
+.add-order-btn-ary-bell {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -53,11 +54,11 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.add-order-btn:hover {
+.add-order-btn-ary-bell:hover {
   background-color: #4338ca;
 }
 
-.add-new-order-btn {
+.add-new-order-btn-ary-bell {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -73,12 +74,12 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.add-new-order-btn:hover {
+.add-new-order-btn-ary-bell:hover {
   background-color: #059669;
 }
 
 /* Search section styles */
-.search-section {
+.search-section-ary-bell {
   padding: 10px 16px;
   display: flex;
   align-items: center;
@@ -89,7 +90,7 @@
 }
 
 /* Search input styles to match the provided image */
-.search-input-container {
+.search-input-container-ary-bell {
   display: flex;
   align-items: center;
   margin-right: auto;
@@ -98,7 +99,7 @@
   position: relative;
 }
 
-.search-input {
+.search-input-ary-bell {
   width: 100%;
   height: 34px;
   padding: 0 10px;
@@ -112,18 +113,18 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.search-input::placeholder {
+.search-input-ary-bell::placeholder {
   color: #9ca3af;
   font-size: 12px;
 }
 
-.search-input:focus {
+.search-input-ary-bell:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-.search-button {
+.search-button-ary-bell {
   position: absolute;
   right: 0;
   top: 0;
@@ -141,17 +142,17 @@
   transition: all 0.2s ease;
 }
 
-.search-button:hover {
+.search-button-ary-bell:hover {
   background-color: #e5e7eb;
   color: #111827;
 }
 
-.table-actions {
+.table-actions-ary-bell {
   display: flex;
   gap: 6px;
 }
 
-.table-action-btn {
+.table-action-btn-ary-bell {
   width: 30px;
   height: 30px;
   display: flex;
@@ -165,26 +166,27 @@
   color: #6b7280;
 }
 
-.table-action-btn:hover {
+.table-action-btn-ary-bell:hover {
   background-color: #f9fafb;
   color: #111827;
   border-color: #9ca3af;
 }
 
 /* Table wrapper with border-radius and box-shadow */
-.table-wrapper {
+.table-wrapper-ary-bell {
   flex: 1;
   margin: 0;
   overflow: hidden;
   position: relative;
   border-radius: 0;
   box-shadow: none;
+  width: 100%;
 }
 
-/* Table container with scrollbar attached directly to the table */
-.table-container {
+/* Table container with scrollbar */
+.table-container-ary-bell {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; /* Changed to auto to allow scrolling */
   overflow-y: auto;
   max-height: calc(100vh - 260px);
   scrollbar-width: thin;
@@ -192,41 +194,78 @@
 }
 
 /* Make scrollbar always visible */
-.table-container::-webkit-scrollbar {
-  height: 6px;
+.table-container-ary-bell::-webkit-scrollbar {
+  height: 0; /* Hide the default scrollbar, we'll use the bottom one */
   width: 6px;
 }
 
-.table-container::-webkit-scrollbar-track {
+.table-container-ary-bell::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
 
-.table-container::-webkit-scrollbar-thumb {
+.table-container-ary-bell::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
 
-.table-container::-webkit-scrollbar-thumb:hover {
+.table-container-ary-bell::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
+/* Bottom scrollbar container - NEW */
+.bottom-scrollbar-ary-bell {
+  width: 100%;
+  height: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  position: relative;
+}
+
+/* Style for the bottom scrollbar */
+.bottom-scrollbar-ary-bell::-webkit-scrollbar {
+  height: 12px;
+}
+
+.bottom-scrollbar-ary-bell::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.bottom-scrollbar-ary-bell::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+.bottom-scrollbar-ary-bell::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Content for the bottom scrollbar to match table width */
+.scrollbar-content-ary-bell {
+  height: 1px;
+  width: 1500px; /* Match the min-width of the table */
+}
+
 /* Compact table styles */
-.table-container.compact .orders-table th,
-.table-container.compact .orders-table td {
+.table-container-ary-bell.compact-ary-bell .orders-table-ary-bell th,
+.table-container-ary-bell.compact-ary-bell .orders-table-ary-bell td {
   padding: 6px 12px;
   font-size: 12px;
 }
 
-.orders-table {
+.orders-table-ary-bell {
   width: 100%;
-  min-width: max-content;
+  min-width: 1500px; /* Set a minimum width to ensure all columns are visible with scrolling */
   border-collapse: collapse;
   border-spacing: 0;
   table-layout: fixed;
   font-size: 12px;
 }
 
-.orders-table th {
+.orders-table-ary-bell th {
   background-color: #f8fafc;
   padding: 8px 12px;
   text-align: left;
@@ -242,57 +281,57 @@
   letter-spacing: 0.03em;
 }
 
-.orders-table th.column-actions {
+.orders-table-ary-bell th.column-actions-ary-bell {
   width: 70px;
 }
 
 /* Adjusted column widths to ensure all are visible */
-.orders-table th:nth-child(1) {
+.orders-table-ary-bell th:nth-child(1) {
   width: 120px;
 } /* Actions */
-.orders-table th:nth-child(2) {
+.orders-table-ary-bell th:nth-child(2) {
   width: 110px;
 } /* Order Number */
-.orders-table th:nth-child(3) {
+.orders-table-ary-bell th:nth-child(3) {
   width: 110px;
 } /* Order Type */
-.orders-table th:nth-child(4) {
+.orders-table-ary-bell th:nth-child(4) {
   width: 120px;
 } /* Business Unit */
-.orders-table th:nth-child(5) {
+.orders-table-ary-bell th:nth-child(5) {
   width: 90px;
 } /* Category */
-.orders-table th:nth-child(6) {
+.orders-table-ary-bell th:nth-child(6) {
   width: 120px;
 } /* Bill To Customer */
-.orders-table th:nth-child(7) {
+.orders-table-ary-bell th:nth-child(7) {
   width: 130px;
 } /* Start Date */
-.orders-table th:nth-child(8) {
+.orders-table-ary-bell th:nth-child(8) {
   width: 130px;
 } /* End Date */
-.orders-table th:nth-child(9) {
+.orders-table-ary-bell th:nth-child(9) {
   width: 90px;
 } /* Total Value */
 
 /* Additional columns (will require scrolling) */
-.orders-table th:nth-child(n + 10) {
+.orders-table-ary-bell th:nth-child(n + 10) {
   width: 110px;
 }
 
-.orders-table tr {
+.orders-table-ary-bell tr {
   transition: background-color 0.2s ease;
 }
 
-.orders-table tr:nth-child(even) {
+.orders-table-ary-bell tr:nth-child(even) {
   background-color: #f8fafc;
 }
 
-.orders-table tr:hover {
+.orders-table-ary-bell tr:hover {
   background-color: #f1f5f9;
 }
 
-.orders-table td {
+.orders-table-ary-bell td {
   padding: 6px 12px;
   border-bottom: 1px solid #e2e8f0;
   white-space: nowrap;
@@ -303,40 +342,52 @@
 }
 
 /* Order number cell styling */
-.order-number-cell {
+.order-number-cell-ary-bell {
   text-decoration: underline;
   cursor: pointer;
   font-weight: normal;
   color: #0066cc;
 }
 
-.order-number-cell:hover {
+.order-number-cell-ary-bell:hover {
   color: #004c99;
 }
 
 /* Style for links in the table */
-.orders-table td a {
+.orders-table-ary-bell td a {
   color: #3b82f6;
   text-decoration: none;
 }
 
-.orders-table td a:hover {
+.orders-table-ary-bell td a:hover {
   text-decoration: underline;
 }
 
 /* Highlight certain columns with blue text */
-.orders-table td:nth-child(6),
-.orders-table td:nth-child(7) {
+.orders-table-ary-bell td:nth-child(6),
+.orders-table-ary-bell td:nth-child(7) {
   color: #3b82f6;
   font-weight: 500;
 }
 
-.no-records-row {
+.no-records-row-ary-bell {
   height: 100px;
 }
 
+/* Loading and error cells */
+.loading-cell-ary-bell {
+  text-align: center;
+  padding: 16px;
+}
+
+.error-cell-ary-bell {
+  text-align: center;
+  padding: 16px;
+  color: #e53e3e;
+}
+
 /* No records toast styling - updated to match design */
-.no-records-toast {
+.no-records-toast-ary-bell {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -353,12 +404,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.no-records-toast svg {
+.no-records-toast-ary-bell svg {
   color: #0284c7;
 }
 
 /* Load orders toast styling */
-.load-orders-toast {
+.load-orders-toast-ary-bell {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -377,7 +428,7 @@
   animation: greenPulse 2s infinite;
 }
 
-.load-orders-toast svg {
+.load-orders-toast-ary-bell svg {
   color: #059669;
 }
 
@@ -397,7 +448,7 @@
 }
 
 /* Pagination styles */
-.table-pagination {
+.table-pagination-ary-bell {
   display: flex;
   align-items: center;
   padding: 8px 12px;
@@ -405,7 +456,7 @@
   background-color: #f8fafc;
 }
 
-.pagination-btn {
+.pagination-btn-ary-bell {
   width: 28px;
   height: 28px;
   display: flex;
@@ -419,13 +470,13 @@
   transition: all 0.2s ease;
 }
 
-.pagination-btn:hover {
+.pagination-btn-ary-bell:hover {
   background-color: #f1f5f9;
   color: #334155;
   border-color: #94a3b8;
 }
 
-.pagination-slider {
+.pagination-slider-ary-bell {
   flex: 1;
   height: 3px;
   margin: 0 12px;
@@ -434,7 +485,7 @@
   border-radius: 2px;
 }
 
-.slider-track {
+.slider-track-ary-bell {
   position: absolute;
   top: 0;
   left: 0;
@@ -444,7 +495,7 @@
   border-radius: 2px;
 }
 
-.slider-thumb {
+.slider-thumb-ary-bell {
   position: absolute;
   top: -4px;
   left: 30%;
@@ -456,13 +507,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.slider-thumb:hover {
+.slider-thumb-ary-bell:hover {
   background-color: #475569;
   transform: scale(1.1);
 }
 
 /* Action button for table rows */
-.action-btn {
+.action-btn-ary-bell {
   padding: 3px 8px;
   background-color: #f8fafc;
   border: 1px solid #cbd5e1;
@@ -474,21 +525,21 @@
   transition: all 0.2s ease;
 }
 
-.action-btn:hover {
+.action-btn-ary-bell:hover {
   background-color: #f1f5f9;
   color: #334155;
   border-color: #94a3b8;
 }
 
 /* Action buttons styling */
-.action-buttons {
+.action-buttons-ary-bell {
   display: flex;
   gap: 4px;
   justify-content: flex-start;
   align-items: center;
 }
 
-.action-btn {
+.action-btn-ary-bell {
   padding: 4px;
   background-color: transparent;
   border: 1px solid #e2e8f0;
@@ -500,24 +551,24 @@
   transition: all 0.2s ease;
 }
 
-.action-btn:hover {
+.action-btn-ary-bell:hover {
   background-color: #f1f5f9;
   border-color: #cbd5e1;
   transform: translateY(-1px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-tr:hover .action-btn {
+tr:hover .action-btn-ary-bell {
   border-color: #cbd5e1;
 }
 
-tr.selected-row .action-btn,
-tr:hover.selected-row .action-btn {
+tr.selected-row-ary-bell .action-btn-ary-bell,
+tr:hover.selected-row-ary-bell .action-btn-ary-bell {
   border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* Loading state */
-.loading-indicator {
+.loading-indicator-ary-bell {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -526,59 +577,75 @@ tr:hover.selected-row .action-btn {
 }
 
 /* Clickable row styling */
-.clickable-row {
+.clickable-row-ary-bell {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.clickable-row:hover {
+.clickable-row-ary-bell:hover {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
-.clickable-row.selected-row {
+.clickable-row-ary-bell.selected-row-ary-bell {
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-.clickable-row.selected-row:hover {
+.clickable-row-ary-bell.selected-row-ary-bell:hover {
   background-color: rgba(59, 130, 246, 0.15);
 }
 
 /* Selected row styling */
-.orders-table tr.selected-row {
+.orders-table-ary-bell tr.selected-row-ary-bell {
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-.orders-table tr.selected-row:hover {
+.orders-table-ary-bell tr.selected-row-ary-bell:hover {
   background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* Highlighted row styling */
+.orders-table-ary-bell tr.highlighted-row-ary-bell {
+  background-color: #808080;
+  color: white;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.highlighted-text-ary-bell {
+  color: white !important;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .search-section {
+  .search-section-ary-bell {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
 
-  .search-input-container {
+  .search-input-container-ary-bell {
     width: 100%;
     margin-right: 0;
     margin-bottom: 8px;
   }
 
-  .table-actions {
+  .table-actions-ary-bell {
     align-self: flex-end;
   }
 }
 
 /* Order number link styling */
-.order-number-link {
+.order-number-link-ary-bell {
   color: #0066cc;
   text-decoration: underline;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.order-number-link:hover {
+.order-number-link-ary-bell:hover {
   color: #004c99;
 }
+
+/* Ensure the table and bottom scrollbar are synchronized */
+/* This is done with JavaScript in the component */

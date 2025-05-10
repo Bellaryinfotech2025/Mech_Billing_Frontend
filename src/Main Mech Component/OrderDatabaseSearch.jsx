@@ -380,58 +380,58 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
   const sortedOrders = getSortedOrders()
 
   return (
-    <div className="order-search-container">
-      <header className="order-search-header">
+    <div className="order-search-container-ary-bell">
+      <header className="order-search-header-ary-bell">
         <h1>Order Search</h1>
-        <div className="header-actions">
-          {/* <button className="add-order-btn" onClick={onAddOrderClick}>
+        <div className="header-actions-ary-bell">
+          {/* <button className="add-order-btn-ary-bell" onClick={onAddOrderClick}>
             <CgDetailsMore size={14} />
             Line Details
           </button> */}
-          {/* <button className="add-order-btn" onClick={onAddOrderClick}>
+          {/* <button className="add-order-btn-ary-bell" onClick={onAddOrderClick}>
             <FaCloudUploadAlt size={14} />
             Upload
           </button> */}
-          <button className="add-order-btn" onClick={handleImportExport}>
+          <button className="add-order-btn-ary-bell" onClick={handleImportExport}>
             <CgImport size={14} />
             Import / Export
           </button>
-          <button className="add-order-btn" onClick={onAddOrderClick}>
+          <button className="add-order-btn-ary-bell" onClick={onAddOrderClick}>
             <IoIosAddCircle size={14} />
             Add Order
           </button>
         </div>
       </header>
 
-      <div className="search-section">
-        <div className="search-input-container">
+      <div className="search-section-ary-bell">
+        <div className="search-input-container-ary-bell">
           <input
             type="text"
-            className="search-input"
+            className="search-input-ary-bell"
             placeholder="Search Your Order Here ..."
             value={searchQuery}
             onChange={handleSearchInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSearch(e)}
           />
-          <button className="search-button" onClick={handleLoadOrders}>
+          <button className="search-button-ary-bell" onClick={handleLoadOrders}>
             <LuSearchCheck size={50} />
           </button>
         </div>
 
-        <div className="table-actions">
-          <button className="table-action-btn">
+        <div className="table-actions-ary-bell">
+          <button className="table-action-btn-ary-bell">
             <Download size={14} />
           </button>
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <div className="table-container compact">
-          <table className="orders-table">
+      <div className="table-wrapper-ary-bell">
+        <div className="table-container-ary-bell compact-ary-bell">
+          <table className="orders-table-ary-bell">
             <thead>
               <tr>
                 {/* Added Actions column */}
-                <th className="column-actions">Actions</th>
+                <th className="column-actions-ary-bell">Actions</th>
                 <th>Order Number</th>
                 <th>Order Type</th>
                 <th>Business Unit</th>
@@ -452,20 +452,20 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={16} style={{ textAlign: "center", padding: "16px" }}>
+                  <td colSpan={16} className="loading-cell-ary-bell">
                     Loading orders...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={16} style={{ textAlign: "center", padding: "16px", color: "#e53e3e" }}>
+                  <td colSpan={16} className="error-cell-ary-bell">
                     {error}
                   </td>
                 </tr>
               ) : !dataFetched ? (
-                <tr className="no-records-row">
+                <tr className="no-records-row-ary-bell">
                   <td colSpan={16}>
-                    <div className="load-orders-toast">
+                    <div className="load-orders-toast-ary-bell">
                       <AlertCircle size={16} />
                       <span>No Orders</span>
                     </div>
@@ -478,37 +478,18 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                   return (
                     <tr
                       key={index}
-                      className={`${isSelected ? "selected-row" : ""} clickable-row`}
-                      style={
-                        isHighlighted
-                          ? {
-                              background: "#808080",
-                              color: "white",
-                              transition: "all 0.3s ease",
-                              borderRadius: "6px",
-                              fontWeight: "bold",
-                            }
-                          : {}
-                      }
+                      className={`${isSelected ? "selected-row-ary-bell" : ""} ${
+                        isHighlighted ? "highlighted-row-ary-bell" : ""
+                      } clickable-row-ary-bell`}
                     >
                       {/* Added Actions cell with icon */}
-                      <td className="actions-column">
-                        <div className="action-buttons">
-                          {/* <img 
-                            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/icon-YJndqC5YUwBNC7noLuiGg23AmlvcL6.png" 
-                            alt="Action" 
-                            style={{ 
-                              width: "20px", 
-                              height: "20px", 
-                              cursor: "pointer",
-                              opacity: isHighlighted ? "0.9" : "0.7"
-                            }} 
-                          /> */}
+                      <td className="actions-column-ary-bell">
+                        <div className="action-buttons-ary-bell">
                           <IoOpen size={20} />
                         </div>
                       </td>
                       <td
-                        className="order-number-cell"
+                        className="order-number-cell-ary-bell"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleOrderNumberClick(order)
@@ -519,10 +500,10 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                       <td>{getLookupMeaning("ORDER_TYPE", order.orderType)}</td>
                       <td>{order.businessUnit || "-"}</td>
                       <td>{getLookupMeaning("ORDER_CATEGORY", order.orderCategory)}</td>
-                      <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
+                      <td className={isHighlighted ? "highlighted-text-ary-bell" : ""}>
                         {getCustomerName(order.billToCustomerId)}
                       </td>
-                      <td style={{ fontWeight: "normal", color: isHighlighted ? "white" : "inherit" }}>
+                      <td className={isHighlighted ? "highlighted-text-ary-bell" : ""}>
                         {formatDate(order.effectiveStartDate)}
                       </td>
                       <td>{formatDate(order.effectiveEndDate)}</td>
@@ -537,9 +518,9 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
                   )
                 })
               ) : (
-                <tr className="no-records-row">
+                <tr className="no-records-row-ary-bell">
                   <td colSpan={16}>
-                    <div className="no-records-toast">
+                    <div className="no-records-toast-ary-bell">
                       <CheckCircle size={16} />
                       <span>No records found.</span>
                     </div>
@@ -551,69 +532,13 @@ const OrderDatabaseSearch = ({ onAddOrderClick, onOrderNumberClick, selectedOrde
         </div>
       </div>
 
-      <div className="table-pagination">
-        <div className="pagination-slider"></div>
+      <div className="bottom-scrollbar-ary-bell">
+        <div className="scrollbar-content-ary-bell"></div>
       </div>
 
-      {/* Add custom styles to ensure proper column spacing and text display */}
-      <style jsx>{`
-        /* Ensure proper spacing between columns and full text display */
-        .orders-table th,
-        .orders-table td {
-          padding: 8px 16px;
-          white-space: nowrap;
-          overflow: visible;
-          text-overflow: clip;
-          min-width: 120px;
-        }
-
-        /* Actions column styling */
-        .orders-table th.column-actions,
-        .orders-table td.actions-column {
-          width: 80px;
-          min-width: 80px;
-          padding: 8px;
-          text-align: center;
-            
-        }
-
-        /* Add gap between actions column and order number */
-        .orders-table th:nth-child(2),
-        .orders-table td:nth-child(2) {
-          padding-left: 20px;
-        }
-
-        /* Ensure Bill To Customer column has enough space */
-        .orders-table th:nth-child(6),
-        .orders-table td:nth-child(6) {
-          min-width: 180px;
-        }
-
-        /* Ensure Bill to Site column has enough space */
-        .orders-table th:nth-child(11),
-        .orders-table td:nth-child(11) {
-          min-width: 150px;
-        }
-
-        /* Ensure Bill to Contact column has enough space */
-        .orders-table th:nth-child(12),
-        .orders-table td:nth-child(12) {
-          min-width: 150px;
-        }
-
-        /* Ensure Billing Frequency column has enough space */
-        .orders-table th:nth-child(13),
-        .orders-table td:nth-child(13) {
-          min-width: 150px;
-        }
-
-        /* Action buttons container */
-        .action-buttons {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-      `}</style>
+      <div className="table-pagination-ary-bell">
+        <div className="pagination-slider-ary-bell"></div>
+      </div>
     </div>
   )
 }
