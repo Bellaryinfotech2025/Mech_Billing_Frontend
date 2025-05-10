@@ -2,21 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
-import {
-  Save,
-  Upload,
-  Edit,
-  Trash2,
-  Plus,
-  CheckCircle,
-  FileText,
-  AlertCircle,
-  Search,
-  RefreshCw,
-  FileCheck,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
+import { Save, Upload, Edit, Trash2, Plus, CheckCircle, FileText, AlertCircle, Search, RefreshCw, FileCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { FaJediOrder } from "react-icons/fa6"
 import { AiFillBank } from "react-icons/ai"
 import { CgBmw } from "react-icons/cg"
@@ -26,8 +12,8 @@ import "../Fabrication Design/importfile.css"
 import "../Fabrication Design/confirmation.css"
 
 // Updated API base URLs to match the controller
-const API_BASE_URL = "http://localhost:8855/api/V3.0"
-const API_BASE_URL_V2 = "http://localhost:8855/api/V2.0"
+const API_BASE_URL = "http://195.35.45.56:5522/api/V3.0"
+const API_BASE_URL_V2 = "http://195.35.45.56:5522/api/V2.0"
 
 // Key for storing data in localStorage
 const STORAGE_KEY = "fabricationTableData"
@@ -110,7 +96,6 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     { id: "unit", label: "Unit", width: "80px", placeholder: "Enter unit" },
     { id: "totalWt", label: "Total Wt", width: "120px", placeholder: "Enter weight" },
     { id: "qtyReqd", label: "Qty Reqd", width: "120px", placeholder: "Enter qty req." },
-    { id: "erecMkdWt", label: "Erec Mkd Wt", width: "150px", placeholder: "Enter weight" },
     { id: "remarks", label: "Remarks", width: "150px", placeholder: "Enter remarks" },
     {
       id: "status",
@@ -249,27 +234,41 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       setApiError(null)
       console.log("Fetching fabrication data for child line:", selectedChildLine.lineNumber)
 
-      // First try to get data from the latest-imported endpoint as a fallback
+      // First try to get data from the V3.0 API (OrderFabricationDetails)
       let response
       try {
-        // Try the specific endpoint first
-        response = await axios.get(`${API_BASE_URL_V2}/fabrication-by-line`, {
-          params: { lineNumber: selectedChildLine.lineNumber },
+        // Try to get data from the V3.0 API with filters
+        response = await axios.get(`${API_BASE_URL}/getfabrication`, {
+          params: {
+            orderNumber: selectedOrder?.orderNumber,
+            lineNo: selectedChildLine.lineNumber,
+          },
         })
+        console.log("V3.0 API response:", response.data)
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          // If 404, try the latest-imported endpoint as fallback
-          console.log("Specific endpoint not found, trying latest-imported as fallback")
-          response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
+        console.error("Error fetching from V3.0 API:", error)
 
-          // Filter the results to only include records for this line number
-          if (response.data && response.data.data) {
-            response.data.data = response.data.data.filter(
-              (item) => String(item.lineNumber) === String(selectedChildLine.lineNumber),
-            )
+        // If V3.0 API fails, try the V2.0 API
+        try {
+          response = await axios.get(`${API_BASE_URL_V2}/fabrication-by-line`, {
+            params: { lineNumber: selectedChildLine.lineNumber },
+          })
+          console.log("V2.0 API response:", response.data)
+        } catch (v2Error) {
+          if (v2Error.response && v2Error.response.status === 404) {
+            // If 404, try the latest-imported endpoint as fallback
+            console.log("Specific endpoint not found, trying latest-imported as fallback")
+            response = await axios.get(`${API_BASE_URL_V2}/latest-imported`)
+
+            // Filter the results to only include records for this line number
+            if (response.data && response.data.data) {
+              response.data.data = response.data.data.filter(
+                (item) => String(item.lineNumber) === String(selectedChildLine.lineNumber),
+              )
+            }
+          } else {
+            throw v2Error // Re-throw if it's not a 404
           }
-        } else {
-          throw error // Re-throw if it's not a 404
         }
       }
 
@@ -297,25 +296,15 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         console.log("First item from backend:", JSON.stringify(response.data.data[0], null, 2))
       }
 
-      // IMPORTANT: For testing, let's create some sample data with the correct line numbers
-      // This is just for demonstration - you'll remove this in production
-      const sampleData = response.data.data.map((item, index) => {
-        return {
-          ...item,
-          lineNumber: selectedChildLine.lineNumber, // Use the selected child line (e.g., "1.2")
-          origLineNumber: "1", // Set original line number to "1"
-        }
-      })
-
       // Map the backend data to match our frontend structure
-      const mappedData = sampleData.map((item, index) => {
+      const mappedData = response.data.data.map((item, index) => {
         // Try to find any field that could be used as an ID
         let id = null
 
         // Check all possible ID field names
-        if (item.ifaceId !== undefined) id = item.ifaceId
+        if (item.id !== undefined) id = item.id
+        else if (item.ifaceId !== undefined) id = item.ifaceId
         else if (item.iface_id !== undefined) id = item.iface_id
-        else if (item.id !== undefined) id = item.id
         else if (item._id !== undefined) id = item._id
 
         // If no ID found, use index as fallback
@@ -324,34 +313,38 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           id = `index-${index}`
         }
 
-        // Log the raw line number and original line number for debugging
-        console.log("Raw line number:", item.lineNumber)
-        console.log("Raw original line number:", item.origLineNumber || item.orig_line_number || item.ORIG_LINE_NO)
+        // Log the raw item to see what fields are available
+        console.log("Raw item from backend:", item)
 
-        // IMPORTANT: Force the line number to be the selected child line number
-        const lineNumber = selectedChildLine.lineNumber || "1.2"
+        // Get the line number from the item or use the selected child line
+        const lineNumber = item.lineNumber || selectedChildLine.lineNumber || "1.2"
 
-        // IMPORTANT: Force the original line number to be "1"
-        const origLineNumber = "1"
+        // Get the original line number from the item or use "1" as default
+        const origLineNumber = item.origLineNumber || item.orig_line_number || item.ORIG_LINE_NO || "1"
 
+        // Check all possible field names for description
+        const description =
+          item.drawingDescription || item.description || item.DESCRIPTION || item.drawing_description || ""
+
+        // IMPORTANT: Provide default values for all numeric fields to prevent null display
         return {
           _rowIndex: index, // Store the index for fallback deletion
+          id: id, // Store the ID from the backend
           ifaceId: id, // Use the found ID or index
           orderNumber: item.orderNumber || "",
-          // IMPORTANT: Use the forced original line number
-          origLineNo: origLineNumber,
-          // IMPORTANT: Use the forced line number
-          lineNo: lineNumber,
+          origLineNo: origLineNumber || "1", // Default to "1" if null
+          lineNo: lineNumber || "1.2", // Default to "1.2" if null
           drawingNo: item.drawingNo || "",
-          description: item.drawingDescription || "",
+          description: description || "", // Default to empty string if null
           erectionMkd: item.erectionMkd || "",
           itemNo: item.itemNo || "",
           section: item.section || "",
-          length: item.length ? item.length.toString() : "",
-          qty: item.quantity ? item.quantity.toString() : "",
-          unit: item.unitPrice ? item.unitPrice.toString() : "",
-          totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
-          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
+          // IMPORTANT: Provide default values for all numeric fields
+          length: item.length !== undefined && item.length !== null ? String(item.length) : "0",
+          qty: item.quantity !== undefined && item.quantity !== null ? String(item.quantity) : "0",
+          unit: item.unitPrice !== undefined && item.unitPrice !== null ? String(item.unitPrice) : "0",
+          totalWt: item.totalQuantity !== undefined && item.totalQuantity !== null ? String(item.totalQuantity) : "0",
+          qtyReqd: item.originalQuantity !== undefined && item.originalQuantity !== null ? String(item.originalQuantity) : "0",
           erecMkdWt: "", // This field doesn't exist in the backend model
           remarks: item.remark || "",
           ifaceStatus: item.ifaceStatus || "PENDING",
@@ -447,20 +440,23 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
     const newRow = {
       _rowIndex: -1, // Special index for new rows
       ifaceId: `temp-${Date.now()}`, // Temporary ID until saved to backend
-      orderNumber: orderNumber, // Use the current order number
-      origLineNo: "1", // Force original line number to be "1"
-      lineNo: selectedChildLine ? selectedChildLine.lineNumber : "1.2", // Force line number to be "1.2"
+      orderNumber: orderNumber || selectedOrder?.orderNumber || "", // Use the current order number
+      // Use the parent line number if available, otherwise default to "1"
+      origLineNo: selectedChildLine?.parentLineNumber || "1",
+      // Always use the selected child line number if available
+      lineNo: selectedChildLine ? selectedChildLine.lineNumber : "1.2",
       drawingNo: "",
       description: "",
       erectionMkd: "",
       itemNo: "",
       section: "",
-      length: "",
-      qty: "",
-      unit: "",
-      totalWt: "",
-      qtyReqd: "",
-      erecMkdWt: "",
+      // IMPORTANT: Initialize numeric fields with "0" instead of empty string
+      length: "0",
+      qty: "0",
+      unit: "0",
+      totalWt: "0",
+      qtyReqd: "0",
+      erecMkdWt: "0",
       remarks: "",
       ifaceStatus: "PENDING", // Default status for new rows
       isNew: true,
@@ -483,27 +479,67 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       [row.ifaceId]: { ...row },
     }))
 
+    // Log the row being converted
+    console.log("Converting row to backend format:", row)
+    console.log("Description value being sent:", row.description)
+
+    // IMPORTANT: Ensure all numeric values are properly converted and never null
+    const length = row.length ? parseFloat(row.length) : 0
+    const quantity = row.qty ? parseInt(row.qty, 10) : 0
+    const unitPrice = row.unit ? parseFloat(row.unit) : 0
+    const totalQuantity = row.totalWt ? parseFloat(row.totalWt) : 0
+    const originalQuantity = row.qtyReqd ? parseInt(row.qtyReqd, 10) : 0
+
+    console.log("Numeric values being sent:", {
+      length,
+      quantity,
+      unitPrice,
+      totalQuantity,
+      originalQuantity
+    })
+
+    // Create a proper backend DTO object that matches the OrderFabricationDetailsDTO
+    // IMPORTANT: Use the exact field names expected by the backend
     return {
-      ifaceId:
+      id:
         row.ifaceId && !row.ifaceId.toString().startsWith("temp-") && !row.ifaceId.toString().startsWith("index-")
           ? row.ifaceId
           : null,
-      orderNumber: row.orderNumber,
-      origLineNumber: row.origLineNo,
-      lineNumber: row.lineNo,
-      drawingNo: row.drawingNo,
-      drawingDescription: row.description,
-      erectionMkd: row.erectionMkd,
-      itemNo: row.itemNo,
-      section: row.section,
-      length: Number.parseFloat(row.length) || 0,
-      quantity: Number.parseInt(row.qty) || 0,
-      unitPrice: Number.parseFloat(row.unit) || 0,
-      totalQuantity: Number.parseFloat(row.totalWt) || 0,
-      originalQuantity: Number.parseInt(row.qtyReqd) || 0,
-      remark: row.remarks,
-      ifaceStatus: row.ifaceStatus || "PENDING", // Include status in backend format
-      // Add any additional fields that might be needed by the backend
+      orderNumber: row.orderNumber || "",
+      // Ensure origLineNumber is never null by using multiple fallbacks
+      origLineNumber: row.origLineNo || selectedChildLine?.parentLineNumber || "1",
+      orig_line_number: row.origLineNo || selectedChildLine?.parentLineNumber || "1", // Add alternate field name
+      ORIG_LINE_NO: row.origLineNo || selectedChildLine?.parentLineNumber || "1", // Add alternate field name
+      // Ensure lineNumber is never null by using multiple fallbacks
+      lineNumber: row.lineNo || selectedChildLine?.lineNumber || "1.2",
+      line_number: row.lineNo || selectedChildLine?.lineNumber || "1.2", // Add alternate field name
+      LINE_NO: row.lineNo || selectedChildLine?.lineNumber || "1.2", // Add alternate field name
+      drawingNo: row.drawingNo || "",
+      drawingDescription: row.description || "", // Ensure this is properly mapped
+      description: row.description || "", // Add this as a fallback field name
+      DESCRIPTION: row.description || "", // Add this as another fallback field name
+      drawing_description: row.description || "", // Add this as another fallback field name
+      erectionMkd: row.erectionMkd || "",
+      itemNo: row.itemNo || "",
+      section: row.section || "",
+      // IMPORTANT: Use the converted numeric values
+      length: length,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      totalQuantity: totalQuantity,
+      originalQuantity: originalQuantity,
+      remark: row.remarks || "",
+      // Include these fields to ensure they're not null in the database
+      buildingName: "Default Building",
+      lengthUom: "mm",
+      unitPriceUom: "INR",
+      totalQuantityUom: "kg",
+      createdBy: 1,
+      lastUpdatedBy: 1,
+      tenantId: 1,
+      orgId: 1,
+      // Add ifaceStatus if it exists
+      ifaceStatus: row.ifaceStatus || "PENDING",
     }
   }
 
@@ -520,14 +556,20 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           }))
 
           const backendData = convertRowToBackendFormat(rowToSave)
+          console.log("Sending data to backend:", backendData)
+          console.log("Line number value:", backendData.lineNumber)
+          console.log("Original line number value:", backendData.origLineNumber)
 
           let response
           if (rowToSave.isNew) {
-            // Create new record using the correct endpoint from the controller
+            // Create new record using the V3.0 API endpoint
             response = await axios.post(`${API_BASE_URL}/getfabrication`, backendData)
+            console.log("Create response:", response.data)
 
             // Update the row with the ID from the backend
-            const newId = response.data.ifaceId
+            // IMPORTANT: Check the structure of the response to get the correct ID
+            const newId = response.data.data ? response.data.data.id : response.data.id || response.data
+            console.log("New record ID:", newId)
 
             // Update local cache with the new ID
             const cachedData = { ...localDataCache[rowToSave.ifaceId] }
@@ -543,6 +585,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                   ? {
                       ...row,
                       ifaceId: newId,
+                      id: newId,
                       isNew: false,
                     }
                   : row,
@@ -554,8 +597,9 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
 
             showToastNotification("Record created successfully!")
           } else {
-            // Update existing record using the correct endpoint from the controller
+            // Update existing record using the V3.0 API endpoint
             response = await axios.put(`${API_BASE_URL}/getfabrication/${rowToSave.ifaceId}`, backendData)
+            console.log("Update response:", response.data)
 
             // Update the row with data from the backend
             setRows(rows.map((row) => (row.ifaceId === editingRow ? { ...row, isNew: false } : row)))
@@ -582,13 +626,15 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           })
           setLocalDataCache(newCache)
 
-          // Create a batch save request for multiple rows using the correct endpoint from the controller
+          // Create a batch save request for multiple rows using the V3.0 API endpoint
           const batchData = unsavedRows.map(convertRowToBackendFormat)
+          console.log("Sending batch data to backend:", batchData)
 
           const response = await axios.post(`${API_BASE_URL}/getfabrication/batch`, batchData)
+          console.log("Batch save response:", response.data)
 
           // Update rows with IDs from backend
-          const savedIds = response.data.map((item) => item.ifaceId)
+          const savedIds = response.data.data.map((item) => item.id)
 
           // Update the local cache with new IDs
           const updatedCache = { ...localDataCache }
@@ -615,7 +661,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       // Add a small delay to allow the backend to process the save
       setTimeout(() => {
         fetchFabricationDataForChildLine()
-      }, 500)
+      }, 1000)
     } catch (error) {
       console.error("Error saving data:", error)
       showToastNotification(`Failed to save: ${error.response?.data?.message || error.message}`, "Error", "error")
@@ -663,12 +709,22 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
       ) {
         try {
           console.log(`Attempting to delete record with ID ${rowToDelete.ifaceId} from database`)
-          await axios.delete(`${API_BASE_URL_V2}/fabrication/${rowToDelete.ifaceId}`)
-          console.log(`Successfully deleted record with ID ${rowToDelete.ifaceId} from database`)
-        } catch (deleteError) {
-          console.error(`Error deleting from backend:`, deleteError)
-          // Continue with local deletion even if backend delete fails
-          console.log("Continuing with local deletion despite backend error")
+
+          // Try to delete using the V3.0 API first
+          await axios.delete(`${API_BASE_URL}/getfabrication/${rowToDelete.ifaceId}`)
+          console.log(`Successfully deleted record with ID ${rowToDelete.ifaceId} from database using V3.0 API`)
+        } catch (v3Error) {
+          console.error(`Error deleting from V3.0 API:`, v3Error)
+
+          // If V3.0 API fails, try the V2.0 API
+          try {
+            await axios.delete(`${API_BASE_URL_V2}/fabrication/${rowToDelete.ifaceId}`)
+            console.log(`Successfully deleted record with ID ${rowToDelete.ifaceId} from database using V2.0 API`)
+          } catch (v2Error) {
+            console.error(`Error deleting from V2.0 API:`, v2Error)
+            // Continue with local deletion even if both backend deletes fail
+            console.log("Continuing with local deletion despite backend errors")
+          }
         }
       } else {
         console.log("Skipping backend delete - using local deletion only")
@@ -927,6 +983,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
         return {
           _rowIndex: index, // Store the index for fallback deletion
           ifaceId: id, // Use the found ID or index
+          id: id, // Store the ID separately
           orderNumber: item.orderNumber || "",
           origLineNo: "1", // Force original line number to be "1"
           lineNo: selectedChildLine ? selectedChildLine.lineNumber : "1.2", // Force line number to be "1.2"
@@ -935,12 +992,13 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
           erectionMkd: item.erectionMkd || "",
           itemNo: item.itemNo || "",
           section: item.section || "",
-          length: item.length ? item.length.toString() : "",
-          qty: item.quantity ? item.quantity.toString() : "",
-          unit: item.unitPrice ? item.unitPrice.toString() : "",
-          totalWt: item.totalQuantity ? item.totalQuantity.toString() : "",
-          qtyReqd: item.originalQuantity ? item.originalQuantity.toString() : "",
-          erecMkdWt: "", // This field doesn't exist in the backend model
+          // IMPORTANT: Provide default values for all numeric fields
+          length: item.length !== undefined && item.length !== null ? String(item.length) : "0",
+          qty: item.quantity !== undefined && item.quantity !== null ? String(item.quantity) : "0",
+          unit: item.unitPrice !== undefined && item.unitPrice !== null ? String(item.unitPrice) : "0",
+          totalWt: item.totalQuantity !== undefined && item.totalQuantity !== null ? String(item.totalQuantity) : "0",
+          qtyReqd: item.originalQuantity !== undefined && item.originalQuantity !== null ? String(item.originalQuantity) : "0",
+          erecMkdWt: "0", // This field doesn't exist in the backend model
           remarks: item.remark || "",
           ifaceStatus: item.ifaceStatus || "PENDING",
           isNew: false,
@@ -1292,7 +1350,7 @@ const FabricationTable = ({ selectedOrder, selectedChildLine, onBack }) => {
                           {column.renderCell ? (
                             column.renderCell(row)
                           ) : (
-                            <span className="cell-text">{row[column.id] || ""}</span>
+                            <span className="cell-text">{row[column.id] || "0"}</span>
                           )}
                         </div>
                       )}
